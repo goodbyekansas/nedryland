@@ -1,11 +1,11 @@
 pkgs: rec {
-  static = { name, cfg, path ? null, vars ? { } }:
+  static = { name, cfg, path ? null, vars ? {} }:
     dynamic {
       inherit name cfg path vars;
       image = null;
     };
 
-  dynamic = { name, cfg, image, path ? null, vars ? { } }:
+  dynamic = { name, cfg, image, path ? null, vars ? {} }:
     let
       f = { cfg, name, image, path, vars }:
         let
@@ -37,8 +37,10 @@ pkgs: rec {
             inherit cfgContent;
             buildInputs = [ j2 ];
             jsonVars = builtins.toJSON
-              ((if builtins.isFunction inputVars then { } else vars)
-                // imageAndVersion);
+              (
+                (if builtins.isFunction inputVars then {} else vars)
+                // imageAndVersion
+              );
 
             passAsFile = [ "cfgContent" "jsonVars" ];
 
@@ -48,8 +50,8 @@ pkgs: rec {
               mkdir $out
 
               j2 -f json "$cfgContentPath" "$jsonVarsPath" --customize ${
-                ./jinja_addons.py
-              } -o $out/${name}.yaml
+            ./jinja_addons.py
+            } -o $out/${name}.yaml
             '';
           };
         };

@@ -9,7 +9,7 @@ self: super:
         inherit pname version;
         sha256 = "0svwdw824z8d49l8100qibkjgl84bpdg3jyccfidzx351nj2wal8";
       };
-      
+
       doCheck = false;
       propagatedBuildInputs = [
         super.python3Packages.six
@@ -17,20 +17,20 @@ self: super:
         super.python3Packages.grpcio
       ];
     };
-    
+
     clique = super.python3Packages.buildPythonPackage rec {
       pname = "clique";
       version = "1.5.0";
 
       preBuild = ''
-         export HOME=$PWD
+        export HOME=$PWD
       '';
-      
+
       src = super.python3Packages.fetchPypi {
         inherit pname version;
         sha256 = "c34a4eac30187a5b7d75bc8cf600ddc50ceef50a423772a4c96f1dc8440af5fa";
       };
-      
+
       doCheck = false;
     };
     ftrack-python-api = super.python3Packages.buildPythonPackage rec {
@@ -38,14 +38,14 @@ self: super:
       version = "2.0.0rc2";
 
       preBuild = ''
-         export HOME=$PWD
+        export HOME=$PWD
       '';
-      
+
       src = super.python3Packages.fetchPypi {
         inherit pname version;
         sha256 = "77e20cd7ab2d9e45edba7dbbb3404e51b9919618f83f44902aab33f1b298fdc9";
       };
-      
+
       doCheck = false;
       propagatedBuildInputs = [
         clique
