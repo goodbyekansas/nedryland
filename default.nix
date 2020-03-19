@@ -21,7 +21,7 @@ let
   configContent = if configContentFromEnv != "" then configContentFromEnv else (
     if builtins.pathExists defaultConfigFile then builtins.readFile defaultConfigFile else "{}");
   base = {
-    mkComponent = { package, docker, deployment, docs ? null, pth ? builtins.toString ./. }: rec { inherit package docker deployment docs pth; };
+    mkComponent = { package, deployment ? {}, docs ? null, pth ? builtins.toString ./. }: rec { inherit package deployment docs pth; };
     mkStaticHTMLContainer = import ./utils/build-static-nginx.nix pkgs;
     mkK8sConfigStaticImage = k8sFunctions.static;
     mkK8sConfig = k8sFunctions.dynamic;
@@ -53,7 +53,6 @@ in
     all = builtins.map (v: v.component) (builtins.attrValues allComponents);
     package = builtins.map (component: component.package) all;
     packageWithChecks = builtins.map (component: component.packageWithChecks) all;
-    docker = builtins.map (component: component.docker) all;
     deploymentConfigs = builtins.filter (c: c != null)
       (builtins.map (component: component.deployment) all);
     docs = pkgs.lib.foldl (x: y: x // y) {} (
