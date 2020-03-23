@@ -25,6 +25,7 @@ in
         mkComponent = import ./mkcomponent.nix pkgs protoLocation;
         mkFunction = import ./mkfunction.nix base;
         mkClient = import ./mkclient.nix base;
+        mkService = import ./mkservice.nix base;
         deployment = pkgs.callPackage ./deployment.nix {};
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
