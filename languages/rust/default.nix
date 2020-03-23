@@ -6,6 +6,7 @@ rec {
       component = mkRustComponent {
         inherit name src buildInputs extensions;
         targets = [ "wasm32-wasi" ];
+        hasTests = false;
       };
       newPackage = component.package.overrideAttrs (
         oldAttrs: {
@@ -17,4 +18,19 @@ rec {
       );
     in
       base.mkFunction { inherit manifest name; package = newPackage; };
+  mkRustClient = { name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name }:
+    let
+      component = mkRustComponent {
+        inherit name src buildInputs extensions;
+      };
+      newPackage = component.package.overrideAttrs (
+        oldAttrs: {
+          installPhase = ''
+            ${oldAttrs.installPhase}
+            cp target/release/${name} $out/bin
+          '';
+        }
+      );
+    in
+      base.mkClient { inherit name deployment; package = newPackage; };
 }
