@@ -12,7 +12,8 @@ let
     };
 in
 {
-  mkProject = { name, configFile }:
+  # TODO find a better way of dealing with protobuf
+  mkProject = { name, configFile, protoLocation }:
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
       configContent = if configContentFromEnv != "" then configContentFromEnv else (
@@ -21,10 +22,12 @@ in
 
       # gbk-pipeline specific functionality
       base = {
-        mkComponent = { package, deployment ? {}, docs ? null }: rec { inherit package deployment docs; };
+        mkComponent = import ./mkcomponent.nix pkgs protoLocation;
+        mkFunction = import ./mkfunction.nix base;
         deployment = pkgs.callPackage ./deployment.nix {};
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
+        languages = pkgs.callPackage ./languages { inherit base; };
       };
     in
       {
