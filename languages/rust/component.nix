@@ -1,4 +1,4 @@
-pkgs: base: { name, src, buildInputs ? [], extensions ? [], targets ? [] }:
+pkgs: base: { name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true }:
 base.mkComponent {
   package = pkgs.stdenv.mkDerivation {
     inherit name;
@@ -20,10 +20,12 @@ base.mkComponent {
     '';
 
     checkPhase = ''
-      export HOME=$PWD
+      if [ -z $IN_NIX_SHELL ]; then
+        export HOME="$PWD"
+      fi
 
       cargo fmt -- --check
-
+      ${if hasTests then "cargo test" else ""}
       cargo clippy
     '';
 
