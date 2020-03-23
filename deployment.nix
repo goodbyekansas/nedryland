@@ -11,4 +11,5 @@ in
   mkWindowsInstaller = {}: {};
   mkRPMPackage = {}: {};
   uploadFiles = files: {};
+  deployFunction = { package }: {};
 }
