@@ -1,6 +1,6 @@
 pkgs: configContent: prefix: { key, structure }:
 let
-  parsedConfig = builtins.fromJSON configContent;
+  parsedConfig = builtins.fromTOML configContent;
   subConfig = (if builtins.hasAttr key parsedConfig then builtins.getAttr key parsedConfig else {});
 in
   with builtins;
