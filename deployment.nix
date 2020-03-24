@@ -11,5 +11,17 @@ in
   mkWindowsInstaller = {}: {};
   mkRPMPackage = {}: {};
   uploadFiles = files: {};
-  deployFunction = { package }: {};
+  deployFunction = { package }: {
+    type = "function";
+    derivation = { lomax, endpoint, port }: pkgs.stdenv.mkDerivation {
+      name = "deploy-${package.name}";
+      inputPackage = package;
+      inherit lomax;
+      builder = builtins.toFile "builder.sh" ''
+        source $stdenv/setup
+        mkdir -p $out
+        $lomax/bin/lomax --address ${endpoint} --port ${builtins.toString port} register $inputPackage/bin/${package.name}.wasm $inputPackage/manifest.toml 2>&1 | tee $out/command-output
+      '';
+    };
+  };
 }

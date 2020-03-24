@@ -11,7 +11,24 @@ let
         ];
     };
 in
-{
+rec {
+  getDeployments = { components, type }: builtins.map (c: c.derivation or {}) (
+    builtins.filter (c: c.type or "" == type) (
+      pkgs.lib.flatten (
+        builtins.map (c: (builtins.attrValues c.deployment)) (
+          builtins.filter (c: builtins.hasAttr "deployment" c) (builtins.attrValues components)
+        )
+      )
+    )
+  );
+
+  getFunctionDeployments = args@{ components, lomax, endpoint ? "tcp://[::1]", port ? 1939 }: builtins.map (
+    drv:
+      drv { inherit lomax endpoint port; }
+  ) (
+    getDeployments { inherit components; type = "function"; }
+  );
+
   # TODO find a better way of dealing with protobuf
   mkProject = { name, configFile, protoLocation }:
     let
@@ -46,12 +63,12 @@ in
               );
             };
 
-        mkGrid = { components }:
+        mkGrid = { components, deploy }:
           let
             allComponents = (builtins.attrValues components);
           in
             rec {
-              inherit components; # Find a better way to communicate this with the shells!
+              inherit deploy;
 
               package = builtins.map (component: component.package) allComponents;
               packageWithChecks = builtins.map (component: component.packageWithChecks) allComponents;
@@ -61,17 +78,6 @@ in
                 builtins.filter (d: d != {} && d != null)
                   (builtins.map (component: component.docs) allComponents)
               );
-
-              deploy =
-                {
-                  local = pkgs.callPackage ./infra/local.nix {
-                    inherit deploymentConfigs base;
-                  };
-                  prod = pkgs.callPackage ./infra/prod.nix {
-                    inherit deploymentConfigs base;
-                  };
-                };
-
             } // components;
 
         mkShells = { components, extraShells ? {} }: import ./shell.nix { inherit components extraShells; };

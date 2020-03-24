@@ -11,5 +11,7 @@ let
 in
 base.mkComponent {
   package = packageWithManifest;
-  deployment = base.deployment.deployFunction { package = packageWithManifest; };
+  deployment = {
+    function = base.deployment.deployFunction { package = packageWithManifest; };
+  };
 }
