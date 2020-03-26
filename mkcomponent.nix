@@ -8,7 +8,7 @@ let
       PROTOBUF_DEFINITIONS_LOCATION = protoLocation;
       shellHook = ''
         ${oldAttrs.shellHook or ""}
-        export PROTOBUF_DEFINITIONS_LOCATION=${protoLocation}
+        export PROTOBUF_DEFINITIONS_LOCATION=${builtins.toString protoLocation}
       '';
     }
   );
