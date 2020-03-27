@@ -1,4 +1,9 @@
-{ components, extraShells ? {} }:
+{ pkgs, components, extraShells ? {} }:
+let
+  all = pkgs.mkShell {
+    buildInputs = builtins.map (c: c.package) (builtins.attrValues components);
+  };
+in
 builtins.mapAttrs (
   name: component:
     (
@@ -14,4 +19,6 @@ builtins.mapAttrs (
         }
       )
     )
-) components // extraShells
+) components // extraShells // {
+  inherit all;
+}

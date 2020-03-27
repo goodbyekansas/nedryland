@@ -80,6 +80,6 @@ rec {
               );
             } // components;
 
-        mkShells = { components, extraShells ? {} }: import ./shell.nix { inherit components extraShells; };
+        mkShells = { components, extraShells ? {} }: pkgs.callPackage ./shell.nix { inherit components extraShells; };
       };
 }
