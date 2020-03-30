@@ -62,9 +62,7 @@ Then, in the project setup, make sure to declare your component with this depend
 
 ```nix
 example-component = project.declareComponent ./example-component/example-component.nix {
-  dependencies = {
-    myDependency = theOtherComponent;
-  };
+  myDependency = theOtherComponent;
 };
 ```
 

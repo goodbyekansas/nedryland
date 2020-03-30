@@ -37,7 +37,6 @@ rec {
         if builtins.pathExists configFile then builtins.readFile configFile else "{}"
       );
 
-      # gbk-pipeline specific functionality
       base = {
         mkComponent = import ./mkcomponent.nix pkgs protoLocation;
         mkFunction = import ./mkfunction.nix base;
@@ -50,7 +49,7 @@ rec {
       };
     in
       {
-        declareComponent = path: { dependencies ? {} }:
+        declareComponent = path: dependencies@{ ... }:
           let
             c = pkgs.callPackage path ({ inherit base; } // dependencies);
           in
