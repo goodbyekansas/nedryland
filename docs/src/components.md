@@ -111,27 +111,3 @@ base.mkClient {
   };
 }
 ```
-
-## Functions
-A function is a well defined component that takes a set of inputs and produces a set of outputs.
-Functions are defined together with a manifest describing things like their execution environment,
-inputs, outputs, etc.
-
-To define a function, this Nix snippet provides an example:
-
-```nix
-{ pkgs, base }:
-
-base.mkFunction {
-  name = "example-function";
-  src = ./.;
-  manifest = ./function.toml;
-
-  buildPhase = ''
-    touch $out/hello-world
-  '';
-  };
-}
-```
-
-Note that the declaration of a function actually requires you to specify a manifest.
