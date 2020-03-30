@@ -22,15 +22,8 @@ rec {
     )
   );
 
-  getFunctionDeployments = args@{ components, lomax, endpoint ? "tcp://[::1]", port ? 1939 }: builtins.map (
-    drv:
-      drv { inherit lomax endpoint port; }
-  ) (
-    getDeployments { inherit components; type = "function"; }
-  );
-
   # TODO find a better way of dealing with protobuf
-  mkProject = { name, configFile, protoLocation }:
+  mkProject = { name, configFile, protoLocation, baseExtensions ? [], projectDependencies ? [] }:
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
       configContent = if configContentFromEnv != "" then configContentFromEnv else (
@@ -39,19 +32,31 @@ rec {
 
       base = {
         mkComponent = import ./mkcomponent.nix pkgs protoLocation;
-        mkFunction = import ./mkfunction.nix base;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
+        extend = pkgs.callPackage ./extend.nix {};
         deployment = pkgs.callPackage ./deployment.nix {};
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
         languages = pkgs.callPackage ./languages { inherit base; };
       };
+
+      allBaseExtensions = (
+        builtins.foldl' (x: y: x ++ y) [] (
+          builtins.map (pd: pd.baseExtensions) projectDependencies
+        )
+      ) ++ baseExtensions;
+
+      combinedBaseExtensions = builtins.foldl' (
+        left: right: pkgs.lib.recursiveUpdate left (right { inherit base pkgs; })
+      ) {} allBaseExtensions;
+
+      extendedBase = pkgs.lib.recursiveUpdate combinedBaseExtensions base;
     in
       {
         declareComponent = path: dependencies@{ ... }:
           let
-            c = pkgs.callPackage path ({ inherit base; } // dependencies);
+            c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
           in
             c // {
               inherit path;
@@ -62,23 +67,25 @@ rec {
               );
             };
 
-        mkGrid = { components, deploy }:
+        mkGrid = { components, deploy, extraShells ? {}, lib ? {} }:
           let
             allComponents = (builtins.attrValues components);
           in
-            rec {
-              inherit deploy;
+            {
+              inherit baseExtensions lib;
+              grid = rec {
+                inherit deploy;
 
-              package = builtins.map (component: component.package) allComponents;
-              packageWithChecks = builtins.map (component: component.packageWithChecks) allComponents;
-              deploymentConfigs = builtins.filter (c: c != null)
-                (builtins.map (component: component.deployment) allComponents);
-              docs = pkgs.lib.foldl (x: y: x // y) {} (
-                builtins.filter (d: d != {} && d != null)
-                  (builtins.map (component: component.docs) allComponents)
-              );
-            } // components;
-
-        mkShells = { components, extraShells ? {} }: pkgs.callPackage ./shell.nix { inherit components extraShells; };
+                package = builtins.map (component: component.package) allComponents;
+                packageWithChecks = builtins.map (component: component.packageWithChecks) allComponents;
+                deploymentConfigs = builtins.filter (c: c != null)
+                  (builtins.map (component: component.deployment) allComponents);
+                docs = pkgs.lib.foldl (x: y: x // y) {} (
+                  builtins.filter (d: d != {} && d != null)
+                    (builtins.map (component: component.docs) allComponents)
+                );
+              } // components;
+              shells = pkgs.callPackage ./shell.nix { inherit components extraShells; };
+            };
       };
 }
