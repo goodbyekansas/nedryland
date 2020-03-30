@@ -1,0 +1,6 @@
+[book]
+authors = ["Albert Cervin"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Nedryland"
