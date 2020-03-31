@@ -49,7 +49,6 @@ base.mkComponent {
 
       # always want backtraces when building or in dev
       RUST_BACKTRACE = 1;
-      CARGO_BUILD_TARGET = defaultTarget;
-    }
+    } // (if defaultTarget != "" then { CARGO_BUILD_TARGET = defaultTarget; } else {})
   );
 }
