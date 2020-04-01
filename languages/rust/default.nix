@@ -1,10 +1,10 @@
 { base, pkgs }:
 rec {
-  mkRustComponent = import ./component.nix pkgs base;
+  mkComponent = import ./component.nix pkgs base;
 
-  mkRustUtility = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], libraryName ? name, defaultTarget ? "", ... }:
+  mkUtility = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], libraryName ? name, defaultTarget ? "", ... }:
     let
-      component = mkRustComponent attrs;
+      component = mkComponent attrs;
       newPackage = component.package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
@@ -17,9 +17,9 @@ rec {
     in
       base.mkComponent { inherit deployment; package = newPackage; };
 
-  mkRustClient = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
+  mkClient = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
     let
-      component = mkRustComponent attrs;
+      component = mkComponent attrs;
       newPackage = component.package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
@@ -32,9 +32,9 @@ rec {
     in
       base.mkClient { inherit name deployment; package = newPackage; };
 
-  mkRustService = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
+  mkService = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
     let
-      component = mkRustComponent attrs;
+      component = mkComponent attrs;
       newPackage = component.package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
