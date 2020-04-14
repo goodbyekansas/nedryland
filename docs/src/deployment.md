@@ -8,7 +8,7 @@ An example might look like
 
 ```nix
 deploy = rec {
-  functions = nedryland.getFunctionDeployments {
+  functions = firm.getFunctionDeployments {
     inherit components;
   };
 
@@ -18,7 +18,7 @@ deploy = rec {
 
   prod = [
     (
-      nedryland.getFunctionDeployments {
+      firm.getFunctionDeployments {
         inherit components;
         endpoint = "tcp://a.production.registry";
         port = 1337;
@@ -29,4 +29,5 @@ deploy = rec {
 ```
 
 This example defines three deploy targets: `functions`, `local`, and `prod`. The targets are normal
-Nix targets and can be invoked with `nix-build -A functions/local/prod`.
+Nix targets and can be invoked with `nix-build -A functions` or `nix-build -A local` or `nix-build
+-A prod`.
