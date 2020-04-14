@@ -70,7 +70,8 @@ Nix will then ensure the correct build order and send in your dependency.
 
 # Component Types
 
-There is also a standard set of component types defined in Nedryland. The types are described below.
+Nedryland contains a standard set of component types which are described below. Further component
+types can be added in projects by extending _base_ like explained [here](../declare-project.md#extensions).
 
 ## Services
 A service is a component that has no user interface and instead exposes some sort of a remote API.
