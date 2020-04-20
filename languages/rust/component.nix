@@ -1,4 +1,4 @@
-pkgs: base: attrs@{ name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true, rustDependencies ? [], defaultTarget ? "", ... }:
+pkgs: base: attrs@{ name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true, rustDependencies ? [], defaultTarget ? "", useNightly ? "", ... }:
 let
   safeAttrs = (builtins.removeAttrs attrs [ "rustDependencies" ]);
 in
@@ -11,10 +11,21 @@ base.mkComponent {
       buildInputs = with pkgs; [
         cacert
         (
-          latest.rustChannels.stable.rust.override {
-            extensions = [ "rust-src" ] ++ extensions;
-            inherit targets;
-          }
+          if useNightly != "" then
+            (
+              rustChannelOf {
+                date = useNightly;
+                channel = "nightly";
+              }
+            ).rust.override {
+              extensions = [ "rust-src" ] ++ extensions;
+              inherit targets;
+            }
+          else
+            latest.rustChannels.stable.rust.override {
+              extensions = [ "rust-src" ] ++ extensions;
+              inherit targets;
+            }
         )
       ] ++ buildInputs;
 
