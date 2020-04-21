@@ -5,7 +5,28 @@ let
     if [ -z $IN_NIX_SHELL ]; then
       sccache --stop-server 2>&1 > /dev/null || true
       export RUSTC_WRAPPER=sccache
-      SCCACHE_DIR=${builtins.getEnv "HOME"}/.cache/sccache/ sccache --start-server
+
+      home_cache="${builtins.getEnv "HOME"}/.cache/nedryland-rust"
+      var_cache="/var/cache/nedryland-rust"
+      tmp_cache="/tmp/cache/nedryland-rust"
+
+      if [ -w "$(dirname "$home_cache")" ]; then # Home folder
+           echo "Using rust cache directory \"$home_cache\""
+           SCCACHE_DIR="$home_cache" sccache --start-server
+      elif [ -w "$var_cache" ]; then
+           echo "Using rust cache directory \"$var_cache\""
+           SCCACHE_DIR="$var_cache" sccache --start-server
+      else
+           echo "Using rust cache directory \"$tmp_cache\""
+           echo "WARNING: Using fallback cache location.
+           If you are running single user nix install check
+           the permissions of your home folder. If you are
+           running multi user nix install we use the
+           location \"$var_cache\", please make sure that
+           folder exists and is writable by the group \"$(id -gn)\""
+
+           SCCACHE_DIR="$tmp_cache" sccache --start-server
+      fi
       export HOME=$PWD
     fi
   '';
@@ -42,16 +63,15 @@ base.mkComponent {
         rm -rf nix-deps
         mkdir -p nix-deps
         ${builtins.foldl' (left: right: "${left}\n ln -s ${right.package.src} nix-deps/${right.package.name}") "" rustDependencies}
+        ${rustPhase}
       '';
 
       buildPhase = ''
-        ${rustPhase}
         cargo build --release
         sccache -s
       '';
 
       checkPhase = ''
-        ${rustPhase}
         cargo fmt -- --check
         ${if hasTests then "cargo test" else ""}
         cargo clippy
