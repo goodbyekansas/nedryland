@@ -3,7 +3,7 @@ let
   safeAttrs = (builtins.removeAttrs attrs [ "rustDependencies" ]);
   rustPhase = ''
     if [ -z $IN_NIX_SHELL ]; then
-      sccache --stop-server 2>&1 > /dev/null | true
+      sccache --stop-server 2>&1 > /dev/null || true
       export RUSTC_WRAPPER=sccache
       SCCACHE_DIR=${builtins.getEnv "HOME"}/.cache/sccache/ sccache --start-server
       export HOME=$PWD
