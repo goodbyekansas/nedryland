@@ -3,19 +3,26 @@ let
   safeAttrs = (builtins.removeAttrs attrs [ "rustDependencies" ]);
   rustPhase = ''
     if [ -z $IN_NIX_SHELL ]; then
-      sccache --stop-server 2>&1 > /dev/null || true
       export RUSTC_WRAPPER=sccache
 
-      home_cache="${builtins.getEnv "HOME"}/.cache/nedryland-rust"
-      var_cache="/var/cache/nedryland-rust"
-      tmp_cache="/tmp/cache/nedryland-rust"
+      home_cache="${builtins.getEnv "HOME"}/.cache/nedryland-rust/${name}"
+      var_cache="/var/cache/nedryland-rust/${name}"
+      tmp_cache="/tmp/cache/nedryland-rust/${name}"
 
-      if [ -w "$(dirname "$home_cache")" ]; then # Home folder
+      if [ -w "$(dirname "${builtins.getEnv "HOME"}/.cache")" ]; then # Home folder (single user install)
            echo "Using rust cache directory \"$home_cache\""
-           SCCACHE_DIR="$home_cache" sccache --start-server
-      elif [ -w "$var_cache" ]; then
+           mkdir -p "$home_cache"
+           export SCCACHE_DIR="$home_cache"
+      elif [ -w "$(dirname "$var_cache")" ]; then
            echo "Using rust cache directory \"$var_cache\""
-           SCCACHE_DIR="$var_cache" sccache --start-server
+
+           if [ ! -d "$var_cache" ]; then
+             echo "$var_cache" does not exist, creating...
+             mkdir -p "$var_cache"
+             chmod g+w "$var_cache"
+           fi
+
+           export SCCACHE_DIR="$var_cache"
       else
            echo "Using rust cache directory \"$tmp_cache\""
            echo "WARNING: Using fallback cache location.
@@ -25,9 +32,16 @@ let
            location \"$var_cache\", please make sure that
            folder exists and is writable by the group \"$(id -gn)\""
 
-           SCCACHE_DIR="$tmp_cache" sccache --start-server
+           if [ ! -d "$tmp_cache" ]; then
+             echo "$tmp_cache" does not exist, creating...
+             mkdir -p "$tmp_cache"
+             chmod g+w "$tmp_cache"
+           fi
+
+           export SCCACHE_DIR="$tmp_cache"
       fi
-      export HOME=$PWD
+      export SCCACHE_SERVER_PORT=$(${pkgs.python}/bin/python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
+      export CARGO_HOME=$PWD
     fi
   '';
 in
