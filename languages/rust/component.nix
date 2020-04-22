@@ -19,7 +19,7 @@ let
            if [ ! -d "$var_cache" ]; then
              echo "$var_cache" does not exist, creating...
              mkdir -p "$var_cache"
-             chmod g+w "$var_cache"
+             chmod g+w,o+r "$var_cache"
            fi
 
            export SCCACHE_DIR="$var_cache"
@@ -35,7 +35,7 @@ let
            if [ ! -d "$tmp_cache" ]; then
              echo "$tmp_cache" does not exist, creating...
              mkdir -p "$tmp_cache"
-             chmod g+w "$tmp_cache"
+             chmod g+w,o+r "$tmp_cache"
            fi
 
            export SCCACHE_DIR="$tmp_cache"
