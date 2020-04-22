@@ -9,7 +9,7 @@ let
       var_cache="/var/cache/nedryland-rust/${name}"
       tmp_cache="/tmp/cache/nedryland-rust/${name}"
 
-      if [ -w "$(dirname "${builtins.getEnv "HOME"}/.cache")" ]; then # Home folder (single user install)
+      if [ -w "${builtins.getEnv "HOME"}/.cache" ]; then # Home folder (single user install)
            echo "Using rust cache directory \"$home_cache\""
            mkdir -p "$home_cache"
            export SCCACHE_DIR="$home_cache"
