@@ -9,8 +9,8 @@ rec {
         oldAttrs: {
           installPhase = ''
             ${oldAttrs.installPhase}
-            mkdir -p $out/lib
-            cp target${(if defaultTarget != "" then "/" + defaultTarget else "")}/release/lib${libraryName}.rlib $out/lib
+            mkdir -p $out
+            cp -r $src $out
           '';
         }
       );

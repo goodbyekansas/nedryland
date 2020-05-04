@@ -76,7 +76,7 @@ base.mkComponent {
       configurePhase = ''
         rm -rf nix-deps
         mkdir -p nix-deps
-        ${builtins.foldl' (left: right: "${left}\n ln -s ${right.package.src} nix-deps/${right.package.name}") "" rustDependencies}
+        ${builtins.foldl' (left: right: "${left}\n ln -s ${right.package} nix-deps/${right.package.name}") "" rustDependencies}
         ${rustPhase}
       '';
 
