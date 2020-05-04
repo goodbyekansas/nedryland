@@ -20,10 +20,20 @@ rec {
         )
       )
     )
-  );
+    );
 
-  # TODO find a better way of dealing with protobuf
-  mkProject = { name, configFile, protoLocation, baseExtensions ? [], projectDependencies ? [] }:
+  # import another nedryland project
+  importProject = { name, url, rev ? null, ref ? "master", pathOverrideEnvVar ? "${pkgs.lib.toUpper name}_PATH" }:
+    import (
+    if builtins.getEnv pathOverrideEnvVar != "" then
+      (./. + "/${builtins.getEnv pathOverrideEnvVar}")
+    else
+      builtins.fetchGit {
+        inherit name url rev ref;
+      }
+    );
+
+  mkProject = { name, configFile, baseExtensions ? [], projectDependencies ? [] }:
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
       configContent = if configContentFromEnv != "" then configContentFromEnv else (
@@ -31,7 +41,7 @@ rec {
       );
 
       base = {
-        mkComponent = import ./mkcomponent.nix pkgs protoLocation;
+        mkComponent = import ./mkcomponent.nix pkgs;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
         extend = pkgs.callPackage ./extend.nix {};
