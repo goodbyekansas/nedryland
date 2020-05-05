@@ -1,4 +1,4 @@
-pkgs: base: attrs@{ name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true, rustDependencies ? [], defaultTarget ? "", useNightly ? "", ... }:
+pkgs: base: attrs@{ name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true, rustDependencies ? [], defaultTarget ? "", useNightly ? "", filterLockFile ? false, ... }:
 let
   safeAttrs = (builtins.removeAttrs attrs [ "rustDependencies" ]);
   rustPhase = ''
@@ -44,13 +44,29 @@ let
       export CARGO_HOME=$PWD
     fi
   '';
+
+  copyRustDeps = left: right: ''
+    ${left}
+    PACKAGE_PATH="nix-deps/${right.package.name}"
+    FILE_NAME="nix-deps/${right.package.name}-copied-from"
+
+    if [[ ! -d "$PACKAGE_PATH" || ! -f  "$FILE_NAME" || $(cat "$FILE_NAME") != ${right.package} ]]; then
+      echo "📦💨 Copying ${right.package.name} to nix-deps."
+      rm -rf "$PACKAGE_PATH"
+      cp -r ${right.package} "$PACKAGE_PATH"
+      echo "${right.package}" > "$FILE_NAME"
+      chmod 0444 "$FILE_NAME"
+    else
+      echo "🧾 Skipping copying ${right.package.name} since it's already up to date."
+    fi
+  '';
 in
 base.mkComponent {
   package = pkgs.stdenv.mkDerivation (
     safeAttrs // {
       inherit name;
       src = builtins.filterSource
-        (path: type: (type != "directory" || baseNameOf path != "target")) src;
+        (path: type: !(type == "directory" && baseNameOf path == "target") && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")) src;
       buildInputs = with pkgs; [
         cacert
         sccache
@@ -74,9 +90,9 @@ base.mkComponent {
       ] ++ buildInputs;
 
       configurePhase = ''
-        rm -rf nix-deps
         mkdir -p nix-deps
-        ${builtins.foldl' (left: right: "${left}\n ln -s ${right.package} nix-deps/${right.package.name}") "" rustDependencies}
+
+        ${builtins.foldl' copyRustDeps "" rustDependencies}
         ${rustPhase}
       '';
 
