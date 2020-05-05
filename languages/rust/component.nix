@@ -52,6 +52,14 @@ let
 
     if [[ ! -d "$PACKAGE_PATH" || ! -f  "$FILE_NAME" || $(cat "$FILE_NAME") != ${right.package} ]]; then
       echo "📦💨 Copying ${right.package.name} to nix-deps."
+      if [ -d "$PACKAGE_PATH"]; then
+        chmod +w -R "$PACKAGE_PATH"
+      fi
+
+      if [ -f "$FILE_NAME" ]; then
+        chmod +w "$FILE_NAME"
+      fi
+
       rm -rf "$PACKAGE_PATH"
       cp -r ${right.package} "$PACKAGE_PATH"
       echo "${right.package}" > "$FILE_NAME"
@@ -66,7 +74,11 @@ base.mkComponent {
     safeAttrs // {
       inherit name;
       src = builtins.filterSource
-        (path: type: !(type == "directory" && baseNameOf path == "target") && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")) src;
+        (
+          path: type: !(type == "directory" && baseNameOf path == "target")
+          && !(type == "directory" && baseNameOf path == "nix-deps")
+          && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
+        ) src;
       buildInputs = with pkgs; [
         cacert
         sccache
