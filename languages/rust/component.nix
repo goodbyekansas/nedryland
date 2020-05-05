@@ -53,22 +53,36 @@ let
     if [[ ! -d "$PACKAGE_PATH" || ! -f  "$FILE_NAME" || $(cat "$FILE_NAME") != ${right.package} ]]; then
       echo "📦💨 Copying ${right.package.name} to nix-deps."
 
+      # copy package source
       if [ -d "$PACKAGE_PATH" ]; then
         chmod +w -R "$PACKAGE_PATH"
+        rm -rf "$PACKAGE_PATH"
       fi
+      cp -r ${right.package} "$PACKAGE_PATH"
 
+      # write source location file
       if [ -f "$FILE_NAME" ]; then
         chmod +w "$FILE_NAME"
       fi
-
-      rm -rf "$PACKAGE_PATH"
-      cp -r ${right.package} "$PACKAGE_PATH"
       echo "${right.package}" > "$FILE_NAME"
       chmod 0444 "$FILE_NAME"
+
+      # patch up Cargo.toml
+      echo "🐷 Patching $PACKAGE_PATH/Cargo.toml to fix transitive dependencies."
+      chmod +w -R "$PACKAGE_PATH"
+      sed -i -E 's/nix-deps/\.\./g' "$PACKAGE_PATH"/Cargo.toml
+      chmod -w -R "$PACKAGE_PATH"
+
     else
       echo "🍄 Skipping copying ${right.package.name} since it's already up to date."
     fi
   '';
+
+  collectRustDeps = attrs:
+    if builtins.hasAttr "rustDependencies" attrs then
+      attrs.rustDependencies ++ (builtins.map (dep: collectRustDeps dep) attrs.rustDependencies)
+    else
+      [];
 in
 base.mkComponent {
   package = pkgs.stdenv.mkDerivation (
@@ -105,7 +119,7 @@ base.mkComponent {
       configurePhase = ''
         mkdir -p nix-deps
 
-        ${builtins.foldl' copyRustDeps "" rustDependencies}
+        ${builtins.foldl' copyRustDeps "" (pkgs.lib.lists.flatten (rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)))}
         ${rustPhase}
       '';
 
