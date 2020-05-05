@@ -26,11 +26,11 @@ rec {
   importProject = { name, url, rev ? null, ref ? "master", pathOverrideEnvVar ? "${pkgs.lib.toUpper name}_PATH" }:
     import (
       if builtins.getEnv pathOverrideEnvVar != "" then
-        (./. + "/${builtins.getEnv pathOverrideEnvVar}")
+        (./. + "/${builtins.getEnv pathOverrideEnvVar}/project.nix")
       else
         builtins.fetchGit {
           inherit name url rev ref;
-        }
+        } + "/project.nix"
     );
 
   mkProject = { name, configFile, baseExtensions ? [], projectDependencies ? [] }:
