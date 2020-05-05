@@ -20,17 +20,17 @@ rec {
         )
       )
     )
-    );
+  );
 
   # import another nedryland project
   importProject = { name, url, rev ? null, ref ? "master", pathOverrideEnvVar ? "${pkgs.lib.toUpper name}_PATH" }:
     import (
-    if builtins.getEnv pathOverrideEnvVar != "" then
-      (./. + "/${builtins.getEnv pathOverrideEnvVar}")
-    else
-      builtins.fetchGit {
-        inherit name url rev ref;
-      }
+      if builtins.getEnv pathOverrideEnvVar != "" then
+        (./. + "/${builtins.getEnv pathOverrideEnvVar}")
+      else
+        builtins.fetchGit {
+          inherit name url rev ref;
+        }
     );
 
   mkProject = { name, configFile, baseExtensions ? [], projectDependencies ? [] }:

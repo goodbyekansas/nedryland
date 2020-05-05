@@ -4,13 +4,16 @@ rec {
 
   mkUtility = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], libraryName ? name, defaultTarget ? "", ... }:
     let
-      component = mkComponent attrs;
+      component = mkComponent (
+        attrs // { filterLockFile = true; }
+      );
       newPackage = component.package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
             ${oldAttrs.installPhase}
             mkdir -p $out
-            cp -r $src $out
+
+            cp -r $src/* $out
           '';
         }
       );
