@@ -52,7 +52,8 @@ let
 
     if [[ ! -d "$PACKAGE_PATH" || ! -f  "$FILE_NAME" || $(cat "$FILE_NAME") != ${right.package} ]]; then
       echo "📦💨 Copying ${right.package.name} to nix-deps."
-      if [ -d "$PACKAGE_PATH"]; then
+
+      if [ -d "$PACKAGE_PATH" ]; then
         chmod +w -R "$PACKAGE_PATH"
       fi
 
@@ -65,7 +66,7 @@ let
       echo "${right.package}" > "$FILE_NAME"
       chmod 0444 "$FILE_NAME"
     else
-      echo "🧾 Skipping copying ${right.package.name} since it's already up to date."
+      echo "🍄 Skipping copying ${right.package.name} since it's already up to date."
     fi
   '';
 in
