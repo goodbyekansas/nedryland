@@ -9,7 +9,7 @@
     };
   };
 
-  mkExtension = { componentTypes ? {}, deployFunctions ? {}, languages ? {} }:
+  mkExtension = { componentTypes ? { }, deployFunctions ? { }, languages ? { } }:
     componentTypes // (
       {
         deployment = deployFunctions;

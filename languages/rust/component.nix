@@ -1,6 +1,15 @@
-pkgs: base: attrs@{ name, src, buildInputs ? [], extensions ? [], targets ? [], hasTests ? true, rustDependencies ? [], defaultTarget ? "", useNightly ? "", filterLockFile ? false, ... }:
+pkgs: base: { name
+            , src
+            , buildInputs ? [ ]
+            , extensions ? [ ]
+            , targets ? [ ]
+            , hasTests ? true
+            , rustDependencies ? [ ]
+            , defaultTarget ? ""
+            , useNightly ? ""
+            , filterLockFile ? false
+            }:
 let
-  safeAttrs = (builtins.removeAttrs attrs [ "rustDependencies" ]);
   rustPhase = ''
     if [ -z $IN_NIX_SHELL ]; then
       export RUSTC_WRAPPER=sccache
@@ -44,7 +53,6 @@ let
       export CARGO_HOME=$PWD
     fi
   '';
-
   copyRustDeps = left: right: ''
     ${left}
     PACKAGE_PATH="nix-deps/${right.package.name}"
@@ -77,16 +85,15 @@ let
       echo "🍄 Skipping copying ${right.package.name} since it's already up to date."
     fi
   '';
-
   collectRustDeps = attrs:
     if builtins.hasAttr "rustDependencies" attrs then
       attrs.rustDependencies ++ (builtins.map (dep: collectRustDeps dep) attrs.rustDependencies)
     else
-      [];
+      [ ];
 in
-base.mkComponent {
-  package = pkgs.stdenv.mkDerivation (
-    safeAttrs // {
+pkgs.stdenv.mkDerivation
+  (
+    {
       inherit name;
       src = builtins.filterSource
         (
@@ -130,7 +137,7 @@ base.mkComponent {
 
       checkPhase = ''
         cargo fmt -- --check
-        ${if hasTests then "cargo test" else ""}
+        ${ if hasTests then "cargo test" else ""}
         cargo clippy
       '';
 
@@ -144,6 +151,5 @@ base.mkComponent {
 
       # always want backtraces when building or in dev
       RUST_BACKTRACE = 1;
-    } // (if defaultTarget != "" then { CARGO_BUILD_TARGET = defaultTarget; } else {})
-  );
-}
+    } // ( if defaultTarget != "" then { CARGO_BUILD_TARGET = defaultTarget; } else { })
+  )
