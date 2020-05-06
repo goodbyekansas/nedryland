@@ -1,52 +1,103 @@
 { base, pkgs }:
 rec {
-  mkComponent = import ./component.nix pkgs base;
+  mkPackage = import ./component.nix pkgs base;
 
-  mkUtility = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], libraryName ? name, defaultTarget ? "", ... }:
+  mkUtility =
+    attrs@{ name
+    , src
+    , deployment ? { }
+    , buildInputs ? [ ]
+    , rustDependencies ? [ ]
+    , extensions ? [ ]
+    , targets ? [ ]
+    , libraryName ? name
+    , defaultTarget ? ""
+    , useNightly ? ""
+    , hasTests ? true
+    }:
     let
-      component = mkComponent (
-        attrs // { filterLockFile = true; }
-      );
-      newPackage = component.package.overrideAttrs (
-        oldAttrs: {
-          installPhase = ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out
+      package = mkPackage {
+        inherit
+          name
+          src
+          buildInputs
+          rustDependencies
+          extensions
+          targets
+          defaultTarget
+          useNightly
+          hasTests
+          ;
 
-            cp -r $src/* $out
-          '';
-        }
-      );
+        filterLockFile = true;
+      };
+      newPackage = package.overrideAttrs
+        (
+          oldAttrs: {
+            installPhase = ''
+              ${oldAttrs.installPhase}
+              mkdir -p $out
+
+              cp -r $src/* $out
+            '';
+          }
+        );
     in
-      base.mkComponent { inherit deployment; package = newPackage; };
+    base.mkComponent (attrs // { inherit deployment; package = newPackage; });
 
-  mkClient = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
+  mkClient =
+    attrs@{ name
+    , src
+    , deployment ? { }
+    , buildInputs ? [ ]
+    , rustDependencies ? [ ]
+    , extensions ? [ ]
+    , targets ? [ ]
+    , executableName ? name
+    , useNightly ? ""
+    }:
     let
-      component = mkComponent attrs;
-      newPackage = component.package.overrideAttrs (
-        oldAttrs: {
-          installPhase = ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out/bin
-            cp target/release/${executableName} $out/bin
-          '';
-        }
-      );
+      package = mkPackage {
+        inherit name src buildInputs rustDependencies extensions targets useNightly;
+      };
+      newPackage = package.overrideAttrs
+        (
+          oldAttrs: {
+            installPhase = ''
+              ${oldAttrs.installPhase}
+              mkdir -p $out/bin
+              cp target/release/${executableName} $out/bin
+            '';
+          }
+        );
     in
-      base.mkClient { inherit name deployment; package = newPackage; };
+    base.mkClient (attrs // { inherit deployment; package = newPackage; });
 
-  mkService = attrs@{ name, src, deployment ? {}, buildInputs ? [], extensions ? [], targets ? [], executableName ? name, ... }:
+  mkService =
+    attrs@{ name
+    , src
+    , deployment ? { }
+    , buildInputs ? [ ]
+    , rustDependencies ? [ ]
+    , extensions ? [ ]
+    , targets ? [ ]
+    , executableName ? name
+    , useNightly ? ""
+    }:
     let
-      component = mkComponent attrs;
-      newPackage = component.package.overrideAttrs (
-        oldAttrs: {
-          installPhase = ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out/bin
-            cp target/release/${name} $out/bin
-          '';
-        }
-      );
+      package = mkPackage {
+        inherit name src buildInputs rustDependencies extensions targets useNightly;
+      };
+      newPackage = package.overrideAttrs
+        (
+          oldAttrs: {
+            installPhase = ''
+              ${oldAttrs.installPhase}
+              mkdir -p $out/bin
+              cp target/release/${name} $out/bin
+            '';
+          }
+        );
     in
-      base.mkService { inherit name deployment; package = newPackage; };
+    base.mkService (attrs // { inherit deployment; package = newPackage; });
 }

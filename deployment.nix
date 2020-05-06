@@ -8,7 +8,7 @@ in
   mkK8sConfig = k8sFunctions.dynamic;
   mkDatabaseConfig = import ./configs/databaseconfig.nix;
   mkDeploymentConfig = import ./configs/deploymentconfig.nix;
-  mkWindowsInstaller = {}: {};
-  mkRPMPackage = {}: {};
-  uploadFiles = files: {};
+  mkWindowsInstaller = {}: { };
+  mkRPMPackage = {}: { };
+  uploadFiles = files: { };
 }

@@ -12,23 +12,27 @@ let
       server {
         listen 80;
         index index.html;
-        ${builtins.concatStringsSep "\n" (
-    pkgs.lib.reverseList (
-      pkgs.lib.mapAttrsToList (
-        location: attrs: ''
-          location ${location} {
-            ${if attrs ? root then "root ${attrs.root};" else ""}
-            ${if attrs ? alias then "alias ${attrs.alias};" else ""}
-            ${if attrs ? redirectTo then "return 301 ${attrs.redirectTo};" else ""}
-            ${if (attrs.redirectToIndex or false) then ''
-          try_files $uri $uri/ /index.html;
-        '' else ""}
-            autoindex ${if (attrs.directoryListing or false) then "on" else "off"};
-          }
-        ''
-      ) locations
-    )
-  )}
+        ${builtins.concatStringsSep "\n"
+      (
+          pkgs.lib.reverseList
+              (
+                  pkgs.lib.mapAttrsToList
+                      (
+                          location: attrs: ''
+                              location ${location} {
+                                ${ if attrs ? root then "root ${attrs.root};" else ""}
+                                ${ if attrs ? alias then "alias ${attrs.alias};" else ""}
+                                ${ if attrs ? redirectTo then "return 301 ${attrs.redirectTo};" else ""}
+                                ${
+                              if (attrs.redirectToIndex or false) then ''
+                                try_files $uri $uri/ /index.html;
+                              '' else ""}
+                                autoindex ${ if (attrs.directoryListing or false) then "on" else "off"};
+                              }
+                            ''
+                        ) locations
+                )
+        )}
       }
     }
   '';

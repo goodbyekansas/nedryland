@@ -1,30 +1,32 @@
 pkgs: rec {
-  static = { name, cfg, path ? null, vars ? {} }:
+  static = { name, cfg, path ? null, vars ? { } }:
     dynamic {
       inherit name cfg path vars;
       image = null;
     };
 
-  dynamic = { name, cfg, image, path ? null, vars ? {} }:
+  dynamic = { name, cfg, image, path ? null, vars ? { } }:
     let
       f = { cfg, name, image, path, vars }:
         let
-          cfgContent =
-            if builtins.isPath cfg then builtins.readFile cfg else cfg;
+          cfgContent = if builtins.isPath cfg then builtins.readFile cfg else cfg;
           imageAndVersion = {
             file_version =
               builtins.substring 0 10 (builtins.hashString "sha256" cfgContent);
-            image_version = if image != null then
-              builtins.substring 0 32 (builtins.baseNameOf "${image}")
-            else
-              "";
-            image = if image != null then
-              "${image.imageName}:${image.imageTag}"
-            else
-              "";
+            image_version =
+              if image != null then
+                builtins.substring 0 32 (builtins.baseNameOf "${image}")
+              else
+                "";
+            image =
+              if image != null then
+                "${image.imageName}:${image.imageTag}"
+              else
+                "";
           };
           j2 = pkgs.python3.withPackages (ps: with ps; [ j2cli setuptools ]);
-        in rec {
+        in
+        rec {
           inherit image;
           inputVars = vars;
           descriptor = { inherit name path; };
@@ -38,7 +40,7 @@ pkgs: rec {
             buildInputs = [ j2 ];
             jsonVars = builtins.toJSON
               (
-                (if builtins.isFunction inputVars then {} else vars)
+                ( if builtins.isFunction inputVars then { } else vars)
                 // imageAndVersion
               );
 
@@ -50,13 +52,14 @@ pkgs: rec {
               mkdir $out
 
               j2 -f json "$cfgContentPath" "$jsonVarsPath" --customize ${
-            ./jinja_addons.py
-            } -o $out/${name}.yaml
+                ./jinja_addons.py
+              } -o $out/${name}.yaml
             '';
           };
         };
       # make sure we can override this function later with
       # different arguments
-    in pkgs.makeOverridable f { inherit name cfg image path vars; };
+    in
+    pkgs.makeOverridable f { inherit name cfg image path vars; };
 
 }

@@ -1,11 +1,18 @@
-pkgs: { package, deployment ? {}, docs ? null, usesProtobuf ? true }:
+pkgs: attrs@{ package, deployment ? { }, docs ? null, usesProtobuf ? true, ... }:
 let
-  packageWithProto = package.overrideAttrs (
-    oldAttrs: {
-      # this is needed on NixOS but does not hurt on other
-      # OSes either
-      PROTOC = "${pkgs.protobuf}/bin/protoc";
+  packageWithProto = package.overrideAttrs
+    (
+      oldAttrs: {
+        # this is needed on NixOS but does not hurt on other
+        # OSes either
+        PROTOC = "${pkgs.protobuf}/bin/protoc";
+      }
+    );
+  comp = (
+    attrs // {
+      package = if usesProtobuf then packageWithProto else package;
+      inherit deployment docs;
     }
   );
 in
-rec { package = if usesProtobuf then packageWithProto else package; inherit deployment docs; }
+comp
