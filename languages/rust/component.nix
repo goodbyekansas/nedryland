@@ -3,7 +3,6 @@ pkgs: base: { name
             , buildInputs ? [ ]
             , extensions ? [ ]
             , targets ? [ ]
-            , hasTests ? true
             , rustDependencies ? [ ]
             , defaultTarget ? ""
             , useNightly ? ""
@@ -137,7 +136,7 @@ pkgs.stdenv.mkDerivation
 
       checkPhase = ''
         cargo fmt -- --check
-        ${ if hasTests then "cargo test" else ""}
+        cargo test
         cargo clippy
       '';
 
