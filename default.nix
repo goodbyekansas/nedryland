@@ -31,7 +31,7 @@ rec {
     import
       (
         if builtins.getEnv pathOverrideEnvVar != "" then
-          (./. + "/${builtins.getEnv pathOverrideEnvVar}/project.nix")
+          (builtins.getEnv "PWD" + "/${builtins.getEnv pathOverrideEnvVar}/project.nix")
         else
           builtins.fetchGit {
             inherit name url rev ref;
