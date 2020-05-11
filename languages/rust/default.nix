@@ -1,6 +1,6 @@
 { base, pkgs }:
 rec {
-  mkPackage = import ./component.nix pkgs base;
+  mkPackage = import ./package.nix pkgs base;
 
   mkUtility =
     attrs@{ name
@@ -28,7 +28,6 @@ rec {
           useNightly
           hasTests
           ;
-
         filterLockFile = true;
       };
       newPackage = package.overrideAttrs

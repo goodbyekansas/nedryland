@@ -120,7 +120,7 @@ pkgs.stdenv.mkDerivation
               inherit targets;
             }
         )
-      ] ++ buildInputs;
+      ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [pkgs.wasmer]);
 
       configurePhase = ''
         mkdir -p nix-deps
@@ -150,5 +150,10 @@ pkgs.stdenv.mkDerivation
 
       # always want backtraces when building or in dev
       RUST_BACKTRACE = 1;
-    } // ( if defaultTarget != "" then { CARGO_BUILD_TARGET = defaultTarget; } else { })
+    } // ( if defaultTarget != "" then {
+      CARGO_BUILD_TARGET = defaultTarget;
+    } else { }) // ( if defaultTarget == "wasm32-wasi" then {
+      # run the tests through virtual vm
+      CARGO_TARGET_WASM32_WASI_RUNNER = "wasmer run --env=RUST_TEST_NOCAPTURE=1";
+    } else { } )
   )
