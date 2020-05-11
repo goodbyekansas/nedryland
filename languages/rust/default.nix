@@ -30,17 +30,16 @@ rec {
           ;
         filterLockFile = true;
       };
-      newPackage = package.overrideAttrs
-        (
-          oldAttrs: {
-            installPhase = ''
-              ${oldAttrs.installPhase}
-              mkdir -p $out
+      newPackage = package.overrideAttrs (
+        oldAttrs: {
+          installPhase = ''
+            ${oldAttrs.installPhase}
+            mkdir -p $out
 
-              cp -r $src/* $out
-            '';
-          }
-        );
+            cp -r $src/* $out
+          '';
+        }
+      );
     in
     base.mkComponent (attrs // { inherit deployment; package = newPackage; });
 
@@ -59,16 +58,15 @@ rec {
       package = mkPackage {
         inherit name src buildInputs rustDependencies extensions targets useNightly;
       };
-      newPackage = package.overrideAttrs
-        (
-          oldAttrs: {
-            installPhase = ''
-              ${oldAttrs.installPhase}
-              mkdir -p $out/bin
-              cp target/release/${executableName} $out/bin
-            '';
-          }
-        );
+      newPackage = package.overrideAttrs (
+        oldAttrs: {
+          installPhase = ''
+            ${oldAttrs.installPhase}
+            mkdir -p $out/bin
+            cp target/release/${executableName} $out/bin
+          '';
+        }
+      );
     in
     base.mkClient (attrs // { inherit deployment; package = newPackage; });
 
@@ -87,16 +85,15 @@ rec {
       package = mkPackage {
         inherit name src buildInputs rustDependencies extensions targets useNightly;
       };
-      newPackage = package.overrideAttrs
-        (
-          oldAttrs: {
-            installPhase = ''
-              ${oldAttrs.installPhase}
-              mkdir -p $out/bin
-              cp target/release/${name} $out/bin
-            '';
-          }
-        );
+      newPackage = package.overrideAttrs (
+        oldAttrs: {
+          installPhase = ''
+            ${oldAttrs.installPhase}
+            mkdir -p $out/bin
+            cp target/release/${name} $out/bin
+          '';
+        }
+      );
     in
     base.mkService (attrs // { inherit deployment; package = newPackage; });
 }

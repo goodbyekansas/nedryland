@@ -90,70 +90,75 @@ let
     else
       [ ];
 in
-pkgs.stdenv.mkDerivation
-  (
-    {
-      inherit name;
-      src = builtins.filterSource
+pkgs.stdenv.mkDerivation (
+  {
+    inherit name;
+    src =
+      builtins.filterSource
         (
           path: type: !(type == "directory" && baseNameOf path == "target")
           && !(type == "directory" && baseNameOf path == "nix-deps")
           && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
-        ) src;
-      buildInputs = with pkgs; [
-        cacert
-        sccache
-        (
-          if useNightly != "" then
-            (
-              rustChannelOf {
-                date = useNightly;
-                channel = "nightly";
-              }
-            ).rust.override {
-              extensions = [ "rust-src" ] ++ extensions;
-              inherit targets;
-            }
-          else
-            latest.rustChannels.stable.rust.override {
-              extensions = [ "rust-src" ] ++ extensions;
-              inherit targets;
-            }
         )
-      ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [pkgs.wasmer]);
+        src;
+    buildInputs = with pkgs; [
+      cacert
+      sccache
+      (
+        if useNightly != "" then
+          (
+            rustChannelOf {
+              date = useNightly;
+              channel = "nightly";
+            }
+          ).rust.override {
+            extensions = [ "rust-src" ] ++ extensions;
+            inherit targets;
+          }
+        else
+          latest.rustChannels.stable.rust.override {
+            extensions = [ "rust-src" ] ++ extensions;
+            inherit targets;
+          }
+      )
+    ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
 
-      configurePhase = ''
-        mkdir -p nix-deps
+    configurePhase = ''
+      mkdir -p nix-deps
 
-        ${builtins.foldl' copyRustDeps "" (pkgs.lib.lists.flatten (rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)))}
-        ${rustPhase}
-      '';
+      ${builtins.foldl' copyRustDeps "" (pkgs.lib.lists.flatten (rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)))}
+      ${rustPhase}
+    '';
 
-      buildPhase = ''
-        cargo build --release
-        sccache -s
-      '';
+    buildPhase = ''
+      cargo build --release
+      sccache -s
+    '';
 
-      checkPhase = ''
-        cargo fmt -- --check
-        cargo test
-        cargo clippy
-      '';
+    checkPhase = ''
+      cargo fmt -- --check
+      cargo test
+      cargo clippy
+    '';
 
-      installPhase = ''
-        mkdir -p $out
-      '';
+    installPhase = ''
+      mkdir -p $out
+    '';
 
-      shellHook = ''
-        eval "$configurePhase"
-      '';
+    shellHook = ''
+      eval "$configurePhase"
+    '';
 
-      # always want backtraces when building or in dev
-      RUST_BACKTRACE = 1;
-    } // ( if defaultTarget != "" then {
+    # always want backtraces when building or in dev
+    RUST_BACKTRACE = 1;
+  } // (
+    if defaultTarget != "" then {
       CARGO_BUILD_TARGET = defaultTarget;
-    } else { }) // ( if defaultTarget == "wasm32-wasi" then {
+    } else { }
+  ) // (
+    if defaultTarget == "wasm32-wasi" then {
       # run the tests through virtual vm
       CARGO_TARGET_WASM32_WASI_RUNNER = "wasmer run --env=RUST_TEST_NOCAPTURE=1";
-    } else { } )
+    } else { }
   )
+)
