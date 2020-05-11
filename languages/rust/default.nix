@@ -13,7 +13,6 @@ rec {
     , libraryName ? name
     , defaultTarget ? ""
     , useNightly ? ""
-    , hasTests ? true
     }:
     let
       package = mkPackage {
@@ -26,7 +25,6 @@ rec {
           targets
           defaultTarget
           useNightly
-          hasTests
           ;
         filterLockFile = true;
       };
