@@ -38,11 +38,10 @@ pkgs: rec {
 
             inherit cfgContent;
             buildInputs = [ j2 ];
-            jsonVars = builtins.toJSON
-              (
-                ( if builtins.isFunction inputVars then { } else vars)
-                // imageAndVersion
-              );
+            jsonVars = builtins.toJSON (
+              (if builtins.isFunction inputVars then { } else vars)
+              // imageAndVersion
+            );
 
             passAsFile = [ "cfgContent" "jsonVars" ];
 
