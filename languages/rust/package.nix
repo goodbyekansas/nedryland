@@ -7,6 +7,9 @@ pkgs: base: { name
             , defaultTarget ? ""
             , useNightly ? ""
             , filterLockFile ? false
+            , extraChecks ? ""
+            , buildFeatures ? [ ]
+            , testFeatures ? [ ]
             }:
 let
   rustPhase = ''
@@ -89,6 +92,12 @@ let
       attrs.rustDependencies ++ (builtins.map (dep: collectRustDeps dep) attrs.rustDependencies)
     else
       [ ];
+
+  getFeatures = features:
+    if (builtins.length features) == 0 then
+      ""
+    else
+      "--features ${(builtins.concatStringsSep " " features)}";
 in
 pkgs.stdenv.mkDerivation (
   {
@@ -131,14 +140,15 @@ pkgs.stdenv.mkDerivation (
     '';
 
     buildPhase = ''
-      cargo build --release
+      cargo build --release ${getFeatures buildFeatures}
       sccache -s
     '';
 
     checkPhase = ''
       cargo fmt -- --check
-      cargo test
-      cargo clippy
+      cargo test ${getFeatures testFeatures}
+      cargo clippy ${getFeatures testFeatures}
+      ${extraChecks}
     '';
 
     installPhase = ''
