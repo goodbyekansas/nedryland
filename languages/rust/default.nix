@@ -13,6 +13,9 @@ rec {
     , libraryName ? name
     , defaultTarget ? ""
     , useNightly ? ""
+    , extraChecks ? ""
+    , buildFeatures ? [ ]
+    , testFeatures ? [ ]
     }:
     let
       package = mkPackage {
@@ -25,9 +28,13 @@ rec {
           targets
           defaultTarget
           useNightly
+          extraChecks
+          buildFeatures
+          testFeatures
           ;
         filterLockFile = true;
       };
+
       newPackage = package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
@@ -51,11 +58,15 @@ rec {
     , targets ? [ ]
     , executableName ? name
     , useNightly ? ""
+    , extraChecks ? ""
+    , buildFeatures ? [ ]
+    , testFeatures ? [ ]
     }:
     let
       package = mkPackage {
-        inherit name src buildInputs rustDependencies extensions targets useNightly;
+        inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
       };
+
       newPackage = package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
@@ -78,11 +89,15 @@ rec {
     , targets ? [ ]
     , executableName ? name
     , useNightly ? ""
+    , extraChecks ? ""
+    , buildFeatures ? [ ]
+    , testFeatures ? [ ]
     }:
     let
       package = mkPackage {
-        inherit name src buildInputs rustDependencies extensions targets useNightly;
+        inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
       };
+
       newPackage = package.overrideAttrs (
         oldAttrs: {
           installPhase = ''
