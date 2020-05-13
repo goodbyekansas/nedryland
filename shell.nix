@@ -1,7 +1,16 @@
 { pkgs, components, extraShells ? { } }:
 let
+  getAllPackages = components:
+    [ ] ++
+    (
+      if builtins.hasAttr "package" components then
+        [ components.package ]
+      else
+        builtins.map (c: getAllPackages c) (builtins.attrValues components)
+    );
+
   all = pkgs.mkShell {
-    buildInputs = builtins.map (c: c.package) (builtins.attrValues components);
+    buildInputs = (getAllPackages components);
   };
 in
 builtins.mapAttrs
