@@ -97,7 +97,7 @@ let
     if (builtins.length features) == 0 then
       ""
     else
-      "--features ${(builtins.concatStringsSep " " features)}";
+      ''--features "${(builtins.concatStringsSep " " features)}"'';
 in
 pkgs.stdenv.mkDerivation (
   {
