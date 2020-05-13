@@ -98,6 +98,51 @@ let
       ""
     else
       ''--features "${(builtins.concatStringsSep " " features)}"'';
+
+  rust = (
+    if useNightly != "" then
+      (
+        pkgs.rustChannelOf {
+          date = useNightly;
+          channel = "nightly";
+        }
+      ).rust.override {
+        extensions = [ "rust-src" ] ++ extensions;
+        inherit targets;
+      }
+    else
+      pkgs.latest.rustChannels.stable.rust.override {
+        extensions = [ "rust-src" ] ++ extensions;
+        inherit targets;
+      }
+  );
+
+  rustAnalyzer = pkgs.stdenv.mkDerivation rec {
+    inherit rust;
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    name = "rust-analyzer";
+    version = "2020-05-11";
+    src = builtins.fetchurl (
+      if pkgs.stdenv.isLinux then {
+        url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-linux";
+        sha256 = "91f5325e5dd0c98d584582d74c71db0f172b3da95ec78bc9973dbc372ce50fd0";
+      }
+      else {
+        url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-mac";
+        sha256 = "e9a7e5e92216101862c719a9ad9c51de0cf830bbd2da0a4e864684160fe74bd7";
+      }
+    );
+
+    builder = builtins.toFile "builder.sh" ''
+      source $stdenv/setup
+      mkdir -p $out/bin
+      cp $src $out/bin/rust-analyzer-unwrapped
+      chmod +x $out/bin/rust-analyzer-unwrapped
+      makeWrapper $out/bin/rust-analyzer-unwrapped $out/bin/rust-analyzer \
+      --set-default RUST_SRC_PATH "$rust/lib/rustlib/src/rust/src"
+    '';
+  };
+
 in
 pkgs.stdenv.mkDerivation (
   {
@@ -113,24 +158,10 @@ pkgs.stdenv.mkDerivation (
     buildInputs = with pkgs; [
       cacert
       sccache
-      (
-        if useNightly != "" then
-          (
-            rustChannelOf {
-              date = useNightly;
-              channel = "nightly";
-            }
-          ).rust.override {
-            extensions = [ "rust-src" ] ++ extensions;
-            inherit targets;
-          }
-        else
-          latest.rustChannels.stable.rust.override {
-            extensions = [ "rust-src" ] ++ extensions;
-            inherit targets;
-          }
-      )
+      rust
     ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
+
+    shellInputs = [ rustAnalyzer ];
 
     configurePhase = ''
       mkdir -p nix-deps
