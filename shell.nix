@@ -17,7 +17,7 @@ builtins.mapAttrs
   (
     name: component:
       (
-        component.package.overrideAttrs (
+        let pkg = component.package.overrideAttrs (
           oldAttrs: {
             shellHook = ''
               echo 🏗️ Changing dir to \"${builtins.dirOf (builtins.toString component.path)}\"
@@ -27,7 +27,13 @@ builtins.mapAttrs
               echo 🥂 You are now in a shell for working on \"${name}\"
             '';
           }
-        )
+        );
+        in
+        pkgs.mkShell {
+          name = "${pkg.name}-shell";
+          inputsFrom = [ pkg ];
+          buildInputs = pkg.shellInputs;
+        }
       )
   )
   components // extraShells // {
