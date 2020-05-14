@@ -21,7 +21,7 @@ builtins.mapAttrs
           pkg = component.package;
           shellPkg = pkg.drvAttrs // {
             name = "${pkg.name}-shell";
-            buildInputs = [ pkg.shellInputs pkg.buildInputs ];
+            buildInputs = (pkg.shellInputs or []) ++ (pkg.buildInputs  or []);
             shellHook = ''
               echo 🏗️ Changing dir to \"${builtins.dirOf (builtins.toString component.path)}\"
               cd ${builtins.dirOf (builtins.toString component.path)}
