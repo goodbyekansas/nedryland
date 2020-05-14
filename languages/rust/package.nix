@@ -55,6 +55,7 @@ let
       export CARGO_HOME=$PWD
     fi
   '';
+
   copyRustDeps = left: right: ''
     ${left}
     PACKAGE_PATH="nix-deps/${right.package.name}"
@@ -87,6 +88,7 @@ let
       echo "🍄 Skipping copying ${right.package.name} since it's already up to date."
     fi
   '';
+
   collectRustDeps = attrs:
     if builtins.hasAttr "rustDependencies" attrs then
       attrs.rustDependencies ++ (builtins.map (dep: collectRustDeps dep) attrs.rustDependencies)
@@ -99,6 +101,9 @@ let
     else
       ''--features "${(builtins.concatStringsSep " " features)}"'';
 
+  # this controls the version of rust to use
+  # TODO: might be beneficial for reproducible builds
+  # to lock down the stable version of rust as well
   rust = (
     if useNightly != "" then
       (
@@ -117,8 +122,23 @@ let
       }
   );
 
-  rustAnalyzer = pkgs.stdenv.mkDerivation rec {
+  # the combined rust derivation above does contain
+  # the source but in form of symlinks, which
+  # rust-analyzer does not like so we create a
+  # symlink-free version, courtesy of `cp -L`
+  rustSrcNoSymlinks = pkgs.stdenv.mkDerivation {
     inherit rust;
+    name = "rust-src-no-symlinks";
+    builder = builtins.toFile "builder.sh" ''
+      source $stdenv/setup
+      mkdir -p $out
+      cp -r -L $rust/lib/rustlib/src/rust/src/. $out/
+    '';
+  };
+
+  # a derivation for rust-analyzer created from official github releases
+  rustAnalyzer = pkgs.stdenv.mkDerivation rec {
+    rustSrc = rustSrcNoSymlinks;
     nativeBuildInputs = [ pkgs.makeWrapper ];
     name = "rust-analyzer";
     version = "2020-05-11";
@@ -139,10 +159,9 @@ let
       cp $src $out/bin/rust-analyzer-unwrapped
       chmod +x $out/bin/rust-analyzer-unwrapped
       makeWrapper $out/bin/rust-analyzer-unwrapped $out/bin/rust-analyzer \
-      --set-default RUST_SRC_PATH "$rust/lib/rustlib/src/rust/src"
+      --set-default RUST_SRC_PATH "$rustSrc/"
     '';
   };
-
 in
 pkgs.stdenv.mkDerivation (
   {
@@ -165,8 +184,12 @@ pkgs.stdenv.mkDerivation (
 
     configurePhase = ''
       mkdir -p nix-deps
-
-      ${builtins.foldl' copyRustDeps "" (pkgs.lib.lists.flatten (rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)))}
+      ${builtins.foldl' copyRustDeps "" (
+        pkgs.lib.lists.flatten (
+            rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)
+            )
+        )
+      }
       ${rustPhase}
     '';
 
