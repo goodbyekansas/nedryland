@@ -16,25 +16,23 @@ in
 builtins.mapAttrs
   (
     name: component:
-      (
-        let pkg = component.package.overrideAttrs (
-          oldAttrs: {
-            shellHook = ''
+    (
+      let
+        pkg = component.package;
+        shellPkg = pkg.drvAttrs // {
+          name = "${pkg.name}-shell";
+          buildInputs = [ pkg.shellInputs pkg.buildInputs ];
+          shellHook = ''
               echo 🏗️ Changing dir to \"${builtins.dirOf (builtins.toString component.path)}\"
               cd ${builtins.dirOf (builtins.toString component.path)}
               echo 🐚 Running shell hook for \"${name}\"
-              ${oldAttrs.shellHook}
+              ${pkg.shellHook or ""}
               echo 🥂 You are now in a shell for working on \"${name}\"
-            '';
-          }
-        );
-        in
-        pkgs.mkShell {
-          name = "${pkg.name}-shell";
-          inputsFrom = [ pkg ];
-          buildInputs = pkg.shellInputs;
-        }
-      )
+          '';
+        };
+      in
+      pkgs.mkShell shellPkg
+    )
   )
   components // extraShells // {
   inherit all;
