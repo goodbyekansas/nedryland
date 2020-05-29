@@ -1,12 +1,15 @@
 { pkgs, components, extraShells ? { } }:
 let
   getAllPackages = components:
+    let
+      comp = if (builtins.isFunction components) then (components { }) else components;
+    in
     [ ] ++
     (
-      if builtins.hasAttr "package" components then
-        [ components.package ]
+      if builtins.hasAttr "package" comp then
+        [ comp.package ]
       else
-        builtins.map (c: getAllPackages c) (builtins.attrValues components)
+        builtins.map (c: getAllPackages c) (builtins.attrValues comp)
     );
 
   all = pkgs.mkShell {
@@ -15,6 +18,7 @@ let
 in
 builtins.mapAttrs
   (
+    # TODO: Add support for nested components
     name: component:
       (
         let
