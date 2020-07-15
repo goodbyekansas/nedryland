@@ -139,17 +139,17 @@ let
   # a derivation for rust-analyzer created from official github releases
   rustAnalyzer = pkgs.stdenv.mkDerivation rec {
     rustSrc = rustSrcNoSymlinks;
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.makeWrapper pkgs.patchelf ];
     name = "rust-analyzer";
-    version = "2020-05-11";
+    version = "2020-07-13";
     src = builtins.fetchurl (
       if pkgs.stdenv.isLinux then {
         url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-linux";
-        sha256 = "91f5325e5dd0c98d584582d74c71db0f172b3da95ec78bc9973dbc372ce50fd0";
+        sha256 = "a7c46220faf9e6103355fb4a67f37ae7bad9a03cd6da42cef58c3f440d411018";
       }
       else {
         url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-mac";
-        sha256 = "e9a7e5e92216101862c719a9ad9c51de0cf830bbd2da0a4e864684160fe74bd7";
+        sha256 = "39eb91b09d274aa1cdf22616766214a88b6972b646ca5083dfaccd8d8e2c59a6";
       }
     );
 
@@ -157,7 +157,15 @@ let
       source $stdenv/setup
       mkdir -p $out/bin
       cp $src $out/bin/rust-analyzer-unwrapped
-      chmod +x $out/bin/rust-analyzer-unwrapped
+      chmod +wx $out/bin/rust-analyzer-unwrapped
+
+      ${if pkgs.stdenv.isLinux then ''
+        patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+        $out/bin/rust-analyzer-unwrapped
+      '' else ""}
+
+      chmod -w $out/bin/rust-analyzer-unwrapped
+
       makeWrapper $out/bin/rust-analyzer-unwrapped $out/bin/rust-analyzer \
       --set-default RUST_SRC_PATH "$rustSrc/"
     '';
