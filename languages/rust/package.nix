@@ -170,6 +170,22 @@ let
       --set-default RUST_SRC_PATH "$rustSrc/"
     '';
   };
+
+  cargoAlias = ''
+    cargo()
+    {
+    subcommand="$1"
+    if [ $# -gt 0 ] && ([ "$subcommand" == "test" ] || [ "$subcommand" == "clippy" ]) ; then
+      shift
+      command cargo "$subcommand" ${getFeatures testFeatures} "$@"
+    elif [ $# -gt 0 ] && ([ "$subcommand" == "build" ] || [ "$subcommand" == "run" ]) ; then
+      shift
+      command cargo "$subcommand" ${getFeatures buildFeatures} "$@"
+    else
+      command cargo "$@"
+    fi
+    }
+  '';
 in
 pkgs.stdenv.mkDerivation (
   {
@@ -219,6 +235,7 @@ pkgs.stdenv.mkDerivation (
 
     shellHook = ''
       eval "$configurePhase"
+      ${cargoAlias}
     '';
 
     # always want backtraces when building or in dev
