@@ -12,22 +12,6 @@ let
     };
 in
 rec {
-  getDeployments = { components, type }: builtins.map
-    (c: c.derivation or { })
-    (
-      builtins.filter
-        (c: c.type or "" == type)
-        (
-          pkgs.lib.flatten (
-            builtins.map
-              (c: (builtins.attrValues c.deployment))
-              (
-                builtins.filter (c: builtins.hasAttr "deployment" c) (builtins.attrValues components)
-              )
-          )
-        )
-    );
-
   # import another nedryland project
   importProject = { name, url, rev ? null, ref ? "master", pathOverrideEnvVar ? "${pkgs.lib.toUpper name}_PATH" }:
     import (
