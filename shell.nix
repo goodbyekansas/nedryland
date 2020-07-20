@@ -4,8 +4,8 @@ let
     let
       comp = if (builtins.isFunction components) then (components { }) else components;
     in
-    [ ] ++
-    (
+    [ ]
+    ++ (
       if builtins.hasAttr "package" comp then
         [ comp.package ]
       else
@@ -22,10 +22,10 @@ builtins.mapAttrs
     name: component:
       (
         let
-          pkg = component.package;
+          pkg = component.packageWithChecks;
           shellPkg = pkg.drvAttrs // {
             name = "${pkg.name}-shell";
-            buildInputs = (pkg.shellInputs or [ ]) ++ (pkg.buildInputs  or [ ]);
+            nativeBuildInputs = (pkg.shellInputs or [ ]) ++ (pkg.nativeBuildInputs or [ ]);
             shellHook = ''
               echo 🏗️ Changing dir to \"${builtins.dirOf (builtins.toString component.path)}\"
               cd ${builtins.dirOf (builtins.toString component.path)}

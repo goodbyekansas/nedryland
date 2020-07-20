@@ -27,7 +27,8 @@ rec {
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
       configContent =
-        if configContentFromEnv != "" then configContentFromEnv else (if builtins.pathExists configFile then builtins.readFile configFile else "{}"
+        if configContentFromEnv != "" then configContentFromEnv else (
+          if builtins.pathExists configFile then builtins.readFile configFile else "{}"
         );
       base = {
         mkComponent = import ./mkcomponent.nix pkgs;
@@ -65,6 +66,9 @@ rec {
             c.package.overrideAttrs (
               oldAttrs: {
                 doCheck = true;
+
+                # Python packages don't have a checkPhase, only an installCheckPhase
+                doInstallCheck = true;
               }
             );
         };
