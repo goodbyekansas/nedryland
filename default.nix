@@ -49,7 +49,8 @@ rec {
       ) ++ baseExtensions;
       combinedBaseExtensions = builtins.foldl'
         (
-          left: right: pkgs.lib.recursiveUpdate left (right { inherit base pkgs; })
+          # Combine all extensions into one dictionary that we can merge with base
+          combinedBaseExtensions: currentBaseExtension: pkgs.lib.recursiveUpdate combinedBaseExtensions (currentBaseExtension { base = (pkgs.lib.recursiveUpdate combinedBaseExtensions base); inherit pkgs; })
         )
         { }
         allBaseExtensions;
