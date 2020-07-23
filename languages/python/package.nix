@@ -1,4 +1,4 @@
-pkgs: base: { name, version, src, pythonVersion, checkInputs, buildInputs, nativeBuildInputs, propagatedBuildInputs, preBuild ? "", format ? "setuptools" }:
+pkgs: base: { name, version, src, pythonVersion, checkInputs, buildInputs, nativeBuildInputs, propagatedBuildInputs, preBuild ? "", format ? "setuptools", doStandardTests ? true }:
 let
   pythonPkgs = pythonVersion.pkgs;
 
@@ -47,8 +47,17 @@ let
       inherit name src;
       }}/pylintrc
   '';
+
+  standardTests = (
+    if doStandardTests then {
+      checkPhase = ''
+        echo "Running pytest (with pylint, flake8, mypy, isort and black) 🧪"
+        pytest --pylint --black --mypy --flake8 --isort ./
+      '';
+    } else { }
+  );
 in
-pythonPkgs.buildPythonPackage {
+pythonPkgs.buildPythonPackage ({
   inherit version src setupCfg pylintrc format preBuild;
   pname = name;
 
@@ -93,11 +102,6 @@ pythonPkgs.buildPythonPackage {
     ln -s $pylintrc .pylintrc
   '';
 
-  checkPhase = ''
-    echo "Running pytest (with pylint, flake8, mypy, isort and black) 🧪"
-    pytest --pylint --black --mypy --flake8 --isort ./
-  '';
-
   shellInputs = [ ];
 
   shellHook = ''
@@ -118,4 +122,4 @@ pythonPkgs.buildPythonPackage {
     fi
     ${commands}
   '';
-}
+} // standardTests)

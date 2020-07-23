@@ -11,9 +11,10 @@ rec {
     , nativeBuildInputs ? (pythonPkgs: [ ])
     , propagatedBuildInputs ? (pythonPkgs: [ ])
     , preBuild ? ""
+    , doStandardTests ? true
     }:
     let
-      package = mkPackage { inherit name version pythonVersion checkInputs buildInputs nativeBuildInputs propagatedBuildInputs preBuild src; };
+      package = mkPackage { inherit name version pythonVersion checkInputs buildInputs nativeBuildInputs propagatedBuildInputs preBuild src doStandardTests; };
 
       packageWithWheel = package // {
         wheel = pythonVersion.pkgs.buildPythonPackage {
