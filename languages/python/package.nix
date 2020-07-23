@@ -15,21 +15,21 @@ let
         source $stdenv/setup
         mkdir -p $out/${builtins.dirOf filePath}
 
-        if [ ! -f ${src}/${filePath} ]; then
-        echo "Using default \"${filePath}\" because there is no \"${filePath}\" in the source"
-        cp ${baseFile} $out/${filePath}
-        chmod +w $out/${filePath}
+        if [ ! -f ${src}/${filePath} ] || [ -L ${src}/${filePath} ]; then
+            echo "Using default \"${filePath}\" because there is no \"${filePath}\" in the source"
+            cp ${baseFile} $out/${filePath}
+            chmod +w $out/${filePath}
 
-        if [ -f ${src}/${filePath}.include ]; then
-            echo "Including \"${filePath}.include\" in \"${filePath}\""
-            echo "" >> $out/${filePath}
-            echo "# from ${name}'s ${filePath}.include" >> $out/${filePath}
-            cat ${src}/${filePath}.include >> $out/${filePath}
-        fi
-        chmod -w $out/${filePath}
+            if [ -f ${src}/${filePath}.include ]; then
+               echo "Including \"${filePath}.include\" in \"${filePath}\""
+               echo "" >> $out/${filePath}
+               echo "# from ${name}'s ${filePath}.include" >> $out/${filePath}
+               cat ${src}/${filePath}.include >> $out/${filePath}
+            fi
+            chmod -w $out/${filePath}
         else
-        echo "Using ${name}'s ${filePath} since it exists in the source"
-        cp ${src}/${filePath} $out/${filePath}
+            echo "Using ${name}'s ${filePath} since it exists in the source"
+            cp ${src}/${filePath} $out/${filePath}
         fi
       '';
     };
