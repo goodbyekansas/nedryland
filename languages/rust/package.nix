@@ -209,9 +209,9 @@ pkgs.stdenv.mkDerivation (
     configurePhase = ''
       mkdir -p nix-deps
       ${builtins.foldl' copyRustDeps "" (
-        pkgs.lib.lists.flatten (
+        pkgs.lib.lists.unique (pkgs.lib.lists.flatten (
             rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)
-            )
+            ))
         )
       }
       ${rustPhase}
