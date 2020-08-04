@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Rust packages no longer output duplicate dependencies 🍄.
+- Update rust-analyzer to 2020-08-03.
 
 ## [0.5.0] - 2020-07-29
 ### Added

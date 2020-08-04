@@ -141,15 +141,15 @@ let
     rustSrc = rustSrcNoSymlinks;
     nativeBuildInputs = [ pkgs.makeWrapper pkgs.patchelf ];
     name = "rust-analyzer";
-    version = "2020-07-13";
+    version = "2020-08-03";
     src = builtins.fetchurl (
       if pkgs.stdenv.isLinux then {
         url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-linux";
-        sha256 = "a7c46220faf9e6103355fb4a67f37ae7bad9a03cd6da42cef58c3f440d411018";
+        sha256 = "a04753f1645bd2da322cd0f8e892353381bd9418bfdcb357f7c6a0263fc9b2bd";
       }
       else {
         url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-mac";
-        sha256 = "39eb91b09d274aa1cdf22616766214a88b6972b646ca5083dfaccd8d8e2c59a6";
+        sha256 = "cc2a4a8168d2e6505c565ad81ede53d97cacc4950e205deb48a643f5b6e72057";
       }
     );
 
