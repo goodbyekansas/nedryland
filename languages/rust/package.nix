@@ -191,13 +191,16 @@ pkgs.stdenv.mkDerivation (
   {
     inherit name;
     src =
-      builtins.filterSource
-        (
-          path: type: !(type == "directory" && baseNameOf path == "target")
-          && !(type == "directory" && baseNameOf path == "nix-deps")
-          && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
-        )
-        src;
+      (builtins.path {
+        path = src;
+        inherit name;
+        filter =
+          (
+            path: type: !(type == "directory" && baseNameOf path == "target")
+            && !(type == "directory" && baseNameOf path == "nix-deps")
+            && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
+          );
+      });
     buildInputs = with pkgs; [
       cacert
       sccache
@@ -205,9 +208,9 @@ pkgs.stdenv.mkDerivation (
     ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
 
     shellInputs = [ rustAnalyzer ];
-
     configurePhase = ''
       mkdir -p nix-deps
+
       ${builtins.foldl' copyRustDeps "" (
         pkgs.lib.lists.unique (pkgs.lib.lists.flatten (
             rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Make src path invariant for Python and Rust packages. This makes it cacheable for everyone, irrespective of
+  their path to the repositories. See
+  [this](https://nix.dev/anti-patterns/language.html#reproducability-referencing-top-level-directory-with)
+  for more details.
 - Rust packages no longer output duplicate dependencies 🍄.
 - Update rust-analyzer to 2020-08-03.
 

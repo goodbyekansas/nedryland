@@ -58,8 +58,9 @@ let
   );
 in
 pythonPkgs.buildPythonPackage ({
-  inherit version src setupCfg pylintrc format preBuild;
+  inherit version setupCfg pylintrc format preBuild;
   pname = name;
+  src = builtins.path { path = src; inherit name; };
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
   checkInputs = with pythonPkgs; [
