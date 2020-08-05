@@ -10,6 +10,8 @@ pkgs: base: { name
             , extraChecks ? ""
             , buildFeatures ? [ ]
             , testFeatures ? [ ]
+            , shellInputs ? [ ]
+            , shellHook ? ""
             }:
 let
   rustPhase = ''
@@ -207,7 +209,8 @@ pkgs.stdenv.mkDerivation (
       rust
     ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
 
-    shellInputs = [ rustAnalyzer ];
+    shellInputs = shellInputs ++ [ rustAnalyzer ];
+
     configurePhase = ''
       mkdir -p nix-deps
 
@@ -239,6 +242,7 @@ pkgs.stdenv.mkDerivation (
     shellHook = ''
       eval "$configurePhase"
       ${cargoAlias}
+      ${shellHook}
     '';
 
     # always want backtraces when building or in dev
