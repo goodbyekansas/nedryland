@@ -18,11 +18,11 @@ let
     if [ -z $IN_NIX_SHELL ]; then
       export RUSTC_WRAPPER=sccache
 
-      home_cache="${builtins.getEnv "HOME"}/.cache/nedryland-rust/${name}"
+      home_cache="$HOME/.cache/nedryland-rust/${name}"
       var_cache="/var/cache/nedryland-rust/${name}"
       tmp_cache="/tmp/cache/nedryland-rust/${name}"
 
-      if [ -w "${builtins.getEnv "HOME"}/.cache" ]; then # Home folder (single user install)
+      if [ -w "$HOME/.cache" ]; then # Home folder (single user install)
            echo "Using rust cache directory \"$home_cache\""
            mkdir -p "$home_cache"
            export SCCACHE_DIR="$home_cache"
