@@ -39,12 +39,16 @@ So, something like this:
 ```nix
 project.mkGrid {
   components = {
-    example-component = project.declareComponent ./example-component/example-component.nix {};
+    exampleComponent = project.declareComponent ./example-component/example-component.nix {};
   };
 
   # ...
 }
 ```
+
+The component will be exposed under the nix attribute `exampleComponent` so to build it you can use
+`nix-build -A exampleComponent.<target>` where `target` is for example `package` (see
+[grid](../concepts/grid.md))
 
 ## Component Dependencies
 Nedryland supports components being dependent on other components. This is done by first declaring
@@ -112,3 +116,24 @@ base.mkClient {
   };
 }
 ```
+
+## Utility/Library
+This component type is not exposed directly in base but rather by the different language helpers
+(see below) and should be used to share common functionality in a library for the language in
+question.
+
+# Language Helpers
+Nedryland also contains helpers for some programming languages that can be used when implementing
+one of the supported (through what is included in Nedryland or through extensions) component types.
+These helpers live under `base.languages`.
+
+## Rust
+Rust helpers live under `base.languages.rust` and will give you access to everything you
+need for rust development out of the box:  rustc, cargo, rls, rust-analyzer, rust-src etc.
+Components are usually named the same as their corresponding component types, i.e. there is a
+`base.languages.rust.mkClient` to create a client in Rust.
+
+## Python
+Python helpers live under `base.languages.python` and will give you a full Python development
+environment. Most of the helpers also accept an optional `pythonVersion` to select both between
+minor and major (2/3) versions of Python.

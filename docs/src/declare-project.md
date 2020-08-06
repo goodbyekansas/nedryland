@@ -200,22 +200,21 @@ you would use `base.mkCompType`.
 ### Using extensions from another repo
 
 You can also configure Nedryland to use base extensions from other repositories by importing that
-repository. When importing another repository, you will usually import its' `project.nix` which will
-give you access to the [grid](./concepts/grid.md) of that project. The grid always exposes the
-extensions that projects has in the key `baseExtensions`. Those can then be passed to Nedryland when
-setting up your project.
+repository. When importing another nedryland project, you can use the helper `importProject` in
+Nedryland. This will give you access to the [grid](./concepts/grid.md) of that project and it can
+also be sent in as `projectDependencies` when declaring your project in Nedryland. Doing so will
+give you access to all base extensions from that project.
 
 Example
 
 ```nix
 # ...
 
-otherProject = import (
-      builtins.fetchGit {
-        name = "otherProject";
-        url = "https://github.com/fabrikam/other-project.git";
-        ref = "refs/tags/1.4.5";
-      })/project.nix;
+otherProject = nedryland.importProject {
+  name = "otherProject";
+  url = "https://github.com/fabrikam/other-project.git";
+  ref = "refs/tags/1.4.5";
+};
 
 project = nedryland.mkProject {
   name = "my-project";
@@ -227,4 +226,4 @@ project = nedryland.mkProject {
 };
 ```
 
-This will give you access to all baseExtensions in `otherProject`.
+This will give you access to all baseExtensions declared in `otherProject`.
