@@ -1,6 +1,7 @@
 { pkgs }:
 let
   k8sFunctions = import ./configs/k8sconfig.nix pkgs;
+  terraformFunctions = import ./deployment/terraform.nix pkgs;
 in
 {
   mkStaticHTMLContainer = import ./utils/build-static-nginx.nix pkgs;
@@ -11,4 +12,5 @@ in
   mkWindowsInstaller = {}: { };
   mkRPMPackage = {}: { };
   uploadFiles = files: { };
+  terraformModule = 
 }
