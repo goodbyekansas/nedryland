@@ -8,6 +8,9 @@ let
 
           # extra pip packages
           (import ./overlays/python_packages.nix)
+        
+          # terraform
+          (import ./overlays/terraform.nix)
         ];
     };
 in
