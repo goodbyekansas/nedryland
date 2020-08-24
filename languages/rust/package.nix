@@ -113,10 +113,11 @@ let
           date = useNightly;
           channel = "nightly";
         }
-      ).rust.override {
-        extensions = [ "rust-src" ] ++ extensions;
-        inherit targets;
-      }
+      ).rust.override
+        {
+          extensions = [ "rust-src" ] ++ extensions;
+          inherit targets;
+        }
     else
       pkgs.latest.rustChannels.stable.rust.override {
         extensions = [ "rust-src" ] ++ extensions;
