@@ -1,9 +1,8 @@
 pkgs:
 {
-
-  terraformModule = { package }: pkgs.stdenv.mkDerivation {
+  terraformComponent = attrs@{ package, ... }: pkgs.stdenv.mkDerivation (attrs // {
     name = "terraform-deploy-${package.name}";
-    buildInputs = [ package ];
+    buildInputs = [ package pkgs.terraform_0_13 ];
 
     src = package.src;
 
@@ -11,8 +10,11 @@ pkgs:
       terraform init
     '';
 
-    buildPhase = ''
-      terraform apply -auto-approve ${package}/plan
+    installPhase = ''
+      mkdir -p $out
+      terraform apply ${package}/plan
+
+      terraform output -json > $out/output.json
     '';
-  }
+  });
 }
