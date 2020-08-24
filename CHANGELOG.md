@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2020-08-24
+
 ### Changed
 - Add mkTerraformComponent which is a provider-agnostic terraform module intended for deployment.
 - Rust functions can now pass in shellInputs and shellHooks.
