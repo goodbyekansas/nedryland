@@ -8,7 +8,7 @@ let
 
           # extra pip packages
           (import ./overlays/python_packages.nix)
-        
+
           # terraform
           (import ./overlays/terraform.nix)
         ];
@@ -21,16 +21,18 @@ rec {
       if builtins.getEnv pathOverrideEnvVar != "" then
         (builtins.getEnv "PWD" + "/${builtins.getEnv pathOverrideEnvVar}/project.nix")
       else
-        builtins.fetchGit {
-          inherit name url rev ref;
-        } + "/project.nix"
+        builtins.fetchGit
+          {
+            inherit name url rev ref;
+          } + "/project.nix"
     );
 
   mkProject = { name, configFile, baseExtensions ? [ ], projectDependencies ? [ ] }:
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
       configContent =
-        if configContentFromEnv != "" then configContentFromEnv else (
+        if configContentFromEnv != "" then configContentFromEnv else
+        (
           if builtins.pathExists configFile then builtins.readFile configFile else "{}"
         );
       base = {
