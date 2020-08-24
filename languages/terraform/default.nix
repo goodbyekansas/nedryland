@@ -36,7 +36,7 @@
           {
           subcommand="$1"
           if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
-          echo "Do not run apply locally, the CI will do it!"
+          echo "Local `apply` has been disabled, which probably means that application of Terraform config is done centrally"
           else
           command terraform "$@"
           fi
