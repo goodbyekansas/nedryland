@@ -28,6 +28,9 @@
         installPhase = ''
           mkdir $out
           cp plan $out/plan
+
+          # output date
+          date +%s > $out/plan-generated-at
         '';
 
         shellHook = ''
