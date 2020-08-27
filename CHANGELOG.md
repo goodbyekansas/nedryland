@@ -6,8 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2020-08-27
+
 ### Added
 - Expose Nedryland docs
+- Add a state lock timeout to some TF ops
+
+### Fixed
+- Terraform plans are outputted in ascii
+- Fixed missing rename in deployment.nix (terraformModule -> terraformComponent)
 
 ## [0.6.0] - 2020-08-24
 
