@@ -22,7 +22,7 @@
         '';
 
         buildPhase = ''
-          terraform plan -out=plan
+          terraform plan -no-color > plan
         '';
 
         installPhase = ''

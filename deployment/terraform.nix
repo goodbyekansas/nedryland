@@ -12,7 +12,7 @@ pkgs:
 
     installPhase = ''
       mkdir -p $out
-      terraform apply ${package}/plan
+      terraform apply -auto-approve
 
       terraform output -json > $out/output.json
     '';
