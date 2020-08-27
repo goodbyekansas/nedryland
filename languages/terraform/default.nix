@@ -13,7 +13,7 @@
 
 
         configurePhase = ''
-          terraform init -lock-timeout=300
+          terraform init -lock-timeout=300s
         '';
 
         checkPhase = ''
@@ -22,7 +22,7 @@
         '';
 
         buildPhase = ''
-          terraform plan -lock-timeout=300 -no-color > plan
+          terraform plan -lock-timeout=300s -no-color > plan
         '';
 
         installPhase = ''
