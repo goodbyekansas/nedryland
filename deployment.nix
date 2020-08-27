@@ -12,5 +12,5 @@ in
   mkWindowsInstaller = {}: { };
   mkRPMPackage = {}: { };
   uploadFiles = files: { };
-  terraformModule = terraformFunctions.terraformModule;
+  terraformComponent = terraformFunctions.terraformComponent;
 }
