@@ -27,6 +27,17 @@ rec {
           } + "/project.nix"
     );
 
+  docs = pkgs.stdenv.mkDerivation rec {
+    name = "nedryland-docs";
+    src = builtins.path { inherit name; path = ./docs; };
+    buildInputs = [ pkgs.mdbook ];
+    buildPhase = "mdbook build --dest-dir book";
+    installPhase = ''
+      mkdir -p $out
+      cp -r book/. $out
+    '';
+  };
+
   mkProject = { name, configFile, baseExtensions ? [ ], projectDependencies ? [ ] }:
     let
       configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
