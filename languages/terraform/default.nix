@@ -1,6 +1,6 @@
 { base, pkgs }:
 {
-  mkTerraformComponent = attrs@{ name, src, buildInputs ? [ ], shellHook ? "", disableApplyInShell ? true, ... }:
+  mkTerraformComponent = attrs@{ name, src, buildInputs ? [ ], shellHook ? "", disableApplyInShell ? true, preTerraformHook ? "", postTerraformHook ? "", ... }:
     base.mkComponent rec {
       inherit name;
       package = pkgs.stdenv.mkDerivation (attrs // {
@@ -34,17 +34,21 @@
         '';
 
         shellHook = ''
-          ${if disableApplyInShell then ''
           terraform()
           {
-          subcommand="$1"
-          if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
-          echo "Local `apply` has been disabled, which probably means that application of Terraform config is done centrally"
-          else
-          command terraform "$@"
-          fi
+            ${preTerraformHook}
+            subcommand="$1"
+            ${if disableApplyInShell then ''
+              if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
+                echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
+              else
+                command terraform "$@"
+              fi
+            '' else ''
+              command terraform "$@"
+            ''}
+            ${postTerraformHook}
           }
-          '' else ""}
           ${shellHook}
         '';
       });
