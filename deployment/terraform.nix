@@ -12,7 +12,7 @@ pkgs:
 
     installPhase = ''
       mkdir -p $out
-      terraform apply -auto-approve
+      terraform apply -var-file="${package}/vars.json" -auto-approve
 
       terraform output -json > $out/output.json
     '';

@@ -1,19 +1,31 @@
 { base, pkgs }:
 {
-  mkTerraformComponent = attrs@{ name, src, buildInputs ? [ ], shellHook ? "", disableApplyInShell ? true, preTerraformHook ? "", postTerraformHook ? "", ... }:
+  mkTerraformComponent =
+    attrs@{ name
+    , src
+    , buildInputs ? [ ]
+    , shellHook ? ""
+    , disableApplyInShell ? true
+    , preTerraformHook ? ""
+    , postTerraformHook ? ""
+    , variables ? { }
+    , ...
+    }:
     base.mkComponent rec {
       inherit name;
-      package = pkgs.stdenv.mkDerivation (attrs // {
+      package = pkgs.stdenv.mkDerivation ((builtins.removeAttrs attrs [ "variables" ]) // {
         inherit name;
         src = builtins.path {
           inherit name;
           path = src;
         };
         buildInputs = [ pkgs.terraform_0_13 ] ++ buildInputs;
-
+        variablesFile = (builtins.toJSON variables);
+        passAsFile = [ "variablesFile" ];
 
         configurePhase = ''
           terraform init -lock-timeout=300s
+          cp "$variablesFilePath" tfvars.json
         '';
 
         checkPhase = ''
@@ -22,31 +34,34 @@
         '';
 
         buildPhase = ''
-          terraform plan -lock-timeout=300s -no-color > plan
+          terraform plan -var-file="tfvars.json" -lock-timeout=300s -no-color > plan
         '';
 
         installPhase = ''
           mkdir $out
           cp plan $out/plan
+          cp $variablesFilePath $out/vars.json
 
           # output date
           date +%s > $out/plan-generated-at
         '';
 
         shellHook = ''
+          cp "$variablesFilePath" /tmp/tfvars.json
+          export TF_CLI_ARGS="-var-file=/tmp/tfvars.json"
           terraform()
           {
             ${preTerraformHook}
             subcommand="$1"
             ${if disableApplyInShell then ''
-              if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
-                echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
-              else
-                command terraform "$@"
-              fi
-            '' else ''
+            if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
+              echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
+            else
               command terraform "$@"
-            ''}
+            fi
+          '' else ''
+            command terraform "$@"
+          ''}
             ${postTerraformHook}
           }
           ${shellHook}
