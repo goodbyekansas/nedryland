@@ -1,6 +1,7 @@
 let
+  pkgsPath = import ./nixpkgs.nix;
   pkgs =
-    import ./nixpkgs.nix {
+    import pkgsPath {
       overlays =
         [
           # rust
@@ -55,6 +56,7 @@ rec {
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
         languages = pkgs.callPackage ./languages { inherit base; };
+        packagesRoot = pkgsPath;
       };
       allBaseExtensions = (
         builtins.foldl'
