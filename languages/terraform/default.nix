@@ -48,7 +48,17 @@
 
         shellHook = ''
           cp "$variablesFilePath" /tmp/tfvars.json
-          export TF_CLI_ARGS="-var-file=/tmp/tfvars.json"
+
+          terraform_with_args()
+          {
+            subcommand="$1"
+            if [ "$subcommand" == "apply" ] || [ "$subcommand" == "plan" ]; then
+               command terraform "$@" -var-file=/tmp/tfvars.json
+            else
+               command terraform "$@"
+            fi
+          }
+
           terraform()
           {
             ${preTerraformHook}
@@ -57,10 +67,10 @@
             if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
               echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
             else
-              command terraform "$@"
+              terraform_with_args "$@"
             fi
           '' else ''
-            command terraform "$@"
+            terraform_with_args "$@"
           ''}
             ${postTerraformHook}
           }
