@@ -1,19 +1,25 @@
 let
-  pkgsPath = import ./nixpkgs.nix;
-  pkgs =
-    import pkgsPath {
-      overlays =
-        [
+  sources = import ./nix/sources.nix;
+  pkgs = with
+    {
+      overlay = _: pkgs:
+        {
+          niv = import sources.niv { };
+        };
+    };
+    import sources.nixpkgs
+      {
+        overlays = [
+          overlay
+
           # rust
-          (import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz))
+          (import sources.nixpkgs-mozilla)
 
           # extra pip packages
           (import ./overlays/python_packages.nix)
-
-          # terraform
-          (import ./overlays/terraform.nix)
         ];
-    };
+        config = { };
+      };
 in
 rec {
   # import another nedryland project
@@ -48,6 +54,7 @@ rec {
           if builtins.pathExists configFile then builtins.readFile configFile else "{}"
         );
       base = {
+        inherit sources;
         mkComponent = import ./mkcomponent.nix pkgs;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
@@ -56,7 +63,6 @@ rec {
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
         languages = pkgs.callPackage ./languages { inherit base; };
-        packagesRoot = pkgsPath;
       };
       allBaseExtensions = (
         builtins.foldl'
