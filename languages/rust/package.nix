@@ -125,53 +125,6 @@ let
       }
   );
 
-  # the combined rust derivation above does contain
-  # the source but in form of symlinks, which
-  # rust-analyzer does not like so we create a
-  # symlink-free version, courtesy of `cp -L`
-  rustSrcNoSymlinks = pkgs.stdenv.mkDerivation {
-    inherit rust;
-    name = "rust-src-no-symlinks";
-    builder = builtins.toFile "builder.sh" ''
-      source $stdenv/setup
-      mkdir -p $out
-      cp -r -L $rust/lib/rustlib/src/rust/src/. $out/
-    '';
-  };
-
-  # a derivation for rust-analyzer created from official github releases
-  rustAnalyzer = pkgs.stdenv.mkDerivation rec {
-    rustSrc = rustSrcNoSymlinks;
-    nativeBuildInputs = [ pkgs.makeWrapper pkgs.patchelf ];
-    name = "rust-analyzer";
-    version = "2020-08-04";
-    src = builtins.fetchurl (
-      if pkgs.stdenv.isLinux then {
-        url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-linux";
-      }
-      else {
-        url = "https://github.com/rust-analyzer/rust-analyzer/releases/download/${version}/rust-analyzer-mac";
-      }
-    );
-
-    builder = builtins.toFile "builder.sh" ''
-      source $stdenv/setup
-      mkdir -p $out/bin
-      cp $src $out/bin/rust-analyzer-unwrapped
-      chmod +wx $out/bin/rust-analyzer-unwrapped
-
-      ${if pkgs.stdenv.isLinux then ''
-        patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-        $out/bin/rust-analyzer-unwrapped
-      '' else ""}
-
-      chmod -w $out/bin/rust-analyzer-unwrapped
-
-      makeWrapper $out/bin/rust-analyzer-unwrapped $out/bin/rust-analyzer \
-      --set-default RUST_SRC_PATH "$rustSrc/"
-    '';
-  };
-
   cargoAlias = ''
     cargo()
     {
@@ -208,7 +161,7 @@ pkgs.stdenv.mkDerivation (
       rust
     ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
 
-    shellInputs = shellInputs ++ [ rustAnalyzer ];
+    shellInputs = shellInputs ++ [ pkgs.rust-analyzer ];
 
     configurePhase = ''
       mkdir -p nix-deps
