@@ -104,8 +104,6 @@ let
       ''--features "${(builtins.concatStringsSep " " features)}"'';
 
   # this controls the version of rust to use
-  # TODO: might be beneficial for reproducible builds
-  # to lock down the stable version of rust as well
   rust = (
     if useNightly != "" then
       (
@@ -119,7 +117,9 @@ let
           inherit targets;
         }
     else
-      pkgs.latest.rustChannels.stable.rust.override {
+      (pkgs.rustChannelOf {
+        channel = "1.46.0";
+      }).rust.override {
         extensions = [ "rust-src" ] ++ extensions;
         inherit targets;
       }
@@ -159,7 +159,7 @@ pkgs.stdenv.mkDerivation (
       cacert
       sccache
       rust
-    ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ]);
+    ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
 
     shellInputs = shellInputs ++ [ pkgs.rust-analyzer ];
 
