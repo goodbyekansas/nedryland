@@ -28,18 +28,6 @@ let
       };
 in
 rec {
-  # import another nedryland project
-  importProject = { name, url, rev ? null, ref ? "master", pathOverrideEnvVar ? "${pkgs.lib.toUpper name}_PATH" }:
-    import (
-      if builtins.getEnv pathOverrideEnvVar != "" then
-        (builtins.getEnv "PWD" + "/${builtins.getEnv pathOverrideEnvVar}/project.nix")
-      else
-        builtins.fetchGit
-          {
-            inherit name url rev ref;
-          } + "/project.nix"
-    );
-
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";
     src = builtins.path { inherit name; path = ./docs; };
