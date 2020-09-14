@@ -7,7 +7,7 @@ pkgs:
     src = package.src;
 
     configurePhase = ''
-      terraform init -lock-timeout=300s
+      terraform init -lock-timeout=300s -input=false
     '';
 
     installPhase = ''

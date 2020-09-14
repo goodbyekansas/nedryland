@@ -15,17 +15,18 @@
       inherit name;
       package = pkgs.stdenv.mkDerivation ((builtins.removeAttrs attrs [ "variables" ]) // {
         inherit name;
-        src = builtins.path {
+        # Builtins.path does not support store paths for the path argument
+        src = if pkgs.lib.isStorePath src then src else
+        builtins.path {
           inherit name;
           path = src;
         };
         buildInputs = [ pkgs.terraform_0_13 ] ++ buildInputs;
-        variablesFile = (builtins.toJSON variables);
+        variablesFile = (builtins.toJSON (pkgs.lib.filterAttrs (name: value: value != null) variables));
         passAsFile = [ "variablesFile" ];
 
         configurePhase = ''
-          terraform init -lock-timeout=300s
-          cp "$variablesFilePath" tfvars.json
+          terraform init -lock-timeout=300s -input=false
         '';
 
         checkPhase = ''
@@ -34,7 +35,8 @@
         '';
 
         buildPhase = ''
-          terraform plan -var-file="tfvars.json" -lock-timeout=300s -no-color > plan
+          cp "$variablesFilePath" tfvars.json
+          terraform plan -var-file="tfvars.json" -lock-timeout=300s -input=false -no-color > plan
         '';
 
         installPhase = ''
