@@ -113,15 +113,13 @@ let
         }
       ).rust.override
         {
-          extensions = [ "rust-src" ] ++ extensions;
-          inherit targets;
+          inherit targets extensions;
         }
     else
       (pkgs.rustChannelOf {
         channel = "1.46.0";
       }).rust.override {
-        extensions = [ "rust-src" ] ++ extensions;
-        inherit targets;
+        inherit targets extensions;
       }
   );
 
