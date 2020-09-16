@@ -193,13 +193,11 @@ pkgs.stdenv.mkDerivation (
     '';
 
     shellHook = ''
+      export RUST_BACKTRACE=1
       eval "$configurePhase"
       ${cargoAlias}
       ${shellHook}
     '';
-
-    # always want backtraces when building or in dev
-    RUST_BACKTRACE = 1;
   } // (
     if defaultTarget != "" then {
       CARGO_BUILD_TARGET = defaultTarget;
