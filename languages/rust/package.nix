@@ -155,7 +155,8 @@ pkgs.stdenv.mkDerivation (
             && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
           );
       });
-    buildInputs = with pkgs; [
+
+    nativeBuildInputs = with pkgs; [
       cacert
       sccache
       rust
