@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre Terraform shell hook.
 - Post Terraform shell hook.
 - Terraform derivations accept nix store paths as source.
+- Deploy target (`<component>.deploy`) that is a list of all attributes in the `deployment` of the
+  component.
 
 ## [0.7.0] - 2020-08-27
 
