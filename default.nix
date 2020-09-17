@@ -90,6 +90,10 @@ rec {
                 doInstallCheck = true;
               }
             );
+
+          # the deploy target is simply the sum of everything
+          # in the deployment set
+          deploy = builtins.attrValues (c.deployment or { });
         };
 
       mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
