@@ -18,9 +18,6 @@ let
           # extra pip packages
           (import ./overlays/python_packages.nix)
 
-          # Someone made a bad decision and broke things.
-          (import ./overlays/python-jedi.nix)
-
           # comment here
           (import ./overlays/wasmer.nix)
         ];
