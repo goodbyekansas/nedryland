@@ -95,7 +95,23 @@ rec {
 
       mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
         let
-          allComponents = (builtins.attrValues components);
+          # TODO support shells for nested components too (and maybe functions in some way?)
+          gatherComponents = components:
+            builtins.foldl'
+              (
+                accumulator: current: accumulator ++ (
+                  if (
+                    builtins.hasAttr "package" current && builtins.hasAttr "packageWithChecks" current
+                  ) then
+                    [ current ]
+                  else
+                    gatherComponents current
+                )
+              )
+              [ ]
+              (builtins.filter builtins.isAttrs (builtins.attrValues components))
+          ;
+          allComponents = gatherComponents components;
         in
         {
           inherit baseExtensions lib;
