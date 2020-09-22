@@ -16,44 +16,6 @@ pkgs: base: { name
 let
   rustPhase = ''
     if [ -z $IN_NIX_SHELL ]; then
-      export RUSTC_WRAPPER=sccache
-
-      home_cache="$HOME/.cache/nedryland-rust/${name}"
-      var_cache="/var/cache/nedryland-rust/${name}"
-      tmp_cache="/tmp/cache/nedryland-rust/${name}"
-
-      if [ -w "$HOME/.cache" ]; then # Home folder (single user install)
-           echo "Using rust cache directory \"$home_cache\""
-           mkdir -p "$home_cache"
-           export SCCACHE_DIR="$home_cache"
-      elif [ -w "$(dirname "$var_cache")" ]; then
-           echo "Using rust cache directory \"$var_cache\""
-
-           if [ ! -d "$var_cache" ]; then
-             echo "$var_cache" does not exist, creating...
-             mkdir -p "$var_cache"
-             chmod g+w "$var_cache"
-           fi
-
-           export SCCACHE_DIR="$var_cache"
-      else
-           echo "Using rust cache directory \"$tmp_cache\""
-           echo "WARNING: Using fallback cache location.
-           If you are running single user nix install check
-           the permissions of your home folder. If you are
-           running multi user nix install we use the
-           location \"$var_cache\", please make sure that
-           folder exists and is writable by the group \"$(id -gn)\""
-
-           if [ ! -d "$tmp_cache" ]; then
-             echo "$tmp_cache" does not exist, creating...
-             mkdir -p "$tmp_cache"
-             chmod g+w "$tmp_cache"
-           fi
-
-           export SCCACHE_DIR="$tmp_cache"
-      fi
-      export SCCACHE_SERVER_PORT=$(${pkgs.python}/bin/python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
       export CARGO_HOME=$PWD
     fi
   '';
@@ -156,7 +118,6 @@ pkgs.stdenv.mkDerivation (
 
     nativeBuildInputs = with pkgs; [
       cacert
-      sccache
       rust
     ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
 
@@ -176,7 +137,6 @@ pkgs.stdenv.mkDerivation (
 
     buildPhase = ''
       cargo build --release ${getFeatures buildFeatures}
-      sccache -s
     '';
 
     checkPhase = ''
