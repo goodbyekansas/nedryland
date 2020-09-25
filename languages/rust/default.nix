@@ -16,6 +16,7 @@ rec {
     , extraChecks ? ""
     , buildFeatures ? [ ]
     , testFeatures ? [ ]
+    , ...
     }:
     let
       package = mkPackage {
@@ -61,11 +62,12 @@ rec {
     , extraChecks ? ""
     , buildFeatures ? [ ]
     , testFeatures ? [ ]
+    , ...
     }:
     let
-      package = mkPackage {
+      package = mkPackage (attrs // {
         inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
-      };
+      });
 
       newPackage = package.overrideAttrs (
         oldAttrs: {
@@ -92,11 +94,12 @@ rec {
     , extraChecks ? ""
     , buildFeatures ? [ ]
     , testFeatures ? [ ]
+    , ...
     }:
     let
-      package = mkPackage {
+      package = mkPackage (attrs // {
         inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
-      };
+      });
 
       newPackage = package.overrideAttrs (
         oldAttrs: {

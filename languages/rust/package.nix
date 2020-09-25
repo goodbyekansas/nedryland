@@ -1,4 +1,4 @@
-pkgs: base: { name
+pkgs: base: attrs@{ name
             , src
             , buildInputs ? [ ]
             , extensions ? [ ]
@@ -12,6 +12,7 @@ pkgs: base: { name
             , testFeatures ? [ ]
             , shellInputs ? [ ]
             , shellHook ? ""
+            , ...
             }:
 let
   rustPhase = ''
@@ -100,9 +101,11 @@ let
     fi
     }
   '';
+
+  safeAttrs = builtins.removeAttrs attrs [ "rustDependencies" "extraChecks" "testFeatures" "buildFeatures" ];
 in
 pkgs.stdenv.mkDerivation (
-  {
+  safeAttrs // {
     inherit name;
     src =
       (builtins.path {
@@ -119,7 +122,7 @@ pkgs.stdenv.mkDerivation (
     nativeBuildInputs = with pkgs; [
       cacert
       rust
-    ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
+    ] ++ attrs.nativeBuildInputs or [ ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
 
     shellInputs = shellInputs ++ [ pkgs.rust-analyzer ];
 
