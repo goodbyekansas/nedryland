@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- RUST_BACKTRACE was enabled by default. Removed it. Enable it manually when needed instead.
+
 ### Changed
 - Use niv for handling nix dependencies.
 

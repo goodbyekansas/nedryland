@@ -154,7 +154,6 @@ pkgs.stdenv.mkDerivation (
     '';
 
     shellHook = ''
-      export RUST_BACKTRACE=1
       eval "$configurePhase"
       ${cargoAlias}
       ${shellHook}
