@@ -1,0 +1,2 @@
+pkgs: attrs@{ name, ... }:
+attrs

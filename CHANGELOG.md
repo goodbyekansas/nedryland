@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- languages now also aliases their name to package so we can do `nix-build -A rust` to build all rust packages.
-- callFunction method on base. Can be used in cases where you just want to evaluate an expression and don't have a file.
+- Add `mkTheme` and theme as an argument to `mkProject`.
+- Add shell alias for name of (rust) component that runs the component.
+- Languages now also aliases their name to package so we can do `nix-build -A rust` to build all rust packages.
+- `callFunction` method on base. Can be used in cases where you just want to evaluate an expression and don't have a file.
   You will need to specify the working directory manually since how else are we supposed to know where the shell is located
   when we just run a lambda.
 - Shells for all targets, the default target for a component is `package` (can be changed in the project's config).
