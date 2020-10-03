@@ -60,6 +60,8 @@ in
       chmod +x "$n"
     '';
 
+  mkTheme = import ./mktheme.nix pkgs;
+
   mkProject =
     attrs@{ name
     , components
@@ -68,6 +70,7 @@ in
     , configFile ? null
     , lib ? { }
     , dependencies ? [ ]
+    , themes ? { }
     , ...
     }:
     pkgs.lib.makeOverridable
@@ -89,7 +92,6 @@ in
               mkClient = targets@{ name, ... }: mkComponent' targets;
               mkService = targets@{ name, ... }: mkComponent' targets;
               extend = import ./extend.nix pkgs.lib.toUpper;
-              theme = import ./theme/default.nix pkgs;
               parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase;
@@ -146,7 +148,7 @@ in
         minimalBase = pkgs.lib.makeOverridable createMinimalBase {
           mkComponent = componentFns.mkComponent enableChecks ./.;
         };
-        base = extendBase minimalBase;
+        base = (extendBase minimalBase) // { inherit themes; };
 
         # callFile and callFunction will auto-populate dependencies
         # on nixpkgs, base members and project components
@@ -231,6 +233,7 @@ in
             "configFile"
             "name"
             "dependencies"
+            "themes"
           ]);
       in
       rec {
