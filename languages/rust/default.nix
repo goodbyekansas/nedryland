@@ -19,25 +19,17 @@ rec {
     , ...
     }:
     let
-      package = mkPackage {
-        inherit
-          name
-          src
-          buildInputs
-          rustDependencies
-          extensions
-          targets
-          defaultTarget
-          useNightly
-          extraChecks
-          buildFeatures
-          testFeatures
-          ;
+      package = mkPackage (attrs // {
         filterLockFile = true;
-      };
+      });
 
       newPackage = package.overrideAttrs (
         oldAttrs: {
+          buildPhase = attrs.buildPhase or ''echo "Rust libraries are built from source, skipping build now"'';
+          checkPhase = ''
+            ${oldAttrs.buildPhase}
+            ${oldAttrs.checkPhase}
+          '';
           installPhase = ''
             ${oldAttrs.installPhase}
             mkdir -p $out
