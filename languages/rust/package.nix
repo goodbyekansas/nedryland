@@ -126,7 +126,7 @@ pkgs.stdenv.mkDerivation (
 
     shellInputs = shellInputs ++ [ pkgs.rust-analyzer ];
 
-    configurePhase = ''
+    configurePhase = attrs.configurePhase or ''
       mkdir -p nix-deps
 
       ${builtins.foldl' copyRustDeps "" (
@@ -138,18 +138,18 @@ pkgs.stdenv.mkDerivation (
       ${rustPhase}
     '';
 
-    buildPhase = ''
+    buildPhase = attrs.buildPhase or ''
       cargo build --release ${getFeatures buildFeatures}
     '';
 
-    checkPhase = ''
+    checkPhase = attrs.checkPhase or ''
       cargo fmt -- --check
       cargo test ${getFeatures testFeatures}
       cargo clippy ${getFeatures testFeatures}
       ${extraChecks}
     '';
 
-    installPhase = ''
+    installPhase = attrs.installPhase or ''
       mkdir -p $out
     '';
 
