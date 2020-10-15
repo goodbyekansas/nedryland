@@ -1,4 +1,12 @@
-pkgs: base: { name, version, src, pythonVersion, checkInputs, buildInputs, nativeBuildInputs, propagatedBuildInputs, preBuild ? "", format ? "setuptools", doStandardTests ? true }:
+pkgs: base: attrs@{ name
+            , version
+            , src
+            , pythonVersion
+            , preBuild ? ""
+            , format ? "setuptools"
+            , doStandardTests ? true
+            , ...
+            }:
 let
   pythonPkgs = pythonVersion.pkgs;
 
@@ -57,7 +65,7 @@ let
     } else { }
   );
 in
-pythonPkgs.buildPythonPackage ({
+pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
   pname = name;
   src = builtins.path { path = src; inherit name; };
@@ -79,20 +87,20 @@ pythonPkgs.buildPythonPackage ({
     python-language-server
     pyls-mypy
     pyls-isort
-  ] ++ checkInputs pythonPkgs;
+  ] ++ attrs.checkInputs or (x: [ ]) pythonPkgs;
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = buildInputs pythonPkgs;
+  buildInputs = attrs.buildInputs or (x: [ ]) pythonPkgs;
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = nativeBuildInputs pythonPkgs;
+  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs;
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
   # Items listed in install_requires go here
-  propagatedBuildInputs = propagatedBuildInputs pythonPkgs;
+  propagatedBuildInputs = attrs.propagatedBuildInputs or (x: [ ]) pythonPkgs;
 
   doCheck = false;
 
