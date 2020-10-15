@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - RUST_BACKTRACE was enabled by default. Removed it. Enable it manually when needed instead.
+- sscache, was brittle and gave little benefit.
 
 ### Changed
 - Use niv for handling nix dependencies.
 
 ### Added
+- Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildinputs optional.
+- Add overlays for python packages: cloudevents, functions-framework.
+- Support arbitrary attribute for rust packages.
 - Pre Terraform shell hook.
 - Post Terraform shell hook.
 - Terraform derivations accept nix store paths as source.
