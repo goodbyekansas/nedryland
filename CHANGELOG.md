@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Use niv for handling nix dependencies.
+- Python overlays now work for both Python 3.7 and 3.8. Furthermore it is exposed both on the
+  interpreter package and as <python-version>Packages.
 
 ### Added
 - Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildinputs optional.
