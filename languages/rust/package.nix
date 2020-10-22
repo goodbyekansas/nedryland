@@ -80,11 +80,29 @@ let
         }
     else
       (pkgs.rustChannelOf {
-        channel = "1.46.0";
+        channel = "1.47.0";
       }).rust.override {
         inherit targets extensions;
       }
   );
+
+  # rust-analyzer cannot handle symlinks
+  # so we need to create a derivation with the
+  # correct rust source without symlinks
+  rustSrcNoSymlinks = pkgs.stdenv.mkDerivation {
+    name = "rust-src-no-symlinks";
+
+    rustWithSrc = (rust.override {
+      extensions = [ "rust-src" ] ++ extensions;
+    });
+    inherit rust;
+
+    builder = builtins.toFile "builder.sh" ''
+      source $stdenv/setup
+      mkdir -p $out
+      cp -r -L $rustWithSrc/lib/rustlib/src/rust/library/. $out/
+    '';
+  };
 
   cargoAlias = ''
     cargo()
@@ -124,7 +142,7 @@ pkgs.stdenv.mkDerivation (
       rust
     ] ++ attrs.nativeBuildInputs or [ ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
 
-    shellInputs = shellInputs ++ [ pkgs.rust-analyzer ];
+    shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
 
     configurePhase = attrs.configurePhase or ''
       mkdir -p nix-deps
@@ -155,6 +173,7 @@ pkgs.stdenv.mkDerivation (
 
     shellHook = ''
       eval "$configurePhase"
+      export RUST_SRC_PATH=${rustSrcNoSymlinks}
       ${cargoAlias}
       ${shellHook}
     '';
