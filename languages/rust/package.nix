@@ -44,13 +44,9 @@ let
       chmod 0444 "$FILE_NAME"
 
       # patch up Cargo.toml
-      echo "🐷 Patching $PACKAGE_PATH/Cargo.toml to fix transitive dependencies."
       chmod +w -R "$PACKAGE_PATH"
       sed -i -E 's/nix-deps/\.\./g' "$PACKAGE_PATH"/Cargo.toml
       chmod -w -R "$PACKAGE_PATH"
-
-    else
-      echo "🍄 Skipping copying ${right.package.name} since it's already up to date."
     fi
   '';
 
