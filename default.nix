@@ -95,7 +95,6 @@ rec {
 
       mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
         let
-          # TODO support shells for nested components too (and maybe functions in some way?)
           gatherComponents = components:
             builtins.foldl'
               (
