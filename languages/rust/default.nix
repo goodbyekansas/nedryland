@@ -30,7 +30,7 @@ rec {
             ${oldAttrs.buildPhase}
             ${oldAttrs.checkPhase}
           '';
-          installPhase = ''
+          installPhase = attrs.installPhase or ''
             ${oldAttrs.installPhase}
             mkdir -p $out
 
