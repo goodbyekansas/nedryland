@@ -12,6 +12,7 @@ pkgs: base: attrs@{ name
             , testFeatures ? [ ]
             , shellInputs ? [ ]
             , shellHook ? ""
+            , warningsAsErrors ? true
             , ...
             }:
 let
@@ -191,6 +192,10 @@ pkgs.stdenv.mkDerivation (
           exit $exit_code
         '';
       };
+    } else { }
+  ) // (
+    if warningsAsErrors then {
+      RUSTFLAGS = "-D warnings";
     } else { }
   )
 )
