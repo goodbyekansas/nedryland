@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use niv for handling nix dependencies.
 - Python overlays now work for both Python 3.7 and 3.8. Furthermore it is exposed both on the
   interpreter package and as <python-version>Packages.
+- Set warnings as errors by default on all Rust projects. This can be turned off with the argument
+  `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
 - Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildinputs optional.
