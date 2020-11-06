@@ -65,7 +65,7 @@ let
     } else { }
   );
 in
-pythonPkgs.buildPythonPackage (attrs // {
+(pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
   pname = name;
   src = builtins.path { path = src; inherit name; };
@@ -131,4 +131,10 @@ pythonPkgs.buildPythonPackage (attrs // {
     fi
     ${commands}
   '';
-} // standardTests)
+} // standardTests)).overrideAttrs (a: {
+  MYPYPATH = builtins.concatStringsSep ":" (
+    builtins.map (b: "${b}/${pythonVersion.sitePackages}") (
+      builtins.filter (c: c != pythonVersion) a.propagatedBuildInputs or [ ]
+    )
+  );
+})
