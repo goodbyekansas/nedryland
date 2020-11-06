@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
+- Automatically set MYPYPATH from propagatedBuildInputs in python packages.
 - Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildinputs optional.
 - Add overlays for python packages: cloudevents, functions-framework.
 - Support arbitrary attribute for rust packages.
