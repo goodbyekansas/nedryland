@@ -20,24 +20,36 @@ rec {
     }:
     let
       package = mkPackage (attrs // {
-        filterLockFile = true;
+        vendorDependencies = false;
       });
 
+      checksumHook = pkgs.makeSetupHook
+        {
+          name = "generate-cargo-checksums";
+          deps = [ pkgs.jq pkgs.coreutils ];
+        }
+        ./generateCargoChecksums.sh;
       newPackage = package.overrideAttrs (
         oldAttrs: {
-          buildPhase = attrs.buildPhase or ''echo "Rust libraries are built from source, skipping build now"'';
-          checkPhase = ''
-            ${oldAttrs.buildPhase}
-            ${oldAttrs.checkPhase}
-          '';
-          installPhase = attrs.installPhase or ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out
 
-            cp -r $src/* $out
+          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ checksumHook ];
+          buildPhase = attrs.buildPhase or ''
+            runHook preBuild
+            cargo package --no-verify --no-metadata
+            runHook postBuild
+          '';
+
+          installPhase = attrs.installPhase or ''
+            mkdir -p $out/src/rust
+
+            for crate in target/package/*.crate; do
+              tar -xzf $crate -C $out/src/rust
+            done
+
           '';
         }
       );
+
     in
     base.mkComponent (attrs // { inherit deployment; package = newPackage; });
 
@@ -63,7 +75,7 @@ rec {
 
       newPackage = package.overrideAttrs (
         oldAttrs: {
-          installPhase = ''
+          installPhase = attrs.installPhase or ''
             ${oldAttrs.installPhase}
             mkdir -p $out/bin
             cp target/release/${executableName} $out/bin
@@ -95,7 +107,7 @@ rec {
 
       newPackage = package.overrideAttrs (
         oldAttrs: {
-          installPhase = ''
+          installPhase = attrs.installPhase or ''
             ${oldAttrs.installPhase}
             mkdir -p $out/bin
             cp target/release/${name} $out/bin

@@ -1,12 +1,10 @@
 pkgs: base: attrs@{ name
             , src
-            , buildInputs ? [ ]
             , extensions ? [ ]
             , targets ? [ ]
-            , rustDependencies ? [ ]
             , defaultTarget ? ""
             , useNightly ? ""
-            , filterLockFile ? false
+            , vendorDependencies ? true
             , extraChecks ? ""
             , buildFeatures ? [ ]
             , testFeatures ? [ ]
@@ -16,53 +14,6 @@ pkgs: base: attrs@{ name
             , ...
             }:
 let
-  rustPhase = ''
-    if [ -z $IN_NIX_SHELL ]; then
-      export CARGO_HOME=$PWD
-    fi
-  '';
-
-  copyRustDeps = left: right: ''
-    ${left}
-    PACKAGE_PATH="nix-deps/${right.package.name}"
-    FILE_NAME="nix-deps/${right.package.name}-copied-from"
-
-    if [[ ! -d "$PACKAGE_PATH" || ! -f  "$FILE_NAME" || $(cat "$FILE_NAME") != ${right.package} ]]; then
-      echo "📦💨 Copying ${right.package.name} to nix-deps."
-
-      # copy package source
-      if [ -d "$PACKAGE_PATH" ]; then
-        chmod +w -R "$PACKAGE_PATH"
-        rm -rf "$PACKAGE_PATH"
-      fi
-      cp -r ${right.package} "$PACKAGE_PATH"
-
-      # write source location file
-      if [ -f "$FILE_NAME" ]; then
-        chmod +w "$FILE_NAME"
-      fi
-      echo "${right.package}" > "$FILE_NAME"
-      chmod 0444 "$FILE_NAME"
-
-      # patch up Cargo.toml
-      chmod +w -R "$PACKAGE_PATH"
-      sed -i -E 's/nix-deps/\.\./g' "$PACKAGE_PATH"/Cargo.toml
-      chmod -w -R "$PACKAGE_PATH"
-    fi
-  '';
-
-  collectRustDeps = attrs:
-    if builtins.hasAttr "rustDependencies" attrs then
-      attrs.rustDependencies ++ (builtins.map (dep: collectRustDeps dep) attrs.rustDependencies)
-    else
-      [ ];
-
-  getFeatures = features:
-    if (builtins.length features) == 0 then
-      ""
-    else
-      ''--features "${(builtins.concatStringsSep " " features)}"'';
-
   # this controls the version of rust to use
   rust = (
     if useNightly != "" then
@@ -82,6 +33,47 @@ let
         inherit targets extensions;
       }
   );
+
+  commands = ''
+    test() {
+        eval "$checkPhase"
+    }
+
+    build() {
+        eval "$buildPhase"
+    }
+
+    run() {
+        cargo run
+    }
+  '';
+
+  invariantSource =
+    if !(pkgs.lib.isStorePath src) then
+      (builtins.path {
+        path = src;
+        inherit name;
+        filter =
+          (
+            path: type: !(type == "directory" && baseNameOf path == "target")
+              && !(type == "directory" && baseNameOf path == ".cargo")
+              && !(!vendorDependencies && type == "regular" && baseNameOf path == "Cargo.lock")
+          );
+      }) else src;
+
+  vendor = import ./vendor.nix pkgs rust {
+    inherit name;
+    src = invariantSource;
+    buildInputs = attrs.buildInputs or [ ];
+    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
+  };
+
+  getFeatures = features:
+    if (builtins.length features) == 0 then
+      ""
+    else
+      ''--features "${(builtins.concatStringsSep " " features)}"'';
+
 
   # rust-analyzer cannot handle symlinks
   # so we need to create a derivation with the
@@ -117,50 +109,45 @@ let
     }
   '';
 
-  safeAttrs = builtins.removeAttrs attrs [ "rustDependencies" "extraChecks" "testFeatures" "buildFeatures" ];
+  safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
 in
 pkgs.stdenv.mkDerivation (
   safeAttrs // {
     inherit name;
-    src =
-      (builtins.path {
-        path = src;
-        inherit name;
-        filter =
-          (
-            path: type: !(type == "directory" && baseNameOf path == "target")
-            && !(type == "directory" && baseNameOf path == "nix-deps")
-            && !(filterLockFile && type == "regular" && baseNameOf path == "Cargo.lock")
-          );
-      });
+    src = invariantSource;
 
     nativeBuildInputs = with pkgs; [
       cacert
       rust
-    ] ++ attrs.nativeBuildInputs or [ ] ++ buildInputs ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ]);
+    ] ++ attrs.nativeBuildInputs or [ ]
+    ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
+    ++ [ vendor.internal ]
+    ++ pkgs.lib.optional vendorDependencies vendor.external;
+
+    buildInputs = attrs.buildInputs or [ ];
+    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
 
     shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
 
     configurePhase = attrs.configurePhase or ''
-      mkdir -p nix-deps
-
-      ${builtins.foldl' copyRustDeps "" (
-        pkgs.lib.lists.unique (pkgs.lib.lists.flatten (
-            rustDependencies ++ (builtins.map (dep: (collectRustDeps dep)) rustDependencies)
-            ))
-        )
-      }
-      ${rustPhase}
+      runHook preConfigure
+      export CARGO_HOME=$PWD
+      if declare -f createCargoConfig > /dev/null; then
+        createCargoConfig
+      fi
+      runHook postConfigure
     '';
 
     buildPhase = attrs.buildPhase or ''
-      cargo build --release ${getFeatures buildFeatures}
+      runHook preBuild
+      cargo build --frozen --release ${getFeatures buildFeatures}
+      runHook postBuild
     '';
 
     checkPhase = attrs.checkPhase or ''
       cargo fmt -- --check
-      cargo test ${getFeatures testFeatures}
-      cargo clippy ${getFeatures testFeatures}
+      cargo test --frozen ${getFeatures testFeatures}
+      cargo clippy --frozen ${getFeatures testFeatures}
       ${extraChecks}
     '';
 
@@ -169,9 +156,12 @@ pkgs.stdenv.mkDerivation (
     '';
 
     shellHook = ''
-      eval "$configurePhase"
       export RUST_SRC_PATH=${rustSrcNoSymlinks}
+      if declare -f createCargoConfig > /dev/null; then
+        createCargoConfig
+      fi
       ${cargoAlias}
+      ${commands}
       ${shellHook}
     '';
   } // (
