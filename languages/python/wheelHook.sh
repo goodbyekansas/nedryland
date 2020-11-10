@@ -7,7 +7,7 @@ setWheelLink() {
   cp dist/*.whl $out/
 
   # first, get all wheels for this derivation
-  wheels=(@out@/*.whl)
+  wheels=($out/*.whl)
   if [ ! ${#wheels[@]} -eq 0 ]; then
     echo -n "${wheels[@]}" >$out/nedryland/wheels
   fi
