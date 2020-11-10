@@ -99,9 +99,7 @@ rec {
             builtins.foldl'
               (
                 accumulator: current: accumulator ++ (
-                  if (
-                    builtins.hasAttr "package" current && builtins.hasAttr "packageWithChecks" current
-                  ) then
+                  if current.isNedrylandComponent or false then
                     [ current ]
                   else
                     gatherComponents current
