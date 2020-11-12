@@ -64,8 +64,17 @@ let
       '';
     } else { }
   );
+  mypyHook = pkgs.makeSetupHook
+    {
+      name = "mypy-hook";
+      substitutions = {
+        "sitePackages" = pythonVersion.sitePackages;
+        "interpreterPath" = "${pythonVersion}";
+      };
+    }
+    ./mypy-hook.sh;
 in
-(pythonPkgs.buildPythonPackage (attrs // {
+pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
   pname = name;
   src = builtins.path { path = src; inherit name; };
@@ -95,7 +104,7 @@ in
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs;
+  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs ++ [ mypyHook ];
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
@@ -131,10 +140,4 @@ in
     fi
     ${commands}
   '';
-} // standardTests)).overrideAttrs (a: {
-  MYPYPATH = builtins.concatStringsSep ":" (
-    builtins.map (b: "${b}/${pythonVersion.sitePackages}") (
-      builtins.filter (c: c != pythonVersion) a.propagatedBuildInputs or [ ]
-    )
-  );
-})
+} // standardTests)
