@@ -69,7 +69,6 @@ let
       name = "mypy-hook";
       substitutions = {
         "sitePackages" = pythonVersion.sitePackages;
-        "interpreterPath" = "${pythonVersion}";
       };
     }
     ./mypy-hook.sh;
@@ -139,5 +138,11 @@ pythonPkgs.buildPythonPackage (attrs // {
        ln -s $pylintrc .pylintrc
     fi
     ${commands}
+  '';
+
+  postFixup = ''
+    ${attrs.postFixup or ""}
+    mkdir -p $out/nedryland
+    touch $out/nedryland/add-to-mypy-path
   '';
 } // standardTests)
