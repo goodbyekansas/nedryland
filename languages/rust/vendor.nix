@@ -122,7 +122,7 @@ let
       # with an up-to-date Cargo.lock that they can
       # use
       if ! cmp Cargo.lock $upToDateCargoLock; then
-        echo "Cargo.lock is not up to date for \"$name\"! You can use the one at $upToDateCargoLock"
+        echo "❌ 💔 Cargo.lock is not up to date for \"${name}\"! You can use the one at $upToDateCargoLock"
         exit 1
       fi
 
