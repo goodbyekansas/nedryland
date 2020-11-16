@@ -1,4 +1,4 @@
-pkgs: rust: { src, name, buildInputs, propagatedBuildInputs }:
+pkgs: rust: { src, vendorDependencies, cargoLockHash, externalDependenciesHash, name, buildInputs, propagatedBuildInputs }:
 let
   internalSetupHook = pkgs.makeSetupHook
     {
@@ -10,14 +10,12 @@ let
   # with our internal nix dependencies
   internal = pkgs.stdenv.mkDerivation {
     name = "${name}-internal-deps";
-    inherit src buildInputs propagatedBuildInputs;
+    inherit buildInputs propagatedBuildInputs;
 
-    phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+    phases = [ "buildPhase" "installPhase" ];
     nativeBuildInputs = with pkgs; [ git cacert rust internalSetupHook ];
 
     buildPhase = ''
-      export CARGO_HOME=$PWD
-
       if [ -n "''${rustDependencies}" ]; then
         echo "🏡 vendoring internal dependencies..."
 
@@ -37,32 +35,27 @@ let
 
       if [ -d vendored ]; then
         cp -r vendored $out
-
-        substitute ${./cargo-local.config.toml} $out/cargo.config.toml \
-          --subst-var-by vendorDir $out/vendored
-
-        mkdir -p "$out/nix-support"
-        substituteAll "$setupHook" "$out/nix-support/setup-hook"
       fi
     '';
-
-    impureEnvVars = pkgs.stdenv.lib.fetchers.proxyImpureEnvVars;
-    setupHook = ./setupHook.sh;
   };
 
   # a derivation that checks that Cargo.lock is up to date
   # and generates an up-to-date one if it is not
   upToDateCargoLock = pkgs.stdenv.mkDerivation {
     name = "${name}-Cargo.lock";
-    inherit src;
+    inherit src internal;
+
+    outputHash = cargoLockHash;
+    outputHashAlgo = "sha256";
 
     phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
-    nativeBuildInputs = with pkgs; [ git cacert rust coreutils internal ];
+    nativeBuildInputs = with pkgs; [ git cacert rust ];
 
     preBuild = ''
-      if declare -f createCargoConfig > /dev/null; then
-        createCargoConfig
+      if [ -d $internal/vendored ]; then
+         substitute ${./cargo-internal.config.toml} config.toml \
+         --subst-var-by vendorDir $internal/vendored
       fi
     '';
 
@@ -70,21 +63,22 @@ let
       runHook preBuild
       export CARGO_HOME=$PWD
 
-      cp Cargo.lock Cargo.lock.orig
-
       # this will contact crates.io to
       # check if the lock file is up to date
       # w.r.t. what is specified in the manifest (Cargo.toml)
       # We also run all commands with -q because the output
       # from a successful run is not all that helpful and
       # error output will still be printed
+      echo "🔐 🧐 Checking if Cargo.lock is up to date..."
       if cargo update -q --locked; then
         echo "🔏 👍 Cargo.lock is up to date"
       else
-        echo "🔏 🗓 Cargo.lock is out of date, generating a new one..."
+        echo -e "🔓 🗓 \e[31mERROR: Cargo.lock is out of date, generating a new one...\e[0m"
         cargo update -q
-
         echo "An up-to-date Cargo.lock for \"${name}\" has been generated at $out"
+
+        echo "Please replace your old lock file with the following command."
+        echo "\"cp $out <path to ${name}/Cargo.lock>\""
       fi
       runHook postBuild
     '';
@@ -100,31 +94,26 @@ let
   # all internal and crates.io dependencies
   external = pkgs.stdenv.mkDerivation {
     name = "${name}-external-deps";
-    inherit src upToDateCargoLock;
+    inherit src upToDateCargoLock internal;
+
+    outputHash = externalDependenciesHash;
+    outputHashAlgo = "sha256";
+    outputHashMode = "recursive";
 
     phases = [ "unpackPhase" "buildPhase" "installPhase" ];
 
-    nativeBuildInputs = with pkgs; [ git cacert rust internal ];
+    nativeBuildInputs = with pkgs; [ git cacert rust nix coreutils ];
 
     preBuild = ''
-      if declare -f createCargoConfig > /dev/null; then
-        createCargoConfig
+      if [ -d $internal/vendored ]; then
+         substitute ${./cargo-internal.config.toml} config.toml \
+         --subst-var-by vendorDir $internal/vendored
       fi
     '';
 
     buildPhase = ''
       runHook preBuild
       export CARGO_HOME=$PWD
-
-      # check to see if Cargo.lock is up to date
-      # the reason we do not fail the above derivation
-      # if it isn't is to be able to provide the user
-      # with an up-to-date Cargo.lock that they can
-      # use
-      if ! cmp Cargo.lock $upToDateCargoLock; then
-        echo "❌ 💔 Cargo.lock is not up to date for \"${name}\"! You can use the one at $upToDateCargoLock"
-        exit 1
-      fi
 
       # We need to set this so that
       # cargo vendor will generate timestamps
@@ -152,16 +141,49 @@ let
 
       cp -r vendored $out
 
-      substitute ${./cargo.config.toml} $out/cargo.config.toml \
-        --subst-var-by vendorDir $out/vendored
-
-      mkdir -p "$out/nix-support"
-      substituteAll "$setupHook" "$out/nix-support/setup-hook"
+      newSha256=$(nix hash-path $out --type sha256)
+      oldSha256=$(nix to-base64 $outputHash --type sha256)
+      formattedNewSha256=$(nix to-base64 $newSha256 --type sha256)
+      if [ "$formattedNewSha256" != "$oldSha256" ]; then
+         echo -e "❌🔮 \e[31mHash mismatch for external dependencies!\e[0m"
+         echo -e "     \e[1mProvided Hash:\e[0m \"$oldSha256\""
+         echo -e "     \e[1mExternal Dependencies Hash:\e[0m \"$formattedNewSha256\""
+         echo -e "     \e[1mMake sure you are providing the correct hash for \"${name}\":\e[0m externalDependenciesHash = \"$newSha256\";"
+         exit 1
+      fi
     '';
-
-    setupHook = ./setupHook.sh;
-
     impureEnvVars = pkgs.stdenv.lib.fetchers.proxyImpureEnvVars;
   };
+
 in
-{ inherit internal external; }
+pkgs.stdenv.mkDerivation ({
+  name = "${name}-vendored-dependencies";
+  inherit internal;
+  phases = [ "buildPhase" "installPhase" ];
+
+  buildPhase = ''
+    if [ -d $internal/vendored ]; then
+       substitute ${./cargo-internal.config.toml} internal-cargo.config.toml \
+       --subst-var-by vendorDir $internal/vendored
+
+       cat internal-cargo.config.toml >> cargo.config.toml
+    fi
+
+    if [ -n "''${external-}" ] && [ -d $external/vendored ]; then
+       substitute ${./cargo-external.config.toml} external-cargo.config.toml \
+       --subst-var-by vendorDir $external/vendored
+
+       cat external-cargo.config.toml >> cargo.config.toml
+    fi
+  '';
+
+  installPhase = ''
+    mkdir -p $out
+    if [ -f cargo.config.toml ]; then
+       cp cargo.config.toml $out
+       mkdir -p "$out/nix-support"
+       substituteAll "$setupHook" "$out/nix-support/setup-hook"
+    fi
+  '';
+  setupHook = ./setupHook.sh;
+} // (if vendorDependencies then { inherit external; } else { }))
