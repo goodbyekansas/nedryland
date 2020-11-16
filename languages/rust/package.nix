@@ -62,7 +62,10 @@ let
       }) else src;
 
   vendor = import ./vendor.nix pkgs rust {
-    inherit name;
+    inherit name vendorDependencies;
+    cargoLockHash = builtins.hashFile "sha256" "${invariantSource}/Cargo.lock";
+    # Input hash or empty with correct length.
+    externalDependenciesHash = attrs.externalDependenciesHash or "0000000000000000000000000000000000000000000000000000000000000000";
     src = invariantSource;
     buildInputs = attrs.buildInputs or [ ];
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
@@ -110,6 +113,8 @@ let
   '';
 
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
+
+  frozen = if vendorDependencies then "--frozen" else "";
 in
 pkgs.stdenv.mkDerivation (
   safeAttrs // {
@@ -121,8 +126,7 @@ pkgs.stdenv.mkDerivation (
       rust
     ] ++ attrs.nativeBuildInputs or [ ]
     ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
-    ++ [ vendor.internal ]
-    ++ pkgs.lib.optional vendorDependencies vendor.external;
+    ++ [ vendor ];
 
     buildInputs = attrs.buildInputs or [ ];
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
@@ -132,22 +136,19 @@ pkgs.stdenv.mkDerivation (
     configurePhase = attrs.configurePhase or ''
       runHook preConfigure
       export CARGO_HOME=$PWD
-      if declare -f createCargoConfig > /dev/null; then
-        createCargoConfig
-      fi
       runHook postConfigure
     '';
 
     buildPhase = attrs.buildPhase or ''
       runHook preBuild
-      cargo build --frozen --release ${getFeatures buildFeatures}
+      cargo build ${frozen} --release ${getFeatures buildFeatures}
       runHook postBuild
     '';
 
     checkPhase = attrs.checkPhase or ''
       cargo fmt -- --check
-      cargo test --frozen ${getFeatures testFeatures}
-      cargo clippy --frozen ${getFeatures testFeatures}
+      cargo test ${frozen} ${getFeatures testFeatures}
+      cargo clippy ${frozen} ${getFeatures testFeatures}
       ${extraChecks}
     '';
 
@@ -156,13 +157,12 @@ pkgs.stdenv.mkDerivation (
     '';
 
     shellHook = ''
+      runHook preShell
       export RUST_SRC_PATH=${rustSrcNoSymlinks}
-      if declare -f createCargoConfig > /dev/null; then
-        createCargoConfig
-      fi
       ${cargoAlias}
       ${commands}
       ${shellHook}
+      runHook postShell
     '';
   } // (
     if defaultTarget != "" then {
