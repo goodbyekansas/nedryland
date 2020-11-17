@@ -79,7 +79,7 @@ rec {
             if attrs.isNedrylandComponent or false then
               (attrs // {
                 inherit path;
-              }) else (builtins.mapAttrs (n: v: addPath v) attrs);
+              }) else (builtins.mapAttrs (n: v: if builtins.isAttrs v then addPath v else v) attrs);
         in
         addPath c;
 
