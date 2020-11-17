@@ -75,26 +75,39 @@ rec {
       declareComponent = path: dependencies@{ ... }:
         let
           c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
+          addPath = attrs:
+            if attrs.isNedrylandComponent or false then
+              (attrs // {
+                inherit path;
+              }) else (builtins.mapAttrs (n: v: addPath v) attrs);
         in
-        c // {
-          inherit path;
-          packageWithChecks =
-            c.package.overrideAttrs (
-              oldAttrs: {
-                doCheck = true;
-
-                # Python packages don't have a checkPhase, only an installCheckPhase
-                doInstallCheck = true;
-              }
-            );
-
-          # the deploy target is simply the sum of everything
-          # in the deployment set
-          deploy = builtins.attrValues (c.deployment or { });
-        };
+        addPath c;
 
       mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
         let
+          setupComponents = comp:
+            pkgs.lib.mapAttrsRecursiveCond
+              (attrs: !(attrs.isNedrylandComponent or false))
+              (name: value:
+                if value.isNedrylandComponent or false then
+                  (value // {
+                    packageWithChecks =
+                      value.package.overrideAttrs (
+                        oldAttrs: {
+                          doCheck = true;
+
+                          # Python packages don't have a checkPhase, only an installCheckPhase
+                          doInstallCheck = true;
+                        }
+                      );
+
+                    # the deploy target is simply the sum of everything
+                    # in the deployment set
+                    deploy = builtins.attrValues (value.deployment or { });
+                  }) else value
+              )
+              comp;
+
           gatherComponents = components:
             builtins.foldl'
               (
@@ -108,19 +121,20 @@ rec {
               [ ]
               (builtins.filter builtins.isAttrs (builtins.attrValues components))
           ;
-          allComponents = gatherComponents components;
+          allComponents = setupComponents components;
+          componentsList = gatherComponents allComponents;
         in
         {
           inherit baseExtensions lib;
           grid = rec {
             inherit deploy;
 
-            package = builtins.map (component: component.package) allComponents;
-            packageWithChecks = builtins.map (component: component.packageWithChecks) allComponents;
+            package = builtins.map (component: component.package) componentsList;
+            packageWithChecks = builtins.map (component: component.packageWithChecks) componentsList;
             deploymentConfigs =
               builtins.filter
                 (c: c != null)
-                (builtins.map (component: component.deployment) allComponents);
+                (builtins.map (component: component.deployment) componentsList);
             docs =
               pkgs.lib.foldl
                 (x: y: x // y)
@@ -128,10 +142,10 @@ rec {
                 (
                   builtins.filter
                     (d: d != { } && d != null)
-                    (builtins.map (component: component.docs) allComponents)
+                    (builtins.map (component: component.docs) componentsList)
                 );
-          } // components;
-          shells = pkgs.callPackage ./shell.nix { inherit components extraShells; };
+          } // allComponents;
+          shells = pkgs.callPackage ./shell.nix { components = allComponents; inherit extraShells; };
         };
     };
 }
