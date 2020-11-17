@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - RUST_BACKTRACE was enabled by default. Removed it. Enable it manually when needed instead.
-- sscache, was brittle and gave little benefit.
+- sccache, was brittle and gave little benefit.
 
 ### Changed
 - Use niv for handling nix dependencies.
@@ -18,11 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
+- language helper for generating protobuf modules.
 - declareComponent supports returning attribute sets.
 - Support for vendoring internal and external rust dependencies.
 - Marker for Nedryland components, isNedrylandComponent = true.
 - Automatically set MYPYPATH from propagatedBuildInputs in python packages.
-- Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildinputs optional.
+- Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildInputs optional.
 - Add overlays for python packages: cloudevents, functions-framework.
 - Support arbitrary attribute for rust packages.
 - Pre Terraform shell hook.

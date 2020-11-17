@@ -51,7 +51,7 @@ rec {
       );
 
     in
-    base.mkComponent (attrs // { inherit deployment; package = newPackage; });
+    base.mkComponent { inherit deployment; package = newPackage; };
 
   mkClient =
     attrs@{ name

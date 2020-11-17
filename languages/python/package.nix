@@ -9,7 +9,7 @@ pkgs: base: attrs@{ name
             }:
 let
   pythonPkgs = pythonVersion.pkgs;
-
+  invariantSrc = if pkgs.lib.isStorePath src then src else (builtins.path { path = src; inherit name; });
   commands = ''
     test() {
         eval "$installCheckPhase"
@@ -18,26 +18,27 @@ let
 
   extendFile = { src, filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
+      inherit src filePath;
       name = "pyconfig-${builtins.baseNameOf filePath}";
       builder = builtins.toFile "builder.sh" ''
         source $stdenv/setup
-        mkdir -p $out/${builtins.dirOf filePath}
+        mkdir -p $out/$(dirname $filePath)
 
-        if [ ! -f ${src}/${filePath} ] || [ -L ${src}/${filePath} ]; then
-            echo "Using default \"${filePath}\" because there is no \"${filePath}\" in the source"
-            cp ${baseFile} $out/${filePath}
-            chmod +w $out/${filePath}
+        if [ ! -f $src/$filePath ] || [ -L $src/$filePath ]; then
+            echo "Using default \"$filePath\" because there is no \"$filePath\" in the source"
+            cp ${baseFile} $out/$filePath
+            chmod +w $out/$filePath
 
-            if [ -f ${src}/${filePath}.include ]; then
-               echo "Including \"${filePath}.include\" in \"${filePath}\""
-               echo "" >> $out/${filePath}
-               echo "# from ${name}'s ${filePath}.include" >> $out/${filePath}
-               cat ${src}/${filePath}.include >> $out/${filePath}
+            if [ -f $src/$filePath.include ]; then
+               echo "Including \"$filePath.include\" in \"$filePath\""
+               echo "" >> $out/$filePath
+               echo "# from ${name}'s $filePath.include" >> $out/$filePath
+               cat $src/$filePath.include >> $out/$filePath
             fi
-            chmod -w $out/${filePath}
+            chmod -w $out/$filePath
         else
-            echo "Using ${name}'s ${filePath} since it exists in the source"
-            cp ${src}/${filePath} $out/${filePath}
+            echo "Using ${name}'s $filePath since it exists in the source"
+            cp $src/$filePath $out/$filePath
         fi
       '';
     };
@@ -45,14 +46,16 @@ let
   setupCfg = ''${extendFile {
       filePath = "setup.cfg";
       baseFile = ./setup.cfg;
-      inherit name src;
+      inherit name;
+      src = invariantSrc;
       }}/setup.cfg'';
 
   pylintrc = ''
     ${extendFile {
       filePath = "pylintrc";
       baseFile = ./pylintrc;
-      inherit name src;
+      inherit name;
+      src = invariantSrc;
       }}/pylintrc
   '';
 
@@ -76,7 +79,7 @@ in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
   pname = name;
-  src = builtins.path { path = src; inherit name; };
+  src = invariantSrc;
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
   checkInputs = with pythonPkgs; [

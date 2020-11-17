@@ -1,0 +1,11 @@
+[package]
+name = "@packageName@"
+version = "@version@"
+authors = ["Goodbye Kansas Pipeline team <pipeline@goodbyekansas.com>"]
+edition = "2018"
+
+[dependencies]
+bytes = "0.5"
+prost = "0.6"
+tempfile = "3"
+@includeTonic@
