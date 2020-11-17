@@ -113,7 +113,10 @@ let
 
     buildPhase = ''
       runHook preBuild
+
       export CARGO_HOME=$PWD
+
+      cp Cargo.lock Cargo.lock.orig
 
       # We need to set this so that
       # cargo vendor will generate timestamps
@@ -124,15 +127,9 @@ let
       export SOURCE_DATE_EPOCH=1
 
       echo "🌍 vendoring dependencies from crates.io..."
-
-      # we cannot really run with --locked here because
-      # that would require the internal dependencies to be
-      # part of Cargo.toml. However, the validity of the lockfile
-      # will still be guaranteed by the dependency on the upToDateCargoLock
-      # derivation
-      cargo vendor -q --versioned-dirs --respect-source-config vendored
-
+      cargo vendor -q --versioned-dirs --locked --respect-source-config vendored
       echo "🌍 dependencies from crates.io vendored!"
+
       runHook postBuild
     '';
 
@@ -149,6 +146,13 @@ let
          echo -e "     \e[1mProvided Hash:\e[0m \"$oldSha256\""
          echo -e "     \e[1mExternal Dependencies Hash:\e[0m \"$formattedNewSha256\""
          echo -e "     \e[1mMake sure you are providing the correct hash for \"${name}\":\e[0m externalDependenciesHash = \"$newSha256\";"
+
+         if ! cmp -s Cargo.lock Cargo.lock.orig; then
+           echo "     This might be since there is a mismatch in Cargo.lock (i.e. vendoring created a new lock file)"
+         else
+           echo "     However, the cargo lock files are identical!"
+         fi
+
          exit 1
       fi
     '';
