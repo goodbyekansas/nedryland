@@ -136,7 +136,9 @@ let
     installPhase = ''
       mkdir $out
 
-      cp -r vendored $out
+      if [ "$(ls -A vendored)" ]; then
+        cp -r vendored $out
+      fi
 
       newSha256=$(nix hash-path $out --type sha256)
       oldSha256=$(nix to-base64 $outputHash --type sha256)

@@ -18,8 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
-- language helper for generating protobuf modules.
-- declareComponent supports returning attribute sets.
+- `mkClient` for python.
+- Examples of transitive protobuf modules.
+- Language helper for generating protobuf modules.
+- DeclareComponent supports returning attribute sets.
 - Support for vendoring internal and external rust dependencies.
 - Marker for Nedryland components, isNedrylandComponent = true.
 - Automatically set MYPYPATH from propagatedBuildInputs in python packages.

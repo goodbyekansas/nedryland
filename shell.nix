@@ -28,9 +28,15 @@ pkgs.lib.mapAttrsRecursiveCond
           shellPkg = pkg.drvAttrs // {
             name = "${pkg.name}-shell";
             nativeBuildInputs = (pkg.shellInputs or [ ]) ++ (pkg.nativeBuildInputs or [ ]);
+            componentDir = builtins.toString comp.path;
             shellHook = ''
-              echo 🏗️ Changing dir to \"${builtins.dirOf (builtins.toString comp.path)}\"
-              cd ${builtins.dirOf (builtins.toString comp.path)}
+              componentDir="$componentDir"
+              if [ -f "$componentDir" ]; then
+                componentDir=$(dirname "$componentDir")
+              fi
+
+              echo ⛑ Changing dir to \"$componentDir\"
+              cd "$componentDir"
               echo 🐚 Running shell hook for \"${name}\"
               ${pkg.shellHook or ""}
               echo 🥂 You are now in a shell for working on \"${name}\"

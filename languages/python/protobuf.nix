@@ -1,8 +1,11 @@
-{ stdenv, name, version, protoSources, python3, protoIncludePaths }:
+{ stdenv, name, version, protoSources, python3, protoInputs }:
+let
+  protoIncludePaths = builtins.map (pi: pi.protobuf) protoInputs;
+in
 stdenv.mkDerivation {
   inherit protoSources protoIncludePaths;
   name = "python-${name}";
-  src = ./python;
+  src = ./protobuf;
   packageName = builtins.replaceStrings [ "-" ] [ "_" ] name;
   nativeBuildInputs = with python3.pkgs; [ grpcio-tools mypy-protobuf mypy setuptools ];
   phases = [ "unpackPhase" "buildPhase" "installPhase" ];

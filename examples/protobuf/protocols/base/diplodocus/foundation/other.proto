@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package diplodocus.foundation;
+
+import "diplodocus/foundation/core.proto";
+
+message DoNotDependOnMe {
+  DependOnMe yes = 1;
+}
