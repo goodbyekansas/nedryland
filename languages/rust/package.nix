@@ -119,11 +119,14 @@ in
 pkgs.stdenv.mkDerivation (
   safeAttrs // {
     inherit name;
+    strictDeps = true;
+    disallowedReferences = [ vendor.internal ] ++ (pkgs.lib.optional (vendor ? external) vendor.external);
     src = invariantSource;
 
     nativeBuildInputs = with pkgs; [
       cacert
       rust
+      removeReferencesTo
     ] ++ attrs.nativeBuildInputs or [ ]
     ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
     ++ [ vendor ];
@@ -154,6 +157,21 @@ pkgs.stdenv.mkDerivation (
 
     installPhase = attrs.installPhase or ''
       mkdir -p $out
+    '';
+
+    preFixup = ''
+      # The binary we built will be full of paths pointing to the nix store.
+      # Nix thinks it is doing us a favour by automatically adding dependencies
+      # by finding store paths in the binary. We strip these store paths so
+      # Nix won't find them.
+      find $out -type f -exec remove-references-to -t ${vendor.internal} '{}' +
+      find $out -type f -exec remove-references-to -t ${rust} '{}' +
+      ${
+        if vendor ? external then
+        "find $out -type f -exec remove-references-to -t ${vendor.external} '{}' +"
+        else
+          ""
+       }
     '';
 
     shellHook = ''
