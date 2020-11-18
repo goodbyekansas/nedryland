@@ -77,9 +77,10 @@ rec {
           c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
           addPath = attrs:
             if attrs.isNedrylandComponent or false then
-              (attrs // {
-                inherit path;
-              }) else (builtins.mapAttrs (n: v: if builtins.isAttrs v then addPath v else v) attrs);
+            # order is important here, components can set path manually
+              ({ inherit path; } // attrs)
+            else
+              (builtins.mapAttrs (n: v: if builtins.isAttrs v then addPath v else v) attrs);
         in
         addPath c;
 

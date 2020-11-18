@@ -44,7 +44,7 @@ let
     }
 
     run() {
-        cargo run
+        cargo run "$@"
     }
   '';
 
@@ -61,15 +61,25 @@ let
           );
       }) else src;
 
-  vendor = import ./vendor.nix pkgs rust {
-    inherit name vendorDependencies;
-    cargoLockHash = builtins.hashFile "sha256" "${invariantSource}/Cargo.lock";
-    # Input hash or empty with correct length.
-    externalDependenciesHash = attrs.externalDependenciesHash or "0000000000000000000000000000000000000000000000000000000000000000";
-    src = invariantSource;
-    buildInputs = attrs.buildInputs or [ ];
-    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
-  };
+  vendor = import ./vendor.nix pkgs rust
+    (
+      let
+        hasCargoToml = builtins.pathExists "${invariantSource}/Cargo.toml";
+        hasCargoLock = builtins.pathExists "${invariantSource}/Cargo.lock";
+        nullHash = "0000000000000000000000000000000000000000000000000000000000000000";
+      in
+      {
+        vendorDependencies = vendorDependencies && hasCargoToml;
+        inherit name;
+        cargoLockHash = (if hasCargoToml && hasCargoLock then builtins.hashFile "sha256" "${invariantSource}/Cargo.lock" else null);
+
+        # Input hash or empty with correct length.
+        externalDependenciesHash = attrs.externalDependenciesHash or nullHash;
+        src = invariantSource;
+        buildInputs = attrs.buildInputs or [ ];
+        propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
+      }
+    );
 
   getFeatures = features:
     if (builtins.length features) == 0 then

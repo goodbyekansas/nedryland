@@ -1,7 +1,6 @@
 { base, pkgs }:
 rec {
   mkPackage = import ./package.nix pkgs base;
-
   mkUtility =
     attrs@{ name
     , src
@@ -116,4 +115,9 @@ rec {
       );
     in
     base.mkService (attrs // { inherit deployment; package = newPackage; });
+  fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
+    let
+      generatedCode = pkgs.callPackage ./protobuf.nix { inherit name protoSources version mkClient includeServices protoInputs; };
+    in
+    mkUtility { inherit name version; src = generatedCode; propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs; };
 }

@@ -327,6 +327,7 @@ dependencies = [
 name = "rust-protobuf-compiler"
 version = "0.1.0"
 dependencies = [
+ "prost-build",
  "structopt",
  "tonic-build",
 ]
