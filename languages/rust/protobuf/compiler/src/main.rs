@@ -85,6 +85,7 @@ fn create_structure(path: &Path, root: &Entry, is_lib_rs: bool) -> Result<(), st
             writeln!(file, "// Generated, not intended for editing!")?;
             let mut mods: Vec<&String> = root.modules.keys().collect();
             mods.sort();
+
             mods.iter()
                 .try_for_each(|path_name| writeln!(file, "pub mod {};", path_name))?;
 
