@@ -75,40 +75,31 @@ rec {
       declareComponent = path: dependencies@{ ... }:
         let
           c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
-          addPath = attrs:
+          setupComponents = attrs:
             if attrs.isNedrylandComponent or false then
             # order is important here, components can set path manually
-              ({ inherit path; } // attrs)
+              ({ inherit path; } // {
+                packageWithChecks =
+                  attrs.package.overrideAttrs (
+                    oldAttrs: {
+                      doCheck = true;
+
+                      # Python packages don't have a checkPhase, only an installCheckPhase
+                      doInstallCheck = true;
+                    }
+                  );
+
+                # the deploy target is simply the sum of everything
+                # in the deployment set
+                deploy = builtins.attrValues (attrs.deployment or { });
+              } // attrs)
             else
-              (builtins.mapAttrs (n: v: if builtins.isAttrs v then addPath v else v) attrs);
+              (builtins.mapAttrs (n: v: if builtins.isAttrs v then setupComponents v else v) attrs);
         in
-        addPath c;
+        setupComponents c;
 
       mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
         let
-          setupComponents = comp:
-            pkgs.lib.mapAttrsRecursiveCond
-              (attrs: !(attrs.isNedrylandComponent or false))
-              (name: value:
-                if value.isNedrylandComponent or false then
-                  (value // {
-                    packageWithChecks =
-                      value.package.overrideAttrs (
-                        oldAttrs: {
-                          doCheck = true;
-
-                          # Python packages don't have a checkPhase, only an installCheckPhase
-                          doInstallCheck = true;
-                        }
-                      );
-
-                    # the deploy target is simply the sum of everything
-                    # in the deployment set
-                    deploy = builtins.attrValues (value.deployment or { });
-                  }) else value
-              )
-              comp;
-
           gatherComponents = components:
             builtins.foldl'
               (
@@ -122,7 +113,7 @@ rec {
               [ ]
               (builtins.filter builtins.isAttrs (builtins.attrValues components))
           ;
-          allComponents = setupComponents components;
+          allComponents = components;
           componentsList = gatherComponents allComponents;
         in
         {
