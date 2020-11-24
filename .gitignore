@@ -1,2 +1,6 @@
 # nix results
 /result*
+
+# random pydev
+.project
+.pydevproject
