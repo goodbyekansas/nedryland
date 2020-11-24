@@ -1,15 +1,12 @@
 { pkgs, components, extraShells ? { } }:
 let
   getAllPackages = components:
-    let
-      comp = if (builtins.isFunction components) then (components { }) else components;
-    in
     [ ]
     ++ (
-      if builtins.hasAttr "package" comp then
-        [ comp.package ]
+      if components.isNedrylandComponent or false then
+        [ components.package ]
       else
-        builtins.map (c: getAllPackages c) (builtins.attrValues comp)
+        builtins.map (c: getAllPackages c) (builtins.filter (c: builtins.isAttrs c) (builtins.attrValues components))
     );
 
   all = pkgs.mkShell {
@@ -17,18 +14,17 @@ let
   };
 in
 pkgs.lib.mapAttrsRecursiveCond
-  (current: !(builtins.hasAttr "package" current && builtins.hasAttr "packageWithChecks" current))
+  (current: !(current.isNedrylandComponent or false))
   (
     attrName: component:
       (
         let
-          comp = if builtins.isFunction component then (component { }) else component;
-          pkg = comp.packageWithChecks;
-          name = comp.name or (builtins.concatStringsSep "." attrName);
+          pkg = component.packageWithChecks;
+          name = component.name or (builtins.concatStringsSep "." attrName);
           shellPkg = pkg.drvAttrs // {
             name = "${pkg.name}-shell";
             nativeBuildInputs = (pkg.shellInputs or [ ]) ++ (pkg.nativeBuildInputs or [ ]);
-            componentDir = builtins.toString comp.path;
+            componentDir = builtins.toString component.path;
             shellHook = ''
               componentDir="$componentDir"
               if [ -f "$componentDir" ]; then
