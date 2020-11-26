@@ -3,5 +3,5 @@ mkClient {
   name = "rust-protobuf-compiler";
   src = ./.;
   PROTOC = "${protobuf}/bin/protoc";
-  externalDependenciesHash = "sha256-63589VnzjTcqUmw330pAtu+tJkx+n1RLIPhAtBZFrnk=";
+  externalDependenciesHash = "sha256-HYFVW8Du8SKmfSFlMfk/bsLSkEE7bCRpvmyM53L5zLA=";
 }
