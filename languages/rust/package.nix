@@ -4,13 +4,13 @@ pkgs: base: attrs@{ name
             , targets ? [ ]
             , defaultTarget ? ""
             , useNightly ? ""
-            , vendorDependencies ? true
             , extraChecks ? ""
             , buildFeatures ? [ ]
             , testFeatures ? [ ]
             , shellInputs ? [ ]
             , shellHook ? ""
             , warningsAsErrors ? true
+            , filterCargoLock ? false
             , ...
             }:
 let
@@ -57,29 +57,15 @@ let
           (
             path: type: !(type == "directory" && baseNameOf path == "target")
               && !(type == "directory" && baseNameOf path == ".cargo")
-              && !(!vendorDependencies && type == "regular" && baseNameOf path == "Cargo.lock")
+              && !(filterCargoLock && type == "regular" && baseNameOf path == "Cargo.lock")
           );
       }) else src;
 
-  vendor = import ./vendor.nix pkgs rust
-    (
-      let
-        hasCargoToml = builtins.pathExists "${invariantSource}/Cargo.toml";
-        hasCargoLock = builtins.pathExists "${invariantSource}/Cargo.lock";
-        nullHash = "0000000000000000000000000000000000000000000000000000000000000000";
-      in
-      {
-        vendorDependencies = vendorDependencies && hasCargoToml;
-        inherit name;
-        cargoLockHash = (if hasCargoToml && hasCargoLock then builtins.hashFile "sha256" "${invariantSource}/Cargo.lock" else null);
-
-        # Input hash or empty with correct length.
-        externalDependenciesHash = attrs.externalDependenciesHash or nullHash;
-        src = invariantSource;
-        buildInputs = attrs.buildInputs or [ ];
-        propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
-      }
-    );
+  vendor = import ./vendor.nix pkgs rust {
+    inherit name;
+    buildInputs = attrs.buildInputs or [ ];
+    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
+  };
 
   getFeatures = features:
     if (builtins.length features) == 0 then
@@ -124,13 +110,12 @@ let
 
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
 
-  frozen = if vendorDependencies then "--frozen" else "";
 in
 pkgs.stdenv.mkDerivation (
   safeAttrs // {
     inherit name;
     strictDeps = true;
-    disallowedReferences = [ vendor.internal ] ++ (pkgs.lib.optional (vendor ? external) vendor.external);
+    disallowedReferences = [ vendor ];
     src = invariantSource;
 
     nativeBuildInputs = with pkgs; [
@@ -154,14 +139,14 @@ pkgs.stdenv.mkDerivation (
 
     buildPhase = attrs.buildPhase or ''
       runHook preBuild
-      cargo build ${frozen} --release ${getFeatures buildFeatures}
+      cargo build --release ${getFeatures buildFeatures}
       runHook postBuild
     '';
 
     checkPhase = attrs.checkPhase or ''
       cargo fmt -- --check
-      cargo test ${frozen} ${getFeatures testFeatures}
-      cargo clippy ${frozen} ${getFeatures testFeatures}
+      cargo test ${getFeatures testFeatures}
+      cargo clippy ${getFeatures testFeatures}
       ${extraChecks}
     '';
 
@@ -174,14 +159,8 @@ pkgs.stdenv.mkDerivation (
       # Nix thinks it is doing us a favour by automatically adding dependencies
       # by finding store paths in the binary. We strip these store paths so
       # Nix won't find them.
-      find $out -type f -exec remove-references-to -t ${vendor.internal} '{}' +
+      find $out -type f -exec remove-references-to -t ${vendor} '{}' +
       find $out -type f -exec remove-references-to -t ${rust} '{}' +
-      ${
-        if vendor ? external then
-        "find $out -type f -exec remove-references-to -t ${vendor.external} '{}' +"
-        else
-          ""
-       }
     '';
 
     shellHook = ''

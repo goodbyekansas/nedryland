@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Examples of transitive protobuf modules.
 - Language helper for generating protobuf modules.
 - DeclareComponent supports returning attribute sets.
-- Support for vendoring internal and external rust dependencies.
+- Support for vendoring internal rust dependencies.
 - Marker for Nedryland components, isNedrylandComponent = true.
 - Automatically set MYPYPATH from propagatedBuildInputs in python packages.
 - Support arbitrary attribute for python packages and make checkInputs, buildInputs, propagatedBuildInputs optional.

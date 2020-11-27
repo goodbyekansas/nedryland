@@ -19,7 +19,7 @@ rec {
     }:
     let
       package = mkPackage (attrs // {
-        vendorDependencies = false;
+        filterCargoLock = true;
       });
 
       checksumHook = pkgs.makeSetupHook
