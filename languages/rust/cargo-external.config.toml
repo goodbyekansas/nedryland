@@ -1,5 +1,0 @@
-[source.crates-io]
-replace-with = "vendored-crates-io"
-
-[source.vendored-crates-io]
-directory = "@vendorDir@"
