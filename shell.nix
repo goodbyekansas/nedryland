@@ -23,7 +23,8 @@ pkgs.lib.mapAttrsRecursiveCond
           name = component.name or (builtins.concatStringsSep "." attrName);
           shellPkg = pkg.drvAttrs // {
             name = "${pkg.name}-shell";
-            nativeBuildInputs = (pkg.shellInputs or [ ]) ++ (pkg.nativeBuildInputs or [ ]);
+            nativeBuildInputs = (pkg.shellInputs or [ ]);
+            inputsFrom = [ pkg ];
             componentDir = builtins.toString component.path;
             shellHook = ''
               componentDir="$componentDir"
@@ -39,7 +40,7 @@ pkgs.lib.mapAttrsRecursiveCond
             '';
           };
         in
-        pkgs.mkShell shellPkg
+        (pkg.crossSystem or pkgs).mkShell shellPkg # TODO document crossSystem or find a better way
       )
   )
   components // extraShells // {
