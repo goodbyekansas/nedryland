@@ -20,6 +20,9 @@ let
 
           # comment here
           (import ./overlays/wasmer.nix)
+
+          # more recent Wasi lib C (default was 2019)
+          (import ./overlays/wasilibc.nix)
         ];
         config = { };
       };
