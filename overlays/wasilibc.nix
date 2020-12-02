@@ -1,12 +1,12 @@
 self: super:
 {
   wasilibc = super.wasilibc.overrideAttrs (oldAttrs: {
-    name = "wasilibc-20200602";
+    name = "wasilibc-20201202";
     src = self.fetchFromGitHub {
       owner = "WebAssembly";
       repo = "wasi-libc";
-      rev = "5a7ba74c1959691d79580a1c3f4d94bca94bab8e";
-      sha256 = "0s86rpn6pljw1s9lks91fp9k4l2l58cnd262v5mk6492p48y7kiv";
+      rev = "378fd4b21aab6d390f3a1c1817d53c422ad00a62";
+      sha256 = "0h5g0q5j9cni7jab0b6bzkw5xm1b1am0dws2skq3cc9c9rnbn1ga";
     };
   });
 }
