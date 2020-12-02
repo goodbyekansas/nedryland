@@ -40,7 +40,11 @@ pkgs.lib.mapAttrsRecursiveCond
             '';
           };
         in
-        (pkg.crossSystem or pkgs).mkShell shellPkg # TODO document crossSystem or find a better way
+        pkgs.mkShell.override
+          {
+            stdenv = pkg.stdenv;
+          }
+          shellPkg
       )
   )
   components // extraShells // {
