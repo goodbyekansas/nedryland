@@ -29,8 +29,8 @@ in
     src = self.fetchFromGitHub {
       owner = "goodbyekansas"; # TODO: change to upstream after https://github.com/WebAssembly/wasi-libc/pull/226 is in
       repo = "wasi-libc";
-      rev = "b601c8509d3230b3abff3d12264b8c752ec3299c";
-      sha256 = "0142kbdjdlj8d5hnmr65f5bpwfskfyfw7wv7g3f58cl4y4r367b8";
+      rev = "6b0f0610e819c0b15a6c37c88e1850cf4803cf13";
+      sha256 = "0mf6lwv77xz78rg3bvyssr187kg95nyh4q5yj53isw1qq4sc7843";
     };
 
     # we need to add two -isystem flags due to nix purity. The clang in Nix does not add any
