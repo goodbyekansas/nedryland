@@ -18,6 +18,38 @@ in
     };
   };
 
+  # This is for a bug in readdir in wasmtime, when the fix is in switch back to main
+  # https://github.com/bytecodealliance/wasmtime/pull/2494
+  wasmtime = super.rustPlatform.buildRustPackage rec {
+    pname = "wasmtime";
+    version = "0.22.0";
+
+    src = super.fetchFromGitHub {
+      owner = "sunfishcode"; #☀️🐡📜
+      repo = pname;
+      rev = "392c5c6712732eb7c3362ca0daf8e21a596af68a";
+      sha256 = "1kdpyckd7wnbhgisxfk4l23crmvb7fb8glcc47z2p1s696i69wzv";
+      fetchSubmodules = true;
+    };
+
+    cargoSha256 = "18s7lwn619zmvgcjp7fpm1qbjmsyg03bd5qwg5x1ghxf1g41kv0w";
+
+    nativeBuildInputs = [ super.python super.cmake super.clang ];
+    buildInputs = [ super.llvmPackages.libclang ] ++
+      super.lib.optionals super.stdenv.isDarwin [ super.darwin.apple_sdk.frameworks.Security ];
+    LIBCLANG_PATH = "${super.llvmPackages.libclang}/lib";
+
+    doCheck = false;
+
+    meta = with super.lib; {
+      description = "Standalone JIT-style runtime for WebAssembly, using Cranelift";
+      homepage = "https://github.com/CraneStation/wasmtime";
+      license = licenses.asl20;
+      maintainers = [ maintainers.matthewbauer ];
+      platforms = platforms.unix;
+    };
+  };
+
   # convenience stdenv that uses clang 11 for wasi
   clang11Stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_11.lldClang);
 
