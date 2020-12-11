@@ -1,6 +1,6 @@
 pkgs:
 {
-  terraformComponent = attrs@{ package, ... }: pkgs.stdenv.mkDerivation (attrs // {
+  terraformComponent = attrs@{ package, ... }: pkgs.stdenv.mkDerivation ((builtins.removeAttrs attrs [ "package" ]) // {
     name = "terraform-deploy-${package.name}";
     buildInputs = [ package pkgs.terraform_0_13 package.buildInputs ];
 
