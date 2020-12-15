@@ -1,6 +1,6 @@
 { base, pkgs }:
 rec {
-  mkPackage = import ./package.nix pkgs base;
+  mkPackage = pkgs.callPackage ./package.nix { inherit base; };
   mkUtility =
     attrs@{ name
     , src
