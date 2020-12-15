@@ -1,18 +1,20 @@
-pkgs: base: attrs@{ name
-            , src
-            , extensions ? [ ]
-            , targets ? [ ]
-            , defaultTarget ? ""
-            , useNightly ? ""
-            , extraChecks ? ""
-            , buildFeatures ? [ ]
-            , testFeatures ? [ ]
-            , shellInputs ? [ ]
-            , shellHook ? ""
-            , warningsAsErrors ? true
-            , filterCargoLock ? false
-            , ...
-            }:
+{ pkgs, base, stdenv }:
+
+attrs@{ name
+, src
+, extensions ? [ ]
+, targets ? [ ]
+, defaultTarget ? ""
+, useNightly ? ""
+, extraChecks ? ""
+, buildFeatures ? [ ]
+, testFeatures ? [ ]
+, shellInputs ? [ ]
+, shellHook ? ""
+, warningsAsErrors ? true
+, filterCargoLock ? false
+, ...
+}:
 let
   # this controls the version of rust to use
   rust = (
@@ -111,7 +113,7 @@ let
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
 
 in
-pkgs.stdenv.mkDerivation (
+stdenv.mkDerivation (
   safeAttrs // {
     inherit name;
     strictDeps = true;
