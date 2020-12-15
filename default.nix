@@ -89,7 +89,10 @@ rec {
 
                       # Python packages don't have a checkPhase, only an installCheckPhase
                       doInstallCheck = true;
-                    }
+                    } // (if attrs.package.stdenv.hostPlatform != attrs.package.stdenv.buildPlatform && attrs.package.doCrossCheck or false then {
+                      preInstallPhases = [ "crossCheckPhase" ];
+                      crossCheckPhase = attrs.package.checkPhase;
+                    } else { })
                   );
 
                 # the deploy target is simply the sum of everything
