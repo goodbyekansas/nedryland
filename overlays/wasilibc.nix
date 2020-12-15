@@ -25,16 +25,17 @@ in
     version = "0.22.0";
 
     src = super.fetchFromGitHub {
-      owner = "sunfishcode"; #☀️🐡📜
+      owner = "bytecodealliance";
       repo = pname;
-      rev = "392c5c6712732eb7c3362ca0daf8e21a596af68a";
-      sha256 = "1kdpyckd7wnbhgisxfk4l23crmvb7fb8glcc47z2p1s696i69wzv";
+      rev = "8f7f8ee0b4c5007ace6de29b45505c360450b1bb";
+      sha256 = "1lg2484r56g7i0bilihvkxr8kxisgvsi4xc473a1d2arcv7wz7bg";
       fetchSubmodules = true;
     };
 
-    cargoSha256 = "18s7lwn619zmvgcjp7fpm1qbjmsyg03bd5qwg5x1ghxf1g41kv0w";
+    cargoSha256 = "00sg12w693jbn00mkfbqcmazqkr6aqgaj1zh5sb4rsiqfn2pmkam";
 
-    nativeBuildInputs = [ super.python super.cmake super.clang ];
+    nativeBuildInputs = [ super.python super.cmake super.clang ] ++
+      super.lib.optionals super.stdenv.isDarwin [ super.xcbuild ];
     buildInputs = [ super.llvmPackages.libclang ] ++
       super.lib.optionals super.stdenv.isDarwin [ super.darwin.apple_sdk.frameworks.Security ];
     LIBCLANG_PATH = "${super.llvmPackages.libclang}/lib";
