@@ -25,14 +25,13 @@ in
     version = "0.22.0";
 
     src = super.fetchFromGitHub {
-      owner = "bytecodealliance";
+      owner = "goodbyekansas";
       repo = pname;
-      rev = "8f7f8ee0b4c5007ace6de29b45505c360450b1bb";
-      sha256 = "1lg2484r56g7i0bilihvkxr8kxisgvsi4xc473a1d2arcv7wz7bg";
+      rev = "22ad43b43068f9944a042b2cfd6505f23d1b15b0";
+      sha256 = "1sr9q5qwrqfhw6q7mlj5akzc9hm7vaw80khxl0irxng7d1by4dr0";
       fetchSubmodules = true;
     };
-
-    cargoSha256 = "00sg12w693jbn00mkfbqcmazqkr6aqgaj1zh5sb4rsiqfn2pmkam";
+    cargoSha256 = "1s8ac1ab13bj1z10b629bck5n9m38wrrnj2l795cbs3xw70m6iid";
 
     nativeBuildInputs = [ super.python super.cmake super.clang ] ++
       super.lib.optionals super.stdenv.isDarwin [ super.xcbuild ];
