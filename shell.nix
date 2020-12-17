@@ -21,10 +21,16 @@ pkgs.lib.mapAttrsRecursiveCond
         let
           pkg = component.packageWithChecks;
           name = component.name or (builtins.concatStringsSep "." attrName);
-          shellPkg = pkg.drvAttrs // {
+          shellPkg = pkg.drvAttrs // rec {
             name = "${pkg.name}-shell";
+
+            hook = pkg.shellHook or "";
             nativeBuildInputs = (pkg.shellInputs or [ ]);
-            inputsFrom = [ pkg ];
+
+            # we will get double shellhooks if we do not
+            # remove this here
+            inputsFrom = [ (builtins.removeAttrs pkg [ "shellHook" ]) ];
+
             componentDir = builtins.toString component.path;
             shellHook = ''
               componentDir="$componentDir"
@@ -35,7 +41,7 @@ pkgs.lib.mapAttrsRecursiveCond
               echo ⛑ Changing dir to \"$componentDir\"
               cd "$componentDir"
               echo 🐚 Running shell hook for \"${name}\"
-              ${pkg.shellHook or ""}
+              ${hook}
               echo 🥂 You are now in a shell for working on \"${name}\"
             '';
           };

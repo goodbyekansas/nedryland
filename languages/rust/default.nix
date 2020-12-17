@@ -115,6 +115,7 @@ rec {
       );
     in
     base.mkService (attrs // { inherit deployment; package = newPackage; });
+
   fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
     let
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name protoSources version mkClient includeServices protoInputs; };
