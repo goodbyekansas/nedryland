@@ -13,4 +13,3 @@ createCargoConfig() {
 
 preConfigureHooks+=(createCargoConfig)
 preShellHooks+=(createCargoConfig)
-
