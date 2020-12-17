@@ -35,7 +35,7 @@ let
         }
     else
       (pkgs.rustChannelOf {
-        channel = "1.47.0";
+        channel = "1.48.0";
       }).rust.override {
         inherit targets extensions;
       }
