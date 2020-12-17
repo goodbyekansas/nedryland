@@ -1,4 +1,9 @@
-{ pkgs, base, stdenv }:
+{ pkgs
+, base
+, stdenv
+, buildPackages
+, rust # use this for toRustTarget
+}:
 
 attrs@{ name
 , src
@@ -17,7 +22,7 @@ attrs@{ name
 }:
 let
   # this controls the version of rust to use
-  rust = (
+  mozillaRust = (
     if useNightly != "" then
       (
         pkgs.rustChannelOf {
@@ -63,7 +68,7 @@ let
           );
       }) else src;
 
-  vendor = import ./vendor.nix pkgs rust {
+  vendor = import ./vendor.nix pkgs mozillaRust {
     inherit name;
     buildInputs = attrs.buildInputs or [ ];
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
@@ -82,10 +87,10 @@ let
   rustSrcNoSymlinks = pkgs.stdenv.mkDerivation {
     name = "rust-src-no-symlinks";
 
-    rustWithSrc = (rust.override {
+    rustWithSrc = (mozillaRust.override {
       extensions = [ "rust-src" ] ++ extensions;
     });
-    inherit rust;
+    rust = mozillaRust;
 
     builder = builtins.toFile "builder.sh" ''
       source $stdenv/setup
@@ -112,6 +117,15 @@ let
 
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
 
+  # cross compiling
+  ccForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}cc";
+  cxxForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}c++";
+  ccForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
+  cxxForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}c++";
+
+  hostTriple = builtins.replaceStrings [ "-" ] [ "_" ] (rust.toRustTarget stdenv.hostPlatform);
+  buildTriple = builtins.replaceStrings [ "-" ] [ "_" ] (rust.toRustTarget stdenv.buildPlatform);
+
 in
 stdenv.mkDerivation (
   safeAttrs // {
@@ -122,7 +136,7 @@ stdenv.mkDerivation (
 
     nativeBuildInputs = with pkgs; [
       cacert
-      rust
+      mozillaRust
       removeReferencesTo
     ] ++ attrs.nativeBuildInputs or [ ]
     ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
@@ -162,7 +176,7 @@ stdenv.mkDerivation (
       # by finding store paths in the binary. We strip these store paths so
       # Nix won't find them.
       find $out -type f -exec remove-references-to -t ${vendor} '{}' +
-      find $out -type f -exec remove-references-to -t ${rust} '{}' +
+      find $out -type f -exec remove-references-to -t ${mozillaRust} '{}' +
     '';
 
     shellHook = ''
@@ -173,6 +187,7 @@ stdenv.mkDerivation (
       ${shellHook}
       runHook postShell
     '';
+
   } // (
     if defaultTarget != "" then {
       CARGO_BUILD_TARGET = defaultTarget;
@@ -195,6 +210,17 @@ stdenv.mkDerivation (
   ) // (
     if warningsAsErrors then {
       RUSTFLAGS = "-D warnings";
+    } else { }
+  ) // (
+    if hostTriple != buildTriple then {
+      # cross-things
+      "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${ccForHost}";
+      "CC_${stdenv.lib.toUpper hostTriple}" = "${ccForHost}";
+      "CXX_${stdenv.lib.toUpper hostTriple}" = "${cxxForHost}";
+
+      "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${ccForBuild}";
+      "CC_${stdenv.lib.toUpper buildTriple}" = "${ccForBuild}";
+      "CXX_${stdenv.lib.toUpper buildTriple}" = "${cxxForBuild}";
     } else { }
   )
 )
