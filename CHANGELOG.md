@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `mkClient` for python.
+- Rust packages has proper cross-compilation support
+- Support for checks when cross-compiling (set `doCrossCheck=true` to run `checkPhase` when
+  cross-compiling.
 - Examples of transitive protobuf modules.
 - Language helper for generating protobuf modules.
 - DeclareComponent supports returning attribute sets.
