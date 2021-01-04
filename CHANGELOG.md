@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - RUST_BACKTRACE was enabled by default. Removed it. Enable it manually when needed instead.
 - sccache, was brittle and gave little benefit.
+- Deploying from inside nix has been removed. Instead we create a deployment script which is called outside nix.
 
 ### Changed
 - Use niv for handling nix dependencies.
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
+- `mkDeployment` and `mkCombinedDeployment`.
 - `mkClient` for python.
 - Rust packages has proper cross-compilation support
 - Support for checks when cross-compiling (set `doCrossCheck=true` to run `checkPhase` when
