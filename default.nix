@@ -53,7 +53,7 @@ rec {
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
         extend = pkgs.callPackage ./extend.nix { };
-        deployment = pkgs.callPackage ./deployment.nix { };
+        deployment = pkgs.callPackage ./deployment.nix { inherit base; };
         theme = import ./theme/default.nix pkgs;
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
         languages = pkgs.callPackage ./languages { inherit base; };
@@ -75,6 +75,7 @@ rec {
       extendedBase = pkgs.lib.recursiveUpdate combinedBaseExtensions base;
     in
     {
+      mkCombinedDeployment = base.deployment.mkCombinedDeployment;
       declareComponent = path: dependencies@{ ... }:
         let
           c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
@@ -98,14 +99,14 @@ rec {
 
                 # the deploy target is simply the sum of everything
                 # in the deployment set
-                deploy = builtins.attrValues (attrs.deployment or { });
+                deploy = base.deployment.mkCombinedDeployment "${attrs.package.name}-deploy" attrs.deployment;
               } // attrs)
             else
               (builtins.mapAttrs (n: v: if builtins.isAttrs v then setupComponents v else v) attrs);
         in
         setupComponents c;
 
-      mkGrid = { components, deploy, extraShells ? { }, lib ? { } }:
+      mkGrid = { components, deploy ? { }, extraShells ? { }, lib ? { } }:
         let
           gatherComponents = components:
             builtins.foldl'

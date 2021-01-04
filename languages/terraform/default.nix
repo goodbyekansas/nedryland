@@ -8,61 +8,42 @@
     , disableApplyInShell ? true
     , preTerraformHook ? ""
     , postTerraformHook ? ""
+    , preDeploy ? ""
+    , postDeploy ? ""
+    , deployShellInputs ? [ ]
     , variables ? { }
     , ...
     }:
+    let
+      safeAttrs = (builtins.removeAttrs attrs [ "variables" ]);
+    in
     base.mkComponent rec {
       inherit name;
-      package = pkgs.stdenv.mkDerivation ((builtins.removeAttrs attrs [ "variables" ]) // {
+      package = pkgs.stdenv.mkDerivation (safeAttrs // {
         inherit name;
-        # Builtins.path does not support store paths for the path argument
-        src = if pkgs.lib.isStorePath src then src else
-        builtins.path {
+        src = builtins.path {
           inherit name;
           path = src;
+          filter = (path: type: !(type == "directory" && baseNameOf path == ".terraform"));
         };
         buildInputs = [ pkgs.terraform_0_13 ] ++ buildInputs;
-        variablesFile = (builtins.toJSON (pkgs.lib.filterAttrs (name: value: value != null) variables));
-        passAsFile = [ "variablesFile" ];
-
-        configurePhase = ''
-          terraform init -lock-timeout=300s -input=false
-        '';
 
         checkPhase = ''
+          terraform init -backend=false
           terraform fmt -recursive -check -diff
           terraform validate
         '';
 
-        buildPhase = ''
-          cp "$variablesFilePath" tfvars.json
-          terraform plan -var-file="tfvars.json" -lock-timeout=300s -input=false -no-color > plan
-        '';
-
         installPhase = ''
-          mkdir $out
-          cp plan $out/plan
-          cp $variablesFilePath $out/vars.json
+          runHook preInstall
 
-          # output date
-          date +%s > $out/plan-generated-at
+          mkdir -p $out/src
+          cp -r $src/. $out/src/
+          
+          runHook postInstall
         '';
-
+        phases = [ "unpackPhase" "installPhase" "checkPhase" ];
         shellHook = ''
-          cp "$variablesFilePath" /tmp/tfvars.json
-
-          terraform_with_args()
-          {
-            subcommand="$1"
-            if [ "$subcommand" == "apply" ] || [ "$subcommand" == "plan" ]; then
-               command terraform "$@" -var-file=/tmp/tfvars.json
-               return $?
-            else
-               command terraform "$@"
-               return $?
-            fi
-          }
-
           terraform()
           {
             ${preTerraformHook}
@@ -72,23 +53,27 @@
               echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
               return 1
             else
-              terraform_with_args "$@"
+              command terraform "$@"
               return $?
             fi
           '' else ''
-            terraform_with_args "$@"
+            command terraform "$@"
             return $?
           ''}
             ${postTerraformHook}
           }
+
           ${shellHook}
         '';
       });
 
       deployment = {
-        terraform = base.deployment.terraformComponent {
-          inherit package;
-        };
+        terraform = base.deployment.mkTerraformDeployment (safeAttrs // {
+          terraformPackage = package;
+          inherit preDeploy postDeploy;
+          shellInputs = deployShellInputs;
+          inputs = package.buildInputs;
+        });
       };
     };
 }
