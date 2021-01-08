@@ -28,6 +28,7 @@ let
       };
 in
 rec {
+  nixpkgs = pkgs;
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";
     src = builtins.path { inherit name; path = ./docs; };
