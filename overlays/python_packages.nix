@@ -10,6 +10,7 @@ let
       attr = "python37";
     }
   ];
+  isDarwin = super.stdenv.isDarwin;
 in
 (builtins.foldl'
   (combined: pythonVersion:
@@ -117,6 +118,13 @@ in
               super.watchdog
             ];
           };
+
+          # these tests seems broken for python 3.8 on macos
+          # https://hydra.nixos.org/job/nixpkgs/nixpkgs-20.09-darwin/python38Packages.python-language-server.x86_64-darwin
+          python-language-server = super.python-language-server.overrideAttrs (oldAttrs: {
+            doCheck = !isDarwin;
+            doInstallCheck = !isDarwin;
+          });
 
         };
       };
