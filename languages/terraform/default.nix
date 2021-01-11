@@ -68,7 +68,7 @@
       });
 
       deployment = {
-        terraform = base.deployment.mkTerraformDeployment (safeAttrs // {
+        terraform = pkgs.lib.makeOverridable base.deployment.mkTerraformDeployment (safeAttrs // {
           terraformPackage = package;
           inherit preDeploy postDeploy;
           shellInputs = deployShellInputs;
