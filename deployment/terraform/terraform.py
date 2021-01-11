@@ -50,7 +50,9 @@ def plan(args: argparse.Namespace) -> None:
     with _setup_sources(pathlib.Path(args.source)) as tmp_dir:
         _run_terraform(cwd=tmp_dir, command="init")
         _run_terraform(
-            cwd=tmp_dir, command="plan", args=[f"-out={args.out}"] if args.out else []
+            cwd=tmp_dir,
+            command="plan",
+            args=["-no-color"] + ([f"-out={args.out}"] if args.out else []),
         )
 
 
