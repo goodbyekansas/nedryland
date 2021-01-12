@@ -28,7 +28,7 @@ let
             declare -x SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             declare -x noDumpEnvVars=1
           ''
-          (builtins.attrNames attrs);
+          (builtins.attrNames env);
       };
       deploy = pkgs.writeTextFile {
         name = "${name}-deploy";
