@@ -2,7 +2,7 @@
 Hello print
 
 numpy_wrapper is available because we put that as a
-dependency in `project.nix`. 
+dependency in `project.nix`.
 """
 
 from numpy_wrapper import array
