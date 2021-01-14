@@ -8,10 +8,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.0.0
+    - uses: actions/checkout@v2
     - name: Install Nix
       uses: cachix/install-nix-action@v12
       with:
         nix_path: nixpkgs=channel:nixpkgs-unstable
     - name: Format Nedryland 👓 🦖💨
       run:  nix-shell -p nixpkgs-fmt --command "nixpkgs-fmt . --check"
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup ssh agent
+      env:
+        SSH_KEY_BUILDERS: ${{ secrets.NIXOS_BUILDERS }}
+      run: .github/workflows/setup/ssh_agent.sh
+
+    - name: Set up nix builders ssh connection
+      run: .github/workflows/setup/setup-builders-ssh.sh
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v12
+
+    - name: Create Nix configuration
+      run: |
+        mkdir -p ~/.config/nix
+        cp .github/workflows/setup/nix.conf ~/.config/nix/nix.conf
+
+    - name: Run all tests
+      run: nix build -L -f tests.nix all --max-jobs 0 --keep-going
