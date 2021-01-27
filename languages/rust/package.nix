@@ -123,8 +123,8 @@ let
   ccForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
   cxxForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}c++";
 
-  hostTriple = builtins.replaceStrings [ "-" ] [ "_" ] (rust.toRustTarget stdenv.hostPlatform);
-  buildTriple = builtins.replaceStrings [ "-" ] [ "_" ] (rust.toRustTarget stdenv.buildPlatform);
+  hostTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.hostPlatform);
+  buildTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.buildPlatform);
 
 in
 stdenv.mkDerivation (
@@ -211,7 +211,7 @@ stdenv.mkDerivation (
     } else { }
   ) // (
     if warningsAsErrors then {
-      RUSTFLAGS = "-D warnings";
+      RUSTFLAGS = ''${if attrs ? RUSTFLAGS then "${attrs.RUSTFLAGS} " else ""}-D warnings'';
     } else { }
   ) // (
     if hostTriple != buildTriple then {
