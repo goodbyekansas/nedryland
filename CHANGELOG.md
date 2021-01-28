@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `warningsAsErrors` on all rust nix helpers (`mkService`, `mkClient` etc.).
 
 ### Added
+- toUtility rust function that converts a rust package to a utility.
 - `nixpkgs` as an attribute on nedryland to access the same version of packages nedryland uses.
 - `mkDeployment` and `mkCombinedDeployment`.
 - `mkClient` for python.
