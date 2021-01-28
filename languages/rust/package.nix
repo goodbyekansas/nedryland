@@ -22,23 +22,19 @@ attrs@{ name
 }:
 let
   # this controls the version of rust to use
-  mozillaRust = (
+  rustBin = (
     if useNightly != "" then
       (
-        pkgs.rustChannelOf {
-          date = useNightly;
-          channel = "nightly";
-        }
-      ).rust.override
-        {
+        pkgs.rust-bin.nightly."${useNightly}".rust.override {
           inherit targets extensions;
         }
+      )
     else
-      (pkgs.rustChannelOf {
-        channel = "1.49.0";
-      }).rust.override {
-        inherit targets extensions;
-      }
+      (
+        pkgs.rust-bin.stable."1.49.0".rust.override {
+          inherit targets extensions;
+        }
+      )
   );
 
   commands = ''
@@ -68,7 +64,7 @@ let
           );
       }) else src;
 
-  vendor = import ./vendor.nix pkgs mozillaRust {
+  vendor = import ./vendor.nix pkgs rustBin {
     inherit name;
     buildInputs = attrs.buildInputs or [ ];
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
@@ -87,10 +83,10 @@ let
   rustSrcNoSymlinks = pkgs.stdenv.mkDerivation {
     name = "rust-src-no-symlinks";
 
-    rustWithSrc = (mozillaRust.override {
+    rustWithSrc = (rustBin.override {
       extensions = [ "rust-src" ] ++ extensions;
     });
-    rust = mozillaRust;
+    rust = rustBin;
 
     builder = builtins.toFile "builder.sh" ''
       source $stdenv/setup
@@ -136,7 +132,7 @@ stdenv.mkDerivation (
 
     nativeBuildInputs = with pkgs; [
       cacert
-      mozillaRust
+      rustBin
       removeReferencesTo
     ] ++ attrs.nativeBuildInputs or [ ]
     ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
@@ -176,7 +172,7 @@ stdenv.mkDerivation (
       # by finding store paths in the binary. We strip these store paths so
       # Nix won't find them.
       find $out -type f -exec remove-references-to -t ${vendor} '{}' +
-      find $out -type f -exec remove-references-to -t ${mozillaRust} '{}' +
+      find $out -type f -exec remove-references-to -t ${rustBin} '{}' +
     '';
 
     shellHook = ''
