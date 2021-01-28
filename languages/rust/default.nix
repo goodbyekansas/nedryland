@@ -1,56 +1,47 @@
 { base, pkgs }:
 rec {
   mkPackage = pkgs.callPackage ./package.nix { inherit base; };
-  mkUtility =
-    attrs@{ name
-    , src
-    , deployment ? { }
-    , buildInputs ? [ ]
-    , rustDependencies ? [ ]
-    , extensions ? [ ]
-    , targets ? [ ]
-    , libraryName ? name
-    , defaultTarget ? ""
-    , useNightly ? ""
-    , extraChecks ? ""
-    , buildFeatures ? [ ]
-    , testFeatures ? [ ]
-    , ...
-    }:
+  toUtility = package:
     let
-      package = mkPackage (attrs // {
-        filterCargoLock = true;
-      });
-
       checksumHook = pkgs.makeSetupHook
         {
           name = "generate-cargo-checksums";
           deps = [ pkgs.jq pkgs.coreutils ];
         }
         ./generateCargoChecksums.sh;
-      newPackage = package.overrideAttrs (
-        oldAttrs: {
-
-          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ checksumHook ];
-          buildPhase = attrs.buildPhase or ''
-            runHook preBuild
-            cargo package --no-verify --no-metadata
-            runHook postBuild
-          '';
-
-          installPhase = attrs.installPhase or ''
-            mkdir -p $out/src/rust
-
-            for crate in target/package/*.crate; do
-              tar -xzf $crate -C $out/src/rust
-            done
-
-          '';
-        }
-      );
-
     in
-    base.mkComponent { inherit deployment; package = newPackage; };
+    package.overrideAttrs (
+      oldAttrs: {
+
+        nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ checksumHook ];
+        buildPhase = ''
+          runHook preBuild
+          cargo package --no-verify --no-metadata
+          runHook postBuild
+        '';
+
+        installPhase = ''
+          mkdir -p $out/src/rust
+
+          for crate in target/package/*.crate; do
+            tar -xzf $crate -C $out/src/rust
+          done
+        '';
+      }
+    );
+
+  mkUtility =
+    attrs@{ name
+    , src
+    , deployment ? { }
+    , ...
+    }:
+    let
+      package = mkPackage (attrs // {
+        filterCargoLock = true;
+      });
+    in
+    base.mkComponent { inherit deployment; package = (toUtility package); };
 
   mkClient =
     attrs@{ name
