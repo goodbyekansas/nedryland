@@ -13,7 +13,7 @@ let
           overlay
 
           # rust
-          (import sources.nixpkgs-mozilla)
+          (import sources.rust)
 
           # extra pip packages
           (import ./overlays/python_packages.nix)
