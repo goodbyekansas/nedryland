@@ -2,7 +2,7 @@ self: super:
 let
   # set this to true to produce a wasilibc with debug symbols
   # TODO: there is probably a better place for this
-  debug = false;
+  debug = true;
 in
 {
   # create statically built versions of the llvm libraries (wasi does not support dynamic linking)
@@ -57,12 +57,12 @@ in
   wasilibc = (super.wasilibc.override {
     stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_11.lldClangNoLibc);
   }).overrideAttrs (oldAttrs: {
-    name = "wasilibc-20201202";
+    name = "wasilibc-20201210";
     src = self.fetchFromGitHub {
-      owner = "goodbyekansas"; # TODO: change to upstream after https://github.com/WebAssembly/wasi-libc/pull/226 is in
+      owner = "WebAssembly";
       repo = "wasi-libc";
-      rev = "6b0f0610e819c0b15a6c37c88e1850cf4803cf13";
-      sha256 = "0mf6lwv77xz78rg3bvyssr187kg95nyh4q5yj53isw1qq4sc7843";
+      rev = "5ccfab77b097a5d0184f91184952158aa5904c8d";
+      sha256 = "1kxcy616vnqw4q2xkng9q67mgmq3gw2h4z6hkcwrqw1fjjp5qnbz";
     };
 
     # we need to add two -isystem flags due to nix purity. The clang in Nix does not add any
