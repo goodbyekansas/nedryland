@@ -8,5 +8,5 @@ base.languages.python.mkClient {
   pythonVersion = pkgs.python3;
   # Here we don't use pp with numpyWrapper since it's our own
   # package and not part of the python version packages.
-  buildInputs = (pp: [ numpyWrapper ]);
+  propagatedBuildInputs = (pp: [ numpyWrapper ]);
 }
