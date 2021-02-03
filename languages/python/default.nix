@@ -37,6 +37,7 @@ rec {
           preBuild
           src
           doStandardTests;
+        setuptoolsLibrary = true;
       });
 
       # setup hook that creates a "link" file in the

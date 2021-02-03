@@ -4,6 +4,7 @@ pkgs: base: attrs@{ name
             , pythonVersion
             , preBuild ? ""
             , format ? "setuptools"
+            , setuptoolsLibrary ? false
             , doStandardTests ? true
             , ...
             }:
@@ -75,6 +76,7 @@ let
       };
     }
     ./mypy-hook.sh;
+  setupPyTemplate = if setuptoolsLibrary then ./setup-template-library else ./setup-template-application;
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
@@ -120,6 +122,12 @@ pythonPkgs.buildPythonPackage (attrs // {
     rm -f .pylintrc
     ln -s $setupCfg setup.cfg
     ln -s $pylintrc .pylintrc
+    ${if format == "setuptools" then ''
+    if [ ! -f setup.py ]; then
+      echo "🤷🐍 No setup.py, generating..."
+      substituteAll ${setupPyTemplate} setup.py
+    fi
+    '' else ""}
   '';
 
   shellInputs = [ ];
