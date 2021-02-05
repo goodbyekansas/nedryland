@@ -121,10 +121,11 @@ in
 
           # these tests seems broken for python 3.8 on macos
           # https://hydra.nixos.org/job/nixpkgs/nixpkgs-20.09-darwin/python38Packages.python-language-server.x86_64-darwin
-          python-language-server = super.python-language-server.overrideAttrs (oldAttrs: {
-            doCheck = !isDarwin;
-            doInstallCheck = !isDarwin;
-          });
+          python-language-server = super.python-language-server.overrideAttrs (oldAttrs:
+            (if isDarwin then {
+              doCheck = false;
+              doInstallCheck = false;
+            } else { }));
 
         };
       };
