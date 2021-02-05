@@ -4,6 +4,7 @@ from ext.ext_pb2 import DependingOnIt
 
 
 def main() -> None:
+    """ Entrypoint """
     sune = DependingOnIt(here=DependOnMe(yes="rune"))
     print(sune)
 

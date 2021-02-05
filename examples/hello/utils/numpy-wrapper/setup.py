@@ -1,3 +1,4 @@
+""" This is the project setup """
 from setuptools import find_packages, setup
 
 setup(

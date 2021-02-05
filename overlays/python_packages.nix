@@ -127,6 +127,14 @@ in
               doInstallCheck = false;
             } else { }));
 
+          pytest-pylint = super.pytest-pylint.overrideAttrs (oldAttrs: rec {
+            version = "0.18.0";
+            src = super.fetchPypi {
+              pname = oldAttrs.pname;
+              inherit version;
+              sha256 = "790c7a8019fab08e59bd3812db1657a01995a975af8b1c6ce95b9aa39d61da27";
+            };
+          });
         };
       };
 
