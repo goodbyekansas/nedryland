@@ -2,7 +2,7 @@ self: super:
 let
   # set this to true to produce a wasilibc with debug symbols
   # TODO: there is probably a better place for this
-  debug = true;
+  debug = false;
 in
 {
   # create statically built versions of the llvm libraries (wasi does not support dynamic linking)
