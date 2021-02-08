@@ -12,7 +12,7 @@ let
   pythonPkgs = pythonVersion.pkgs;
   invariantSrc = if pkgs.lib.isStorePath src then src else (builtins.path { path = src; inherit name; });
   commands = ''
-    test() {
+    check() {
         eval "$installCheckPhase"
     }
   '';
