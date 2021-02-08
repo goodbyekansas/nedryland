@@ -5,6 +5,6 @@ in
 attrs@{ terraformPackage, preDeployPhase ? "", postDeployPhase ? "", shellInputs ? [ ], inputs ? [ ], ... }:
 mkDeployment (attrs // {
   name = "deploy-terraform-${terraformPackage.name}";
-  deployPhase = "exec ${deployer.package}/bin/terraform-deploy --source ${terraformPackage}/src $@";
+  deployPhase = "command ${deployer.package}/bin/terraform-deploy --source ${terraformPackage}/src $@";
   inherit preDeployPhase postDeployPhase shellInputs inputs;
 })
