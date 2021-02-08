@@ -38,7 +38,7 @@ let
   );
 
   commands = ''
-    test() {
+    check() {
         eval "$checkPhase"
     }
 

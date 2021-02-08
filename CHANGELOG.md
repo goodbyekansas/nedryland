@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deploying from inside nix has been removed. Instead we create a deployment script which is called outside nix.
 
 ### Changed
+- Renamed `test` command to `check` due to bash if statement conflict (if statements actually run a function called test).
 - Use niv for handling nix dependencies.
 - Python overlays now work for both Python 3.7 and 3.8. Furthermore it is exposed both on the
   interpreter package and as <python-version>Packages.
