@@ -7,8 +7,8 @@ let
     , inputs ? [ ]
     , shellInputs ? [ ]
     , deployShell ? true
-    , preDeploy
-    , postDeploy
+    , preDeployPhase ? ""
+    , postDeployPhase ? ""
     , ...
     }:
     let
@@ -37,9 +37,32 @@ let
           source ${envVars}
           source ${pkgs.stdenvNoCC}/setup
 
-          ${preDeploy}
+          keep=false
+          while true; do
+            case "$1" in
+              -k | --keep-work-dir ) keep=true; shift ;;
+              -- ) shift; break ;;
+              * ) break ;;
+            esac
+          done
+
+          workdir=$(mktemp -d --tmpdir ${name}-deploy-XXXXXXXX)
+          echo "🏛️ Using temporary working directory $workdir"
+          if [ "$keep" == false ]; then
+            echo "🏛️ To keep the working directory run deploy with --keep-work-dir"
+          fi
+          pushd $workdir
+
+          runHook preDeploy
+          ${preDeployPhase}
           ${deployPhase}
-          ${postDeploy}
+          ${postDeployPhase}
+          runHook postDeploy
+          
+          popd
+          if [ "$keep" == false ]; then
+            rm -rf $workdir
+          fi
         '';
         executable = true;
         destination = "/bin/deploy";
@@ -51,7 +74,8 @@ let
           source ${envVars}
           source ${pkgs.stdenvNoCC}/setup
 
-          ${preDeploy}
+          runHook preDeployShell
+          ${preDeployPhase}
           PS1="\n\e[1;32m[${name}]\e[0m ⛴  \e[1;32m> \e[0m" ${pkgs.bashInteractive}/bin/bash --norc
         '';
         executable = true;
@@ -68,8 +92,6 @@ in
     else
       mkDeployment {
         inherit name;
-        preDeploy = "";
-        postDeploy = "";
         deployShell = false;
         deployPhase = builtins.foldl'
           (

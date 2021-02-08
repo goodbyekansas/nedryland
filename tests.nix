@@ -3,6 +3,7 @@ let
   tests = {
     protobuf = import ./examples/protobuf;
     hello = import ./examples/hello;
+    deployment = import ./deployment;
   };
 
   mappedTests = builtins.mapAttrs (n: v: v.packageWithChecks) tests;

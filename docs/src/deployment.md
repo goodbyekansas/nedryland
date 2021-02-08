@@ -14,7 +14,7 @@ base.mkComponent {
   deployment = {
     terraform = base.deployment.mkTerraformDeployment {
       terraformPackage = package;
-      inherit preDeploy postDeploy deployShellInputs;
+      inherit preDeployPhase postDeployPhase deployShellInputs;
     };
   };
 }
@@ -61,20 +61,20 @@ project.mkGrid {
 # Creating new deployment types
 
 To aid in creating the deploy script and shell Nedryland provides the
-function `base.deployment.mkDeployment`. This function takes three
-mandatory arguments.
+function `base.deployment.mkDeployment`. This function takes one
+mandatory argument.
 
 `deployPhase`: This is the actual deploy script. This can either be
 the inline deploy script or call an external utility. The environment
 is similar to the shell one, but it is recreated outside of nix
-`preDeploy`: Script code to execute before the deploy phase and when
-opening the shell. A typical usecase is to aquire credentials and set
-up connection details.
-`postDeploy`: Script code to execute after the
-deploy phase. Used to cleaning up resources aquired during preDeploy.
 
 Furthermore it accepts these optional arguments.
 
+`preDeployPhase`: Script code to execute before the deploy phase and when
+opening the shell. A typical usecase is to aquire credentials and set
+up connection details.
+`postDeployPhase`: Script code to execute after the
+deploy phase. Used to cleaning up resources aquired during preDeployPhase.
 `inputs`: A list of derivations that will be added to path for the
 deployment script. These are typically dependencies you only need to
 do the deployment of the artifact that aren't necessarily dependencies
@@ -83,3 +83,5 @@ of the artifact itself.
 the shell.
 `deployShell`: Is true by default, set it to false if you
 do not want to have a deploy shell generated in your output.
+
+Deployment will also pick up `preDeploy`, `postDeploy` and `preDeployShell` hooks.
