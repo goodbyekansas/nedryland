@@ -22,16 +22,16 @@ in
   # https://github.com/bytecodealliance/wasmtime/pull/2494
   wasmtime = super.rustPlatform.buildRustPackage rec {
     pname = "wasmtime";
-    version = "0.22.1";
+    version = "0.22.1+40c4c6ac9";
 
     src = super.fetchFromGitHub {
       owner = "bytecodealliance";
       repo = pname;
-      rev = "v0.22.1";
-      sha256 = "19np0r6k9s7bpnqzwjqpsaswfwrzw0a71gyribip9d2kia2aplk8";
+      rev = "40c4c6ac9bde95c72666d0cafb2ede6c7045edf9";
+      sha256 = "0p0a7167b2wg6x7xymvps604f94dr1gfm7kadnq333qchbjgn7sp";
       fetchSubmodules = true;
     };
-    cargoSha256 = "1lnzg81ya2dkjxm1lknscwzmzdf7kap5bzn51wx6vfd6b8y444n8";
+    cargoSha256 = "1kkh7ssq557sg83vxnf6khw6lm74j83nkhkmyz4fnb78xr26ls5i";
 
     nativeBuildInputs = [ super.python super.cmake super.clang ] ++
       super.lib.optionals super.stdenv.isDarwin [ super.xcbuild ];
