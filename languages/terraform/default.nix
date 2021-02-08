@@ -8,8 +8,8 @@
     , disableApplyInShell ? true
     , preTerraformHook ? ""
     , postTerraformHook ? ""
-    , preDeploy ? ""
-    , postDeploy ? ""
+    , preDeployPhase ? ""
+    , postDeployPhase ? ""
     , deployShellInputs ? [ ]
     , variables ? { }
     , ...
@@ -70,7 +70,7 @@
       deployment = {
         terraform = pkgs.lib.makeOverridable base.deployment.mkTerraformDeployment (safeAttrs // {
           terraformPackage = package;
-          inherit preDeploy postDeploy;
+          inherit preDeployPhase postDeployPhase;
           shellInputs = deployShellInputs;
           inputs = package.buildInputs;
         });

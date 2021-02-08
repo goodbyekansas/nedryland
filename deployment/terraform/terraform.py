@@ -2,35 +2,25 @@
 Terraform deployment wrapper
 """
 
-import os
-import os.path
 import argparse
-import shutil
-import tempfile
+import os
 import pathlib
-import contextlib
-import typing
+import shutil
 import subprocess
+import typing
 
 
-@contextlib.contextmanager
-def _setup_sources(source: pathlib.Path) -> typing.Iterator[pathlib.Path]:
-    """
-    Copies sources to a temp directory.
-    """
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        print(f"Using temporary directory {tmp_dir}")
-        shutil.copytree(src=source, dst=tmp_dir, dirs_exist_ok=True)
-        os.chmod(tmp_dir, 0o755)
-        yield pathlib.Path(tmp_dir)
+def _setup_sources(source: pathlib.Path) -> None:
+    shutil.copytree(src=source, dst=os.getcwd(), dirs_exist_ok=True)
+    os.chmod(path=os.getcwd(), mode=0o755)
+    for root, dirs, _ in os.walk(os.getcwd()):
+        for content in dirs:
+            os.chmod(path=os.path.join(root, content), mode=0o755)
 
 
-def _run_terraform(
-    cwd: pathlib.Path, command: str, args: typing.List[str] = None
-) -> None:
+def _run_terraform(command: str, args: typing.List[str] = None) -> None:
     subprocess.check_call(
         ["terraform", command, "-lock-timeout=300s", "-input=false"] + (args or []),
-        cwd=cwd,
     )
 
 
@@ -38,22 +28,20 @@ def apply(args: argparse.Namespace) -> None:
     """
     Applies the terraform plan
     """
-    with _setup_sources(pathlib.Path(args.source)) as tmp_dir:
-        _run_terraform(cwd=tmp_dir, command="init")
-        _run_terraform(cwd=tmp_dir, command="apply", args=["-auto-approve"])
+    _setup_sources(source=args.source)
+    _run_terraform(command="init")
+    _run_terraform(command="apply", args=["-auto-approve"])
 
 
 def plan(args: argparse.Namespace) -> None:
     """
     Plans the terraform
     """
-    with _setup_sources(pathlib.Path(args.source)) as tmp_dir:
-        _run_terraform(cwd=tmp_dir, command="init")
-        _run_terraform(
-            cwd=tmp_dir,
-            command="plan",
-            args=["-no-color"] + ([f"-out={args.out}"] if args.out else []),
-        )
+    _setup_sources(source=args.source)
+    _run_terraform(command="init")
+    _run_terraform(
+        command="plan", args=["-no-color"] + ([f"-out={args.out}"] if args.out else []),
+    )
 
 
 def main() -> None:
