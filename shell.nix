@@ -19,10 +19,10 @@ pkgs.lib.mapAttrsRecursiveCond
     attrName: component:
       (
         let
-          pkg = component.packageWithChecks;
-          name = component.name or (builtins.concatStringsSep "." attrName);
+          pkg = component.packageWithChecks; # TODO if there are more targets, create one shell for each
+          componentName = component.name or (builtins.concatStringsSep "." attrName);
           shellPkg = pkg.drvAttrs // rec {
-            name = "${pkg.name}-shell";
+            name = "${componentName}-shell";
 
             hook = pkg.shellHook or "";
             nativeBuildInputs = (pkg.shellInputs or [ ]);
@@ -40,9 +40,9 @@ pkgs.lib.mapAttrsRecursiveCond
 
               echo ⛑ Changing dir to \"$componentDir\"
               cd "$componentDir"
-              echo 🐚 Running shell hook for \"${name}\"
+              echo 🐚 Running shell hook for \"${componentName}\"
               ${hook}
-              echo 🥂 You are now in a shell for working on \"${name}\"
+              echo 🥂 You are now in a shell for working on \"${componentName}\"
             '';
           };
         in
