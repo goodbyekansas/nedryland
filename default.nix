@@ -94,8 +94,8 @@ rec {
                       doInstallCheck = true;
                     } // (if attrs.package.stdenv.hostPlatform != attrs.package.stdenv.buildPlatform && oldAttrs.doCrossCheck or false then {
                       preInstallPhases = [ "crossCheckPhase" ];
-                      crossCheckPhase = oldAttrs.checkPhase;
-                      nativeBuildInputs = oldAttrs.nativeBuildInputs ++ oldAttrs.checkInputs;
+                      crossCheckPhase = oldAttrs.checkPhase or "";
+                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
                     } else { })
                   );
 
