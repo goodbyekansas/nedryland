@@ -149,6 +149,7 @@ pythonPkgs.buildPythonPackage (attrs // {
        ln -s $pylintrc .pylintrc
     fi
     ${commands}
+    ${attrs.shellHook or ""}
   '';
 
   postFixup = ''
