@@ -12,6 +12,7 @@ let
   ];
   isDarwin = super.stdenv.isDarwin;
   fetchzip = super.fetchzip;
+  tzdata = super.tzdata;
 in
 (builtins.foldl'
   (combined: pythonVersion:
@@ -35,6 +36,7 @@ in
 
             checkInputs = [
               super.mock
+              tzdata
             ];
 
             propagatedBuildInputs = [
