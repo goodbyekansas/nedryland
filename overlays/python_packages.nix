@@ -11,6 +11,7 @@ let
     }
   ];
   isDarwin = super.stdenv.isDarwin;
+  fetchzip = super.fetchzip;
 in
 (builtins.foldl'
   (combined: pythonVersion:
@@ -18,6 +19,61 @@ in
       # pkgs.<python-version>.pkgs
       "${pythonVersion.attr}" = pythonVersion.pkg.override {
         packageOverrides = self: super: rec {
+
+          pycue = super.buildPythonPackage rec {
+            pname = "pycue";
+            version = "0.4.95";
+
+            src = fetchzip {
+              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.95/pycue-0.4.95-all.tar.gz";
+              sha256 = "0f1r0y5n5rzk922a24146qjbd7dxjf8f34cgrk7nsfyk8aqhh6np";
+            };
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            checkInputs = [
+              super.mock
+            ];
+
+            propagatedBuildInputs = [
+              super.grpcio
+              super.pyyaml
+              super.future
+            ];
+          };
+
+          pyoutline = super.buildPythonPackage rec {
+            pname = "pyoutline";
+            version = "0.4.95";
+
+            src = fetchzip {
+              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.95/pyoutline-0.4.95-all.tar.gz";
+              sha256 = "07lmbclfaihddy26sajnfghyiqh69v260swpxrb961kb6iv19zqn";
+            };
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            # TODO: check on this
+            doCheck = false;
+            #preCheck = ''
+            # export HOME=$(mktemp --tmpdir -d pyoutline-tests-home.XXXXX)
+            #'';
+
+            checkInputs = [
+              super.mock
+            ];
+
+            propagatedBuildInputs = [
+              super.pyyaml
+              super.future
+              super.six
+              pycue
+            ];
+          };
 
           grpcio-testing = super.buildPythonPackage rec {
             pname = "grpcio-testing";
