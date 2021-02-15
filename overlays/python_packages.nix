@@ -21,6 +21,24 @@ in
       "${pythonVersion.attr}" = pythonVersion.pkg.override {
         packageOverrides = self: super: rec {
 
+          quadprog = super.buildPythonPackage rec {
+            pname = "quadprog";
+            version = "0.1.8";
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "01qb6p1ybv9sd01v5jy85kkzkyq3iqia2ds0b0l7in19d4vgkv9x";
+            };
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            nativeBuildInputs = [
+              super.cython
+            ];
+          };
+
           pycue = super.buildPythonPackage rec {
             pname = "pycue";
             version = "0.4.95";
