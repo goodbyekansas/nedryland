@@ -39,6 +39,25 @@ in
             ];
           };
 
+          trimesh = super.buildPythonPackage rec {
+            pname = "trimesh";
+            version = "3.9.7";
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "1qsiypqh83sb3hx07x0jn3cvygrxx1qvj282w19xsvac399pdpb3";
+            };
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            doCheck = false;
+            nativeBuildInputs = [
+              super.numpy
+            ];
+          };
+
           pycue = super.buildPythonPackage rec {
             pname = "pycue";
             version = "0.4.95";
