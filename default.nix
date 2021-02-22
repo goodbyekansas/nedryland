@@ -165,7 +165,7 @@ rec {
                     (builtins.map (component: component.docs) componentsList)
                 );
           } // allComponents;
-          shells = pkgs.callPackage ./shell.nix { components = allComponents; inherit extraShells; };
+          shells = pkgs.callPackage ./shell.nix { components = allComponents; inherit extraShells mapComponentsRecursive; };
         };
     };
 }
