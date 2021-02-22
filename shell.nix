@@ -1,4 +1,4 @@
-{ pkgs, components, extraShells ? { } }:
+{ pkgs, components, mapComponentsRecursive, extraShells ? { } }:
 let
   getAllPackages = components:
     [ ]
@@ -13,20 +13,20 @@ let
     buildInputs = (getAllPackages components);
   };
 in
-pkgs.lib.mapAttrsRecursiveCond
-  (current: !(current.isNedrylandComponent or false))
+mapComponentsRecursive
   (
     attrName: component:
       (
         let
-          pkg = component.packageWithChecks; # TODO if there are more targets, create one shell for each
+          # TODO: replace all derivations with our own shells (currently only packageWithChecks)
+          pkg = component.packageWithChecks;
           componentName = component.name or (builtins.concatStringsSep "." attrName);
+          componentAttrs = builtins.removeAttrs component [ "package" "packageWithChecks" "deployment" "deploy" ];
           shellPkg = pkg.drvAttrs // rec {
             name = "${componentName}-shell";
 
-            hook = pkg.shellHook or "";
             nativeBuildInputs = (pkg.shellInputs or [ ]);
-
+            passthru = componentAttrs;
             # we will get double shellhooks if we do not
             # remove this here
             inputsFrom = [ (builtins.removeAttrs pkg [ "shellHook" ]) ];
@@ -41,7 +41,7 @@ pkgs.lib.mapAttrsRecursiveCond
               echo ⛑ Changing dir to \"$componentDir\"
               cd "$componentDir"
               echo 🐚 Running shell hook for \"${componentName}\"
-              ${hook}
+              ${pkg.shellHook or ""}
               echo 🥂 You are now in a shell for working on \"${componentName}\"
             '';
           };
