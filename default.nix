@@ -26,8 +26,26 @@ let
         ];
         config = { };
       };
+  mapComponentsRecursive = f: set:
+    let
+      recurse = path: set:
+        let
+          g =
+            name: value:
+            if ! builtins.isAttrs value || pkgs.lib.isDerivation value then value
+            else
+              recurse (path ++ [ name ]) (
+                if value.isNedrylandComponent or false then f (path ++ [ name ]) value
+                else value
+              );
+        in
+        builtins.mapAttrs g set;
+    in
+    recurse [ ] set;
+
 in
 rec {
+  inherit mapComponentsRecursive;
   nixpkgs = pkgs;
   nixpkgsPath = sources.nixpkgs;
   docs = pkgs.stdenv.mkDerivation rec {
@@ -50,7 +68,7 @@ rec {
           if builtins.pathExists configFile then builtins.readFile configFile else "{}"
         );
       base = {
-        inherit sources;
+        inherit sources mapComponentsRecursive;
         mkComponent = import ./mkcomponent.nix pkgs;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
