@@ -1,12 +1,13 @@
-{ base, pkgs, numpyWrapper }:
-# base and pkgs are given by Nedryland,
-# everything else has to be provided in `project.nix`
+# numpyWrapper is automatically passed in
+# since there is a component with the same name
+{ base, python3, numpyWrapper }:
+
 base.languages.python.mkClient {
   name = "hello";
   version = "0.1.0";
   src = ./.;
-  pythonVersion = pkgs.python3;
+  pythonVersion = python3;
   # Here we don't use pp with numpyWrapper since it's our own
   # package and not part of the python version packages.
-  propagatedBuildInputs = (pp: [ numpyWrapper ]);
+  propagatedBuildInputs = (pp: [ numpyWrapper.package ]);
 }

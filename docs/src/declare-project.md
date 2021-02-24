@@ -33,19 +33,18 @@ The function accepts a name for the project and a default config file to use for
 configuration](#configuration). In the `project` set returned from the above call to `mkProject`,
 there will be more utility functions that can be called to set up the project further.
 
-## Creating the Grid
+## Creating the Matrix
 
-To give you access to shells and build targets in the [grid](./concepts/grid.md), your `project.nix`
-finally needs a call to `mkGrid`. This function is declared on the `Project` instance and is passed
-your `components`, `deployment`, `extraShells` and `lib`.
+To give you access to shells and build targets in the [matrix](./concepts/matrix.md), your call to `mkProject`
+needs a list of `components`.
 
 `components` will be your components as described and declared [here](./components.md). Passing them
-to `mkGrid` might look something like
+to `mkProject` might look something like
 
 ```nix
-project.mkGrid {
-  components = {
-    example-component = project.declareComponent ./example-component/example-component.nix {};
+project.mkMatrix {
+  components = { callFile }: {
+    example-component = callFile ./example-component/example-component.nix {};
   };
 
   # ...
@@ -56,7 +55,7 @@ project.mkGrid {
 targets, no magic there.
 
 `extraShells` is any standard nix shells (as described
-[here](https://nixos.org/nix/manual/#sec-nix-shell)) that you wish to have exposed by the grid.
+[here](https://nixos.org/nix/manual/#sec-nix-shell)) that you wish to have exposed by the matrix.
 
 `lib` is a conventional key for any nix functions that you wish to expose to projects using your
 project. These will simply be exposed on your project instance as `.lib`.
@@ -64,18 +63,18 @@ project. These will simply be exposed on your project instance as `.lib`.
 ## Integrating with Nix
 
 `project.nix` is not a standard Nix file and therefore will not be picked up by any Nix tools.
-Nedryland relies 100% on standard Nix tools and therefore we also need to expose the grid in a way
+Nedryland relies 100% on standard Nix tools and therefore we also need to expose the matrix in a way
 that Nix understands. The way this is done is through the files `default.nix` and `shell.nix`.
 `default.nix` is what the command `nix-build` looks for when not provided with any filename
-arguments. Therefore, we expose the build grid in that file like this
+arguments. Therefore, we expose the build matrix in that file like this
 
 ```nix
 # default.nix
-(import ./project.nix).grid
+(import ./project.nix).matrix
 ```
 
 `shell.nix` is where `nix-shell` looks for shell definitions by default and therefore, we can use it
-to expose the shells from the build grid like this
+to expose the shells from the build matrix like this
 
 ```nix
 # shell.nix
@@ -83,7 +82,7 @@ to expose the shells from the build grid like this
 ```
 
 After this, you should be able to use `nix-build` and `nix-shell` to access targets as described
-[here](./concepts/grid.md). So, for example to build the target `package` of the `example-component`
+[here](./concepts/matrix.md). So, for example to build the target `package` of the `example-component`
 declared above, you would invoke
 
 ```sh
@@ -201,7 +200,7 @@ you would use `base.mkCompType`.
 
 You can also configure Nedryland to use base extensions from other repositories by importing that
 repository. When importing another nedryland project, you can use the helper `importProject` in
-Nedryland. This will give you access to the [grid](./concepts/grid.md) of that project and it can
+Nedryland. This will give you access to the [matrix](./concepts/matrix.md) of that project and it can
 also be sent in as `projectDependencies` when declaring your project in Nedryland. Doing so will
 give you access to all base extensions from that project.
 

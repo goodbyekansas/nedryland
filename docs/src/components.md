@@ -30,16 +30,19 @@ This declares a component with a `package` target and uses the standard nix `mkD
 ## Exposing your Component
 
 In order for your component to be used, it needs to be added to the build
-[grid](./concepts/grid.md). This is done by adding it to the call to `mkGrid` (usually inside
-`project.nix`). A component is exposed by a call to `project.declareComponent` followed by optional
-arguments.
+[matrix](./concepts/matrix.md). This is done by adding it to the call to `mkProject` (usually inside
+`project.nix`). A component is exposed by a call to `callFile` followed by optional
+arguments. `callFile` is part of `base` and can therefore be accepted as an argument when declaring
+components on a project.
 
 So, something like this:
 
 ```nix
-project.mkGrid {
-  components = {
-    exampleComponent = project.declareComponent ./example-component/example-component.nix {};
+nedryland.mkProject {
+  name = "my-project";
+
+  components = { callFile } : {
+    exampleComponent = callFile ./example-component/example-component.nix {};
   };
 
   # ...
@@ -48,11 +51,13 @@ project.mkGrid {
 
 The component will be exposed under the nix attribute `exampleComponent` so to build it you can use
 `nix-build -A exampleComponent.<target>` where `target` is for example `package` (see
-[grid](../concepts/grid.md))
+[matrix](../concepts/matrix.md))
 
 ## Component Dependencies
-Nedryland supports components being dependent on other components. This is done by first declaring
-your dependency as an input.
+Nedryland supports components being dependent on other components. This is done by declaring
+your dependency as an input. This is true for both for packages available in pkgs and your defined components.
+Add your dependency to the argument list to your file and Nedryland will automatically send it to the function
+call if available in either components or pkgs.
 
 ```nix
 { pkgs, base, myDependency }:
@@ -61,16 +66,6 @@ base.mkComponent {
   # ...
 }
 ```
-
-Then, in the project setup, make sure to declare your component with this dependency set.
-
-```nix
-example-component = project.declareComponent ./example-component/example-component.nix {
-  myDependency = theOtherComponent;
-};
-```
-
-Nix will then ensure the correct build order and send in your dependency.
 
 # Component Types
 
@@ -117,7 +112,7 @@ base.mkClient {
 }
 ```
 
-## Utility/Library
+## Library
 This component type is not exposed directly in base but rather by the different language helpers
 (see below) and should be used to share common functionality in a library for the language in
 question.

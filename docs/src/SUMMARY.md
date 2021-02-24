@@ -5,7 +5,7 @@
 - [Concepts](./concepts.md)
   - [Project](./concepts/project.md)
   - [Component](./concepts/component.md)
-  - [Grid](./concepts/grid.md)
+  - [Matrix](./concepts/matrix.md)
   - [Deployment](./concepts/deployment.md)
 
 - [Declaring the Project](./declare-project.md)

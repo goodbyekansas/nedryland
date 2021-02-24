@@ -5,5 +5,5 @@ these components in more detail.
 
 * [Project](./concepts/project.md)
 * [Component](./concepts/component.md)
-* [Grid](./concepts/grid.md)
+* [Matrix](./concepts/matrix.md)
 * [Deployment](./concepts/deployment.md)

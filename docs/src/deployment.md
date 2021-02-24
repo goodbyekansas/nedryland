@@ -32,21 +32,22 @@ this shell run `bin/shell` in the resulting derivation.
 
 ## Setting up project deployment targets
 
-`mkProject` accepts an optional `deploy` argument which is a freeform
-attrset and can be accessed through `nix-build -A deploy.<attribute>`.
+`mkProject` accepts extra targets and `deploy` is conventionally used
+for project deployment targets and can be accessed through `nix-build -A deploy.<attribute>`.
+
 All values in this set should be deployment derivations, or
 combinations of them which can be created with the convenience
-function `mkCombinedDeployment` on the nedryland project.
+function `mkCombinedDeployment` available in `base`.
 
 ```nix
-project.mkGrid {
+nedryland.mkProject {
   ...
-  deploy = {
+  deploy = { mkCombinedDeployment }: {
     group = {
       comp1 = component1.deploy;
       comp2 = component2.deploy;
     }
-    combined = project.mkCombinedDeployment "combined" {
+    combined = mkCombinedDeployment "combined" {
       comp3 = component3.deploy;
       comp4 = component4.deploy;
     }
