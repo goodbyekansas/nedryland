@@ -1,5 +1,6 @@
 let
   sources = import ./nix/sources.nix;
+
   pkgs = with
     {
       overlay = _: pkgs:
@@ -26,28 +27,9 @@ let
         ];
         config = { };
       };
-  mapComponentsRecursive = f: set:
-    let
-      recurse = path: set:
-        let
-          g =
-            name: value:
-            if ! builtins.isAttrs value || pkgs.lib.isDerivation value then value
-            else
-              recurse (path ++ [ name ]) (
-                if value.isNedrylandComponent or false then f (path ++ [ name ]) value
-                else value
-              );
-        in
-        builtins.mapAttrs g set;
-    in
-    recurse [ ] set;
-
 in
-rec {
-  inherit mapComponentsRecursive;
-  nixpkgs = pkgs;
-  nixpkgsPath = sources.nixpkgs;
+{
+
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";
     src = builtins.path { inherit name; path = ./docs; };
@@ -59,17 +41,22 @@ rec {
     '';
   };
 
-  mkProject = { name, configFile, baseExtensions ? [ ], projectDependencies ? [ ] }:
+  mkProject =
+    attrs@{ name
+    , components
+    , baseExtensions ? [ ]
+    , extraShells ? { }
+    , configFile ? null
+    , lib ? { }
+    , ...
+    }:
     let
-      configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper name}_config";
-      configContent =
-        if configContentFromEnv != "" then configContentFromEnv else
-        (
-          if builtins.pathExists configFile then builtins.readFile configFile else "{}"
-        );
+      componentFns = import ./component.nix pkgs;
+      mapComponentsRecursive = componentFns.mapComponentsRecursive;
+
       base = {
-        inherit sources mapComponentsRecursive;
-        mkComponent = import ./mkcomponent.nix pkgs;
+        inherit sources mapComponentsRecursive callFile;
+        mkComponent = componentFns.mkComponent;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
         extend = pkgs.callPackage ./extend.nix { };
@@ -78,94 +65,112 @@ rec {
         parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
         languages = pkgs.callPackage ./languages { inherit base; };
       };
-      allBaseExtensions = (
-        builtins.foldl'
-          (x: y: x ++ y) [ ]
-          (
-            builtins.map (pd: pd.baseExtensions) projectDependencies
-          )
-      ) ++ baseExtensions;
-      combinedBaseExtensions = builtins.foldl'
+
+      callFile = path: attrs: pkgs.lib.makeOverridable
         (
-          # Combine all extensions into one dictionary that we can merge with base
-          combinedBaseExtensions: currentBaseExtension: pkgs.lib.recursiveUpdate combinedBaseExtensions (currentBaseExtension { base = (pkgs.lib.recursiveUpdate combinedBaseExtensions base); inherit pkgs; })
+          attrs:
+          let
+            f = import path;
+            args = builtins.functionArgs f;
+            # The result from calling the function specified by callFile
+            # is not guaranteed to be an actual component. It could just be a set
+            # or a string which is ok.
+            result = (f
+              (
+                (builtins.intersectAttrs args pkgs)
+                // (builtins.intersectAttrs args resolvedComponents)
+                // (builtins.intersectAttrs args {
+                  base = extendedBase;
+                })
+                // attrs
+              )
+            );
+          in
+          if result.isNedrylandComponent or false then
+            componentFns.initComponent result path base.deployment.mkCombinedDeployment
+          else
+            result
+        )
+        attrs;
+
+      appliedAttrs =
+        builtins.mapAttrs
+          (n: v:
+            if builtins.isFunction v then
+              v (builtins.intersectAttrs (builtins.functionArgs v) base)
+            else
+              v)
+          attrs;
+
+      configContentFromEnv = builtins.getEnv "${pkgs.lib.toUpper appliedAttrs.name}_config";
+      configContent =
+        if configContentFromEnv != "" then configContentFromEnv else
+        (
+          if appliedAttrs.configFile != null
+            && builtins.pathExists appliedAttrs.configFile then
+            builtins.readFile appliedAttrs.configFile
+          else "{}"
+        );
+
+      allBaseExtensions = (builtins.foldl'
+        (
+          combinedBaseExtensions: currentBaseExtension:
+            let
+              extFn = import currentBaseExtension;
+              args = builtins.functionArgs extFn;
+            in
+            pkgs.lib.recursiveUpdate combinedBaseExtensions (
+              extFn (
+                builtins.intersectAttrs args resolvedComponents // {
+                  base = (pkgs.lib.recursiveUpdate combinedBaseExtensions base);
+                  inherit pkgs;
+                }
+              )
+            )
         )
         { }
-        allBaseExtensions;
-      extendedBase = pkgs.lib.recursiveUpdate combinedBaseExtensions base;
+        appliedAttrs.baseExtensions or [ ]
+      );
+
+      extendedBase = pkgs.lib.recursiveUpdate allBaseExtensions base;
+      resolvedComponents = appliedAttrs.components;
+
+      allTargets = pkgs.lib.zipAttrs (
+        builtins.map
+          (
+            comp: pkgs.lib.filterAttrs
+              (
+                name: value: pkgs.lib.isDerivation value
+              )
+              comp
+          )
+          (pkgs.lib.collect (value: value.isNedrylandComponent or false) resolvedComponents)
+      );
+
+      extraTargets = (builtins.removeAttrs appliedAttrs [
+        "components"
+        "extraShells"
+        "lib"
+        "baseExtensions"
+        "configFile"
+        "name"
+      ]);
+
     in
     {
+      name = appliedAttrs.name;
+      lib = appliedAttrs.lib or { };
+
+      baseExtensions = allBaseExtensions;
+      nixpkgs = pkgs;
+      nixpkgsPath = sources.nixpkgs;
+      matrix = allTargets // resolvedComponents // extraTargets;
       mkCombinedDeployment = base.deployment.mkCombinedDeployment;
-      declareComponent = path: dependencies@{ ... }:
-        let
-          c = pkgs.callPackage path ({ base = extendedBase; } // dependencies);
-          setupComponents = attrs:
-            if attrs.isNedrylandComponent or false then
-            # order is important here, components can set path manually
-              ({ inherit path; } // {
-                packageWithChecks =
-                  attrs.package.overrideAttrs (
-                    oldAttrs: {
-                      doCheck = true;
 
-                      # Python packages don't have a checkPhase, only an installCheckPhase
-                      doInstallCheck = true;
-                    } // (if attrs.package.stdenv.hostPlatform != attrs.package.stdenv.buildPlatform && oldAttrs.doCrossCheck or false then {
-                      preInstallPhases = [ "crossCheckPhase" ];
-                      crossCheckPhase = oldAttrs.checkPhase or "";
-                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
-                    } else { })
-                  );
-
-                # the deploy target is simply the sum of everything
-                # in the deployment set
-                deploy = base.deployment.mkCombinedDeployment "${attrs.package.name}-deploy" attrs.deployment;
-              } // attrs)
-            else
-              (builtins.mapAttrs (n: v: if builtins.isAttrs v then setupComponents v else v) attrs);
-        in
-        setupComponents c;
-
-      mkGrid = { components, deploy ? { }, extraShells ? { }, lib ? { } }:
-        let
-          gatherComponents = components:
-            builtins.foldl'
-              (
-                accumulator: current: accumulator ++ (
-                  if current.isNedrylandComponent or false then
-                    [ current ]
-                  else
-                    gatherComponents current
-                )
-              )
-              [ ]
-              (builtins.filter builtins.isAttrs (builtins.attrValues components))
-          ;
-          allComponents = components;
-          componentsList = gatherComponents allComponents;
-        in
-        {
-          inherit baseExtensions lib;
-          grid = rec {
-            inherit deploy;
-
-            package = builtins.map (component: component.package) componentsList;
-            packageWithChecks = builtins.map (component: component.packageWithChecks) componentsList;
-            deploymentConfigs =
-              builtins.filter
-                (c: c != null)
-                (builtins.map (component: component.deployment) componentsList);
-            docs =
-              pkgs.lib.foldl
-                (x: y: x // y)
-                { }
-                (
-                  builtins.filter
-                    (d: d != { } && d != null)
-                    (builtins.map (component: component.docs) componentsList)
-                );
-          } // allComponents;
-          shells = pkgs.callPackage ./shell.nix { components = allComponents; inherit extraShells mapComponentsRecursive; };
-        };
+      shells = pkgs.callPackage ./shell.nix {
+        inherit mapComponentsRecursive;
+        extraShells = appliedAttrs.extraShells or { };
+        components = resolvedComponents;
+      };
     };
 }

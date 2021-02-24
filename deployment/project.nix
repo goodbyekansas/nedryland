@@ -1,15 +1,6 @@
-let
-  nedryland = import ../default.nix;
-
-  project = nedryland.mkProject {
-    name = "deployment";
-    configFile = ./config.toml;
+(import ../default.nix).mkProject {
+  name = "deployment";
+  components = { callFile }: rec {
+    terraform = callFile ./terraform/deployer.nix { };
   };
-
-in
-project.mkGrid {
-  components = rec {
-    terraform = project.declareComponent ./terraform/deployer.nix { };
-  };
-  deploy = { };
 }

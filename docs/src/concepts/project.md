@@ -2,7 +2,7 @@
 
 A project in Nedryland is a folder with a collection of [components](./component.md). They can be
 components of only one type or of different types. A project is created by importing Nedryland in a
-file and then exposing the [grid](./grid.md) in `default.nix` and shells in `shell.nix` so that it
+file and then exposing the [matrix](./matrix.md) in `default.nix` and shells in `shell.nix` so that it
 works with the standard Nix tools.
 
 To depend on Nedryland in a project, any standard
