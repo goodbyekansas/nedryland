@@ -24,7 +24,7 @@ let
           '')
           # These variables are needed for stdenvs setup
           ''
-            declare -x out="/not-set"
+            declare -x out="/deploy/should/not/generate/output"
             declare -x SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             declare -x noDumpEnvVars=1
           ''
