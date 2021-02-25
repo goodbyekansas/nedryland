@@ -21,3 +21,5 @@ The book is created with [mdBook](https://github.com/rust-lang/mdBook) which is 
 build the docs. Navigate to the `docs/` folder and get a nix shell with mdBook in it (`nix-shell -p
 mdbook`). You can use `mdbook serve` to get a web server that will also watch and rebuild the book
 when changes are made. `mdbook build` can be used to just build the book.
+
+To build and open the book, call `nix-build -A docs` followed by `xdg-open`/`open` `result/index.html`.
