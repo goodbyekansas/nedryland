@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2021-02-25
+
 ### Removed
 - RUST_BACKTRACE was enabled by default. Removed it. Enable it manually when needed instead.
 - sccache, was brittle and gave little benefit.
