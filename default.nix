@@ -48,6 +48,7 @@ in
     , extraShells ? { }
     , configFile ? null
     , lib ? { }
+    , dependencies ? [ ]
     , ...
     }:
     let
@@ -112,7 +113,7 @@ in
           else "{}"
         );
 
-      allBaseExtensions = (builtins.foldl'
+      projectBaseExtensions = (builtins.foldl'
         (
           combinedBaseExtensions: currentBaseExtension:
             let
@@ -122,7 +123,7 @@ in
             pkgs.lib.recursiveUpdate combinedBaseExtensions (
               extFn (
                 builtins.intersectAttrs args resolvedComponents // {
-                  base = (pkgs.lib.recursiveUpdate combinedBaseExtensions base);
+                  base = (pkgs.lib.recursiveUpdate combinedBaseExtensions baseWithDependencies);
                   inherit pkgs;
                 }
               )
@@ -132,7 +133,15 @@ in
         appliedAttrs.baseExtensions or [ ]
       );
 
-      extendedBase = pkgs.lib.recursiveUpdate allBaseExtensions base;
+      dependenciesBaseExtensions = (
+        builtins.foldl'
+          pkgs.lib.recursiveUpdate
+          { }
+          (builtins.map (pd: pd.baseExtensions) appliedAttrs.dependencies or [ ])
+      );
+      baseWithDependencies = pkgs.lib.recursiveUpdate dependenciesBaseExtensions base;
+      extendedBase = pkgs.lib.recursiveUpdate projectBaseExtensions baseWithDependencies;
+
       resolvedComponents = appliedAttrs.components;
 
       allTargets = pkgs.lib.zipAttrs (
@@ -147,24 +156,32 @@ in
           (pkgs.lib.collect (value: value.isNedrylandComponent or false) resolvedComponents)
       );
 
-      extraTargets = (builtins.removeAttrs appliedAttrs [
-        "components"
-        "extraShells"
-        "lib"
-        "baseExtensions"
-        "configFile"
-        "name"
-      ]);
+      extraTargets = builtins.mapAttrs
+        (
+          name: value: if builtins.isFunction value then value resolvedComponents else value
+        )
+        (builtins.removeAttrs appliedAttrs [
+          "components"
+          "extraShells"
+          "lib"
+          "baseExtensions"
+          "configFile"
+          "name"
+          "dependencies"
+        ]);
 
     in
-    {
+    rec {
       name = appliedAttrs.name;
       lib = appliedAttrs.lib or { };
 
-      baseExtensions = allBaseExtensions;
+      components = resolvedComponents;
+      targets = allTargets // extraTargets;
+      matrix = components // targets;
+
+      baseExtensions = projectBaseExtensions;
       nixpkgs = pkgs;
       nixpkgsPath = sources.nixpkgs;
-      matrix = allTargets // resolvedComponents // extraTargets;
       mkCombinedDeployment = base.deployment.mkCombinedDeployment;
 
       shells = pkgs.callPackage ./shell.nix {
