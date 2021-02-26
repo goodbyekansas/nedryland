@@ -60,11 +60,11 @@ in
 
           pycue = super.buildPythonPackage rec {
             pname = "pycue";
-            version = "0.4.95";
+            version = "0.8.8";
 
             src = fetchzip {
-              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.95/pycue-0.4.95-all.tar.gz";
-              sha256 = "0f1r0y5n5rzk922a24146qjbd7dxjf8f34cgrk7nsfyk8aqhh6np";
+              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.8.8/pycue-0.8.8-all.tar.gz";
+              sha256 = "1vvlndw8gx7sbcqffrh1a6aa1087473fycrj4vkk9zdi4zddyxx6";
             };
 
             preBuild = ''
@@ -85,11 +85,11 @@ in
 
           pyoutline = super.buildPythonPackage rec {
             pname = "pyoutline";
-            version = "0.4.95";
+            version = "0.8.8";
 
             src = fetchzip {
-              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.95/pyoutline-0.4.95-all.tar.gz";
-              sha256 = "07lmbclfaihddy26sajnfghyiqh69v260swpxrb961kb6iv19zqn";
+              url = "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.8.8/pyoutline-0.8.8-all.tar.gz";
+              sha256 = "0kbb47wv7i3y1kp2mq0lrwg8glaj6s5gv2dck41wmy8wah3vf42r";
             };
 
             preBuild = ''
