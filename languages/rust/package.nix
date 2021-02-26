@@ -206,8 +206,13 @@ stdenv.mkDerivation (
       );
     } else { }
   ) // (
-    if warningsAsErrors then {
-      RUSTFLAGS = ''${if attrs ? RUSTFLAGS then "${attrs.RUSTFLAGS} " else ""}-D warnings'';
+    let
+      flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
+      ++ pkgs.lib.optional warningsAsErrors "-D warnings"
+      ++ pkgs.lib.optional (hostTriple == "wasm32_wasi") "-Clinker-flavor=gcc";
+    in
+    if flagList != [ ] then {
+      RUSTFLAGS = builtins.concatStringsSep " " flagList;
     } else { }
   ) // (
     if hostTriple != buildTriple then {
