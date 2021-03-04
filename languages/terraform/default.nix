@@ -3,6 +3,7 @@
   mkTerraformComponent =
     attrs@{ name
     , src
+    , srcExclude ? [ ]
     , buildInputs ? [ ]
     , shellHook ? ""
     , disableApplyInShell ? true
@@ -15,7 +16,7 @@
     , ...
     }:
     let
-      safeAttrs = (builtins.removeAttrs attrs [ "variables" ]);
+      safeAttrs = (builtins.removeAttrs attrs [ "variables" "srcExclude" ]);
     in
     base.mkComponent rec {
       inherit name;
@@ -24,7 +25,10 @@
         src = builtins.path {
           inherit name;
           path = src;
-          filter = (path: type: !(type == "directory" && baseNameOf path == ".terraform"));
+          filter = (path: type:
+            !(type == "directory" && baseNameOf path == ".terraform")
+              && !(builtins.any (pred: pred path type) srcExclude)
+          );
         };
         buildInputs = [ pkgs.terraform_0_13 ] ++ buildInputs;
 

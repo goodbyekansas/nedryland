@@ -1,8 +1,9 @@
 # nix results
 /result*
 
-# random pydev
+# editor related
 .project
 .pydevproject
+.vscode/
 
 .direnv/
