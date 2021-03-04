@@ -1,4 +1,4 @@
-pkgs: base: attrs@{ name
+pkgs: base: attrs_@{ name
             , version
             , src
             , pythonVersion
@@ -83,6 +83,7 @@ let
     }
     ./mypy-hook.sh;
   setupPyTemplate = if setuptoolsLibrary then ./setup-template-library else ./setup-template-application;
+  attrs = builtins.removeAttrs attrs_ [ "srcExclude" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
