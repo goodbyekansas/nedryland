@@ -75,5 +75,6 @@
           inputs = package.buildInputs;
         });
       };
+      terraform = package;
     };
 }

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- languages now also aliases their name to package so we can do `nix-build -A rust` to build all rust packages.
+
 ## [0.8.1] - 2021-02-25
 
 ### Fixed

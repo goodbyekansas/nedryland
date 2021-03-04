@@ -41,7 +41,7 @@ rec {
         filterCargoLock = true;
       });
     in
-    base.mkComponent { inherit deployment; package = (toUtility package); };
+    base.mkComponent { inherit deployment; package = (toUtility package); rust = (toUtility package); };
 
   mkClient =
     attrs@{ name
@@ -73,7 +73,7 @@ rec {
         }
       );
     in
-    base.mkClient (attrs // { inherit deployment; package = newPackage; });
+    base.mkClient (attrs // { inherit deployment; package = newPackage; rust = newPackage; });
 
   mkService =
     attrs@{ name
@@ -105,7 +105,7 @@ rec {
         }
       );
     in
-    base.mkService (attrs // { inherit deployment; package = newPackage; });
+    base.mkService (attrs // { inherit deployment; package = newPackage; rust = newPackage; });
 
   fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
     let
