@@ -31,7 +31,7 @@ let
       )
     else
       (
-        pkgs.rust-bin.stable."1.49.0".rust.override {
+        pkgs.rust-bin.stable."1.50.0".rust.override {
           inherit targets extensions;
         }
       )
