@@ -141,7 +141,8 @@ stdenv.mkDerivation (
     buildInputs = attrs.buildInputs or [ ]
     # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
     # on macos
-    ++ pkgs.stdenv.lib.optional pkgs.stdenv.hostPlatform.isDarwin pkgs.libiconv;
+    ++ pkgs.stdenv.lib.optional stdenv.hostPlatform.isDarwin pkgs.libiconv;
+
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
 
     shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
