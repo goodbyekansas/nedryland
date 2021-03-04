@@ -2,7 +2,7 @@
 let
   protoIncludePaths = builtins.map (pi: pi.protobuf) protoInputs;
   rustInputs = builtins.map (pi: "${pi.rust.package.name}:${pi.rust.package.src}") protoInputs;
-  tonicDependencyString = ''tonic = { version = "0.3", features = ["tls", "tls-roots"] }'';
+  tonicDependencyString = ''tonic = { version = "0.4", features = ["tls", "tls-roots"] }'';
 in
 stdenv.mkDerivation {
   inherit protoSources protoIncludePaths rustInputs;

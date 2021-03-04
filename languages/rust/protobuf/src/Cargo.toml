@@ -5,8 +5,8 @@ authors = ["Goodbye Kansas Pipeline team <pipeline@goodbyekansas.com>"]
 edition = "2018"
 
 [dependencies]
-bytes = "0.5"
-prost = "0.6"
+bytes = "1"
+prost = "0.7"
 tempfile = "3"
 @includeTonic@
 @external@

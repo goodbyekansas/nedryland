@@ -138,7 +138,10 @@ stdenv.mkDerivation (
     ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
     ++ [ vendor ];
 
-    buildInputs = attrs.buildInputs or [ ];
+    buildInputs = attrs.buildInputs or [ ]
+    # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
+    # on macos
+    ++ pkgs.stdenv.lib.optional pkgs.stdenv.hostPlatform.isDarwin pkgs.libiconv;
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
 
     shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
