@@ -7,6 +7,7 @@
 
 attrs@{ name
 , src
+, srcExclude ? [ ]
 , extensions ? [ ]
 , targets ? [ ]
 , defaultTarget ? ""
@@ -61,6 +62,7 @@ let
             path: type: !(type == "directory" && baseNameOf path == "target")
               && !(type == "directory" && baseNameOf path == ".cargo")
               && !(filterCargoLock && type == "regular" && baseNameOf path == "Cargo.lock")
+              && !(builtins.any (pred: pred path type) srcExclude)
           );
       }) else src;
 
@@ -111,7 +113,7 @@ let
     }
   '';
 
-  safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" ];
+  safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" "srcExclude" ];
 
   # cross compiling
   ccForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}cc";

@@ -2,6 +2,7 @@ pkgs: base: attrs@{ name
             , version
             , src
             , pythonVersion
+            , srcExclude ? [ ]
             , preBuild ? ""
             , format ? "setuptools"
             , setuptoolsLibrary ? false
@@ -10,7 +11,12 @@ pkgs: base: attrs@{ name
             }:
 let
   pythonPkgs = pythonVersion.pkgs;
-  invariantSrc = if pkgs.lib.isStorePath src then src else (builtins.path { path = src; inherit name; });
+  invariantSrc = if pkgs.lib.isStorePath src then src else
+  (builtins.path {
+    inherit name;
+    path = src;
+    filter = (path: type: !(builtins.any (pred: pred path type) srcExclude));
+  });
   commands = ''
     check() {
         eval "$installCheckPhase"
