@@ -49,6 +49,7 @@ rec {
     in
     base.mkComponent {
       package = packageWithWheel;
+      python = packageWithWheel;
     };
 
   mkClient =
@@ -80,5 +81,6 @@ rec {
     in
     base.mkComponent {
       package = application;
+      python = application;
     };
 }
