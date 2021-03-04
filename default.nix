@@ -41,6 +41,21 @@ in
     '';
   };
 
+  ci = pkgs.runCommand "ci-scripts"
+    {
+      nixpkgsFmt = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
+      diff = "${pkgs.diffutils}/bin/diff";
+      # Pointless to do this on a remote machine.
+      preferLocalBuild = true;
+      allowSubstitutes = false;
+    }
+    ''
+      n=$out/bin/nixfmt
+      mkdir -p "$(dirname "$n")"
+      substituteAll ${./ci/nix-fmt.bash} $n
+      chmod +x "$n"
+    '';
+
   mkProject =
     attrs@{ name
     , components
