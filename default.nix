@@ -24,6 +24,9 @@ let
 
           # more recent Wasi lib C (default was 2019)
           (import ./overlays/wasilibc.nix)
+
+          # darwin "fix" for mingw
+          (import ./overlays/darwin-fix-mcfgthreads.nix)
         ];
         config = { };
       };
