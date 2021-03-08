@@ -71,7 +71,7 @@ in
       mapComponentsRecursive = componentFns.mapComponentsRecursive;
 
       base = {
-        inherit sources mapComponentsRecursive callFile;
+        inherit sources mapComponentsRecursive callFile callFunction;
         mkComponent = componentFns.mkComponent;
         mkClient = import ./mkclient.nix base;
         mkService = import ./mkservice.nix base;
@@ -82,16 +82,16 @@ in
         languages = pkgs.callPackage ./languages { inherit base; };
       };
 
-      callFile = path: attrs: pkgs.lib.makeOverridable
+      callFile = path: attrs: callFunction (import path) path attrs;
+      callFunction = function: path: attrs: pkgs.lib.makeOverridable
         (
           attrs:
           let
-            f = import path;
-            args = builtins.functionArgs f;
+            args = builtins.functionArgs function;
             # The result from calling the function specified by callFile
             # is not guaranteed to be an actual component. It could just be a set
             # or a string which is ok.
-            result = (f
+            result = (function
               (
                 (builtins.intersectAttrs args pkgs)
                 // (builtins.intersectAttrs args resolvedComponents)
