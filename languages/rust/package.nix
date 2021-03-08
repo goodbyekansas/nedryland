@@ -124,112 +124,116 @@ let
   hostTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.hostPlatform);
   buildTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.buildPlatform);
 
+  runners = [
+    ./runner/wasi.nix
+    ./runner/windows.nix
+  ];
+
+  runnerAttrs = builtins.foldl'
+    (acc: curr:
+      let
+        function = import curr;
+        args = builtins.functionArgs function;
+      in
+      (acc // (function ((builtins.intersectAttrs args pkgs) // {
+        inherit attrs;
+        hostPlatform = defaultTarget;
+        buildPlatform = stdenv.buildPlatform;
+      })))
+    )
+    { }
+    runners;
+
 in
-stdenv.mkDerivation (
-  safeAttrs // {
-    inherit name;
-    strictDeps = true;
-    disallowedReferences = [ vendor ];
-    src = invariantSource;
+stdenv.mkDerivation
+  (
+    safeAttrs // {
+      inherit name;
+      strictDeps = true;
+      disallowedReferences = [ vendor ];
+      src = invariantSource;
 
-    nativeBuildInputs = with pkgs; [
-      cacert
-      rustBin
-      removeReferencesTo
-    ] ++ attrs.nativeBuildInputs or [ ]
-    ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
-    ++ [ vendor ];
+      nativeBuildInputs = with pkgs; [
+        cacert
+        rustBin
+        removeReferencesTo
+      ] ++ attrs.nativeBuildInputs or [ ]
+      ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
+      ++ [ vendor ];
 
-    buildInputs = attrs.buildInputs or [ ]
-    # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
-    # on macos
-    ++ pkgs.stdenv.lib.optional stdenv.hostPlatform.isDarwin pkgs.libiconv;
+      buildInputs = attrs.buildInputs or [ ]
+      # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
+      # on macos
+      ++ pkgs.stdenv.lib.optional stdenv.hostPlatform.isDarwin pkgs.libiconv;
 
-    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
+      propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
 
-    shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
+      shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
 
-    configurePhase = attrs.configurePhase or ''
-      runHook preConfigure
-      export CARGO_HOME=$PWD
-      runHook postConfigure
-    '';
+      configurePhase = attrs.configurePhase or ''
+        runHook preConfigure
+        export CARGO_HOME=$PWD
+        runHook postConfigure
+      '';
 
-    buildPhase = attrs.buildPhase or ''
-      runHook preBuild
-      cargo build --release ${getFeatures buildFeatures}
-      runHook postBuild
-    '';
+      buildPhase = attrs.buildPhase or ''
+        runHook preBuild
+        cargo build --release ${getFeatures buildFeatures}
+        runHook postBuild
+      '';
 
-    checkPhase = attrs.checkPhase or ''
-      cargo fmt -- --check
-      cargo test ${getFeatures testFeatures}
-      cargo clippy ${getFeatures testFeatures}
-      ${extraChecks}
-    '';
+      checkPhase = attrs.checkPhase or ''
+        cargo fmt -- --check
+        cargo test ${getFeatures testFeatures}
+        cargo clippy ${getFeatures testFeatures}
+        ${extraChecks}
+      '';
 
-    installPhase = attrs.installPhase or ''
-      mkdir -p $out
-    '';
+      installPhase = attrs.installPhase or ''
+        mkdir -p $out
+      '';
 
-    preFixup = ''
-      # The binary we built will be full of paths pointing to the nix store.
-      # Nix thinks it is doing us a favour by automatically adding dependencies
-      # by finding store paths in the binary. We strip these store paths so
-      # Nix won't find them.
-      find $out -type f -exec remove-references-to -t ${vendor} '{}' +
-      find $out -type f -exec remove-references-to -t ${rustBin} '{}' +
-    '';
+      preFixup = ''
+        # The binary we built will be full of paths pointing to the nix store.
+        # Nix thinks it is doing us a favour by automatically adding dependencies
+        # by finding store paths in the binary. We strip these store paths so
+        # Nix won't find them.
+        find $out -type f -exec remove-references-to -t ${vendor} '{}' +
+        find $out -type f -exec remove-references-to -t ${rustBin} '{}' +
+      '';
 
-    shellHook = ''
-      runHook preShell
-      export RUST_SRC_PATH=${rustSrcNoSymlinks}
-      ${cargoAlias}
-      ${commands}
-      ${shellHook}
-      runHook postShell
-    '';
+      shellHook = ''
+        runHook preShell
+        export RUST_SRC_PATH=${rustSrcNoSymlinks}
+        ${cargoAlias}
+        ${commands}
+        ${shellHook}
+        runHook postShell
+      '';
 
-  } // (
-    if defaultTarget != "" then {
-      CARGO_BUILD_TARGET = defaultTarget;
-    } else { }
-  ) // (
-    if defaultTarget == "wasm32-wasi" then {
-      # run the tests through virtual vm, create a temp directory and map it to the vm
-      CARGO_TARGET_WASM32_WASI_RUNNER = (
-        attrs.CARGO_TARGET_WASM32_WASI_RUNNER or (pkgs.writeTextFile {
-          name = "runner.sh";
-          executable = true;
-          text = ''
-            temp_dir=$(mktemp -d)
-            wasmer run --env=RUST_TEST_NOCAPTURE=1 --mapdir=:$temp_dir "$@"
-            exit_code=$?
-            rm -rf $temp_dir
-            exit $exit_code
-          '';
-        })
-      );
-    } else { }
-  ) // (
-    let
-      flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
-      ++ pkgs.lib.optional warningsAsErrors "-D warnings"
-      ++ pkgs.lib.optional (hostTriple == "wasm32_wasi") "-Clinker-flavor=gcc";
-    in
-    if flagList != [ ] then {
-      RUSTFLAGS = builtins.concatStringsSep " " flagList;
-    } else { }
-  ) // (
-    if hostTriple != buildTriple then {
-      # cross-things
-      "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${ccForHost}";
-      "CC_${stdenv.lib.toUpper hostTriple}" = "${ccForHost}";
-      "CXX_${stdenv.lib.toUpper hostTriple}" = "${cxxForHost}";
+    } // (
+      if defaultTarget != "" then {
+        CARGO_BUILD_TARGET = defaultTarget;
+      } else { }
+    ) // runnerAttrs // (
+      let
+        flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
+        ++ pkgs.lib.optional warningsAsErrors "-D warnings"
+        ++ pkgs.lib.optional (hostTriple == "wasm32_wasi") "-Clinker-flavor=gcc";
+      in
+      if flagList != [ ] then {
+        RUSTFLAGS = builtins.concatStringsSep " " flagList;
+      } else { }
+    ) // (
+      if hostTriple != buildTriple then {
+        # cross-things
+        "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${ccForHost}";
+        "CC_${stdenv.lib.toUpper hostTriple}" = "${ccForHost}";
+        "CXX_${stdenv.lib.toUpper hostTriple}" = "${cxxForHost}";
 
-      "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${ccForBuild}";
-      "CC_${stdenv.lib.toUpper buildTriple}" = "${ccForBuild}";
-      "CXX_${stdenv.lib.toUpper buildTriple}" = "${cxxForBuild}";
-    } else { }
+        "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${ccForBuild}";
+        "CC_${stdenv.lib.toUpper buildTriple}" = "${ccForBuild}";
+        "CXX_${stdenv.lib.toUpper buildTriple}" = "${cxxForBuild}";
+      } else { }
+    )
   )
-)
