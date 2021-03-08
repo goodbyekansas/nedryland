@@ -79,21 +79,11 @@ rec {
     attrs@{ name
     , src
     , deployment ? { }
-    , buildInputs ? [ ]
-    , rustDependencies ? [ ]
-    , extensions ? [ ]
-    , targets ? [ ]
-    , executableName ? name
-    , useNightly ? ""
-    , extraChecks ? ""
-    , buildFeatures ? [ ]
-    , testFeatures ? [ ]
     , ...
     }:
     let
-      package = mkPackage (attrs // {
-        inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
-      });
+      safeAttrs = builtins.removeAttrs attrs [ "deployment" "mkPackage" ];
+      package = (attrs.mkPackage or mkPackage) safeAttrs;
 
       newPackage = package.overrideAttrs (
         oldAttrs: {
@@ -105,7 +95,11 @@ rec {
         }
       );
     in
-    base.mkService (attrs // { inherit deployment; package = newPackage; rust = newPackage; });
+    base.mkService {
+      inherit deployment name;
+      package = newPackage;
+      rust = newPackage;
+    };
 
   fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
     let
