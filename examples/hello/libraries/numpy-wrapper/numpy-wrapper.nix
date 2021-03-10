@@ -1,5 +1,5 @@
 { base, pkgs }:
-base.languages.python.mkUtility {
+base.languages.python.mkLibrary {
   name = "numpy-wrapper";
   version = "0.1.0";
   src = ./.;

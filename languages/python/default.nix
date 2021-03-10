@@ -5,13 +5,13 @@ rec {
     let
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name version protoSources protoInputs; };
     in
-    mkUtility {
+    mkLibrary {
       inherit name version pythonVersion;
       src = generatedCode;
       propagatedBuildInputs = (pypkgs: [ pypkgs.grpcio ] ++ builtins.map (pi: pi.python.package) protoInputs);
       doStandardTests = false; # We don't want to run our strict tests on generated code and stubs
     };
-  mkUtility =
+  mkLibrary =
     attrs@{ name
     , version
     , src

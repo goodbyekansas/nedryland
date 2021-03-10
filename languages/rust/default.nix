@@ -35,8 +35,7 @@ rec {
       }
     );
 
-  # TODO: rename to toLibrary
-  toUtility = package:
+  toLibrary = package:
     let
       checksumHook = pkgs.makeSetupHook
         {
@@ -65,8 +64,7 @@ rec {
       }
     );
 
-  # TODO: rename to mkLibrary
-  mkUtility =
+  mkLibrary =
     attrs@
     { name
     , src
@@ -74,7 +72,7 @@ rec {
     , ...
     }:
     let
-      package = toUtility (mkPackageOverrideStdenv (
+      package = toLibrary (mkPackageOverrideStdenv (
         (builtins.removeAttrs attrs [ "deployment" ]) // {
           filterCargoLock = true;
         }
@@ -119,5 +117,5 @@ rec {
     let
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name protoSources version mkClient includeServices protoInputs; };
     in
-    mkUtility { inherit name version; src = generatedCode; propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs; };
+    mkLibrary { inherit name version; src = generatedCode; propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs; };
 }
