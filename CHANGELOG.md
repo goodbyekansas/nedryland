@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   You will need to specify the working directory manually since how else are we supposed to know where the shell is located
   when we just run a lambda.
 
+### Changed
+- renamed `languages.python.mkUtility` and `languages.rust.mkUtility` to `mkLibrary`
+
 ## [0.8.1] - 2021-02-25
 
 ### Fixed
