@@ -1,6 +1,41 @@
 { base, pkgs }:
-rec {
+let
   mkPackage = pkgs.callPackage ./package.nix { inherit base; };
+
+  # use `stdenv` to override mkPackage
+  # if it is part of attrs
+  mkPackageOverrideStdenv = attrs:
+    let
+      mkPackage' =
+        if attrs ? stdenv then
+          mkPackage.override
+            {
+              stdenv = attrs.stdenv;
+            }
+        else mkPackage;
+    in
+    mkPackage' attrs;
+in
+rec {
+  inherit mkPackage;
+
+  toApplication = package:
+    package.overrideAttrs (
+      oldAttrs: {
+        installPhase = ''
+          ${oldAttrs.installPhase}
+          mkdir -p $out/bin
+          cp target/${package.defaultTarget or ""}/release/${package.executableName or package.meta.name}${
+            if pkgs.lib.hasInfix "-windows-" package.defaultTarget or "" then
+              ".exe"
+            else
+              ""
+          } $out/bin
+        '';
+      }
+    );
+
+  # TODO: rename to toLibrary
   toUtility = package:
     let
       checksumHook = pkgs.makeSetupHook
@@ -30,75 +65,54 @@ rec {
       }
     );
 
+  # TODO: rename to mkLibrary
   mkUtility =
-    attrs@{ name
+    attrs@
+    { name
     , src
     , deployment ? { }
     , ...
     }:
     let
-      package = mkPackage (attrs // {
-        filterCargoLock = true;
-      });
+      package = toUtility (mkPackageOverrideStdenv (
+        (builtins.removeAttrs attrs [ "deployment" ]) // {
+          filterCargoLock = true;
+        }
+      ));
     in
-    base.mkComponent { inherit deployment; package = (toUtility package); rust = (toUtility package); };
+    base.mkComponent {
+      inherit deployment name package;
+      rust = package;
+    };
 
   mkClient =
-    attrs@{ name
+    attrs@
+    { name
     , src
     , deployment ? { }
-    , buildInputs ? [ ]
-    , rustDependencies ? [ ]
-    , extensions ? [ ]
-    , targets ? [ ]
-    , executableName ? name
-    , useNightly ? ""
-    , extraChecks ? ""
-    , buildFeatures ? [ ]
-    , testFeatures ? [ ]
     , ...
     }:
     let
-      package = mkPackage (attrs // {
-        inherit name src buildInputs rustDependencies extensions targets useNightly extraChecks buildFeatures testFeatures;
-      });
-
-      newPackage = package.overrideAttrs (
-        oldAttrs: {
-          installPhase = attrs.installPhase or ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out/bin
-            cp target/release/${executableName} $out/bin
-          '';
-        }
-      );
+      package = toApplication (mkPackageOverrideStdenv (builtins.removeAttrs attrs [ "deployment" ]));
     in
-    base.mkClient (attrs // { inherit deployment; package = newPackage; rust = newPackage; });
+    base.mkClient {
+      inherit deployment name package;
+      rust = package;
+    };
 
   mkService =
-    attrs@{ name
+    attrs@
+    { name
     , src
     , deployment ? { }
     , ...
     }:
     let
-      safeAttrs = builtins.removeAttrs attrs [ "deployment" "mkPackage" ];
-      package = (attrs.mkPackage or mkPackage) safeAttrs;
-
-      newPackage = package.overrideAttrs (
-        oldAttrs: {
-          installPhase = attrs.installPhase or ''
-            ${oldAttrs.installPhase}
-            mkdir -p $out/bin
-            cp target/release/${name} $out/bin
-          '';
-        }
-      );
+      package = toApplication (mkPackageOverrideStdenv (builtins.removeAttrs attrs [ "deployment" ]));
     in
     base.mkService {
-      inherit deployment name;
-      package = newPackage;
-      rust = newPackage;
+      inherit deployment name package;
+      rust = package;
     };
 
   fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
