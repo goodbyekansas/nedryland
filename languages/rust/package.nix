@@ -184,7 +184,7 @@ stdenv.mkDerivation
 
       checkPhase = attrs.checkPhase or ''
         cargo fmt -- --check
-        cargo test ${getFeatures testFeatures}
+        cargo test ${getFeatures testFeatures} --release
         cargo clippy ${getFeatures testFeatures}
         ${extraChecks}
       '';
