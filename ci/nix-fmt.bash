@@ -1,4 +1,4 @@
-if [ $1 == "--fix" ]; then
+if [ "$1" == "--fix" ]; then
     @nixpkgsFmt@ "${2:-.}"
     exit $?
 fi
@@ -6,7 +6,7 @@ files=$(@nixpkgsFmt@ . --check)
 
 if [ $? == 1 ]; then
     echo "$files"
-    dir=$(mktemp --directory "/tmp/nix-fmt-XXXXXX")
+    dir=$(@mktemp@ --directory "/tmp/nix-fmt-XXXXXX")
     for file in ${files[@]}; do
         echo ""
         echo "⚠️ Formatting errors in $file:"

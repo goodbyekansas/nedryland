@@ -1,6 +1,7 @@
 # Example project illustrating the protobuf generation functionality in Nedryland
 (import ../../default.nix).mkProject {
   name = "protobuf-example";
+  configFile = ./config.toml;
   components = { callFile }: {
     # expose the compiler here as well so it can be accessed
     compiler = callFile ./compiler.nix { };

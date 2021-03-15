@@ -11,9 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - callFunction method on base. Can be used in cases where you just want to evaluate an expression and don't have a file.
   You will need to specify the working directory manually since how else are we supposed to know where the shell is located
   when we just run a lambda.
+- Shells for all targets, the default target for a component is `package` (can be changed in the project's config).
+- `all` as a matrix target to build all targets on all components.
 
 ### Changed
 - renamed `languages.python.mkUtility` and `languages.rust.mkUtility` to `mkLibrary`
+- checks are now a separate evaluation of projects. i.e. call `override` on the result of `mkProject` with `{enableChecks = true;}`
+- creating a component through `mkComponent` now require passing a name for it
+
+### Removed
+- `packageWithChecks` is no longer generated. See "Changed" for more details.
 
 ## [0.8.1] - 2021-02-25
 

@@ -95,6 +95,10 @@ and to get a shell for working on `example-component` you would invoke
 $ nix-shell -A example-component
 ```
 
+Note here that we only use the component name to invoke a shell. If there's only one target in the
+component it will be used, otherwise the default is to use the `package` target. This default target
+can be changed in the config file under `shells.defaultTarget`.
+
 ## Configuration
 
 A project might need configuration for example for server addresses, deploy credentails or really

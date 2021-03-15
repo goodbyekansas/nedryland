@@ -1,4 +1,4 @@
-{ base, pkgs }:
+pkgs: base:
 let
   all = rec {
     rust = pkgs.callPackage ./rust { inherit base; };
