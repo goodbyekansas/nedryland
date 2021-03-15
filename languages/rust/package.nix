@@ -161,13 +161,20 @@ stdenv.mkDerivation
       ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
       ++ [ vendor ];
 
-      buildInputs = attrs.buildInputs or [ ]
-      # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
-      # on macos
-      ++ pkgs.stdenv.lib.optional stdenv.hostPlatform.isDarwin pkgs.libiconv;
+      depsBuildBuild = [ buildPackages.stdenv.cc ]
+      ++ pkgs.lib.optionals stdenv.buildPlatform.isDarwin [
+        # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
+        # on macos
+        buildPackages.libiconv
 
+        # this is actually not always needed but life is
+        # too short to figure out when so let's always
+        # add it
+        buildPackages.darwin.apple_sdk.frameworks.Security
+      ];
+
+      buildInputs = attrs.buildInputs or [ ];
       propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
-
       shellInputs = shellInputs ++ [ rustSrcNoSymlinks ];
 
       configurePhase = attrs.configurePhase or ''

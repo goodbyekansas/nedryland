@@ -25,7 +25,8 @@ let
 
   extendFile = { src, filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
-      inherit src filePath;
+      inherit filePath;
+      src = invariantSrc;
       name = "pyconfig-${builtins.baseNameOf filePath}";
       builder = builtins.toFile "builder.sh" ''
         source $stdenv/setup

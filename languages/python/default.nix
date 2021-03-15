@@ -1,6 +1,8 @@
 { base, pkgs }:
 rec {
+
   mkPackage = import ./package.nix pkgs base;
+
   fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? pkgs.python3 }:
     let
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name version protoSources protoInputs; };
@@ -11,6 +13,7 @@ rec {
       propagatedBuildInputs = (pypkgs: [ pypkgs.grpcio ] ++ builtins.map (pi: pi.python.package) protoInputs);
       doStandardTests = false; # We don't want to run our strict tests on generated code and stubs
     };
+
   mkLibrary =
     attrs@{ name
     , version
@@ -48,6 +51,7 @@ rec {
       });
     in
     base.mkComponent {
+      inherit name;
       package = packageWithWheel;
       python = packageWithWheel;
     };
@@ -80,6 +84,7 @@ rec {
       application = pythonVersion.pkgs.toPythonApplication package;
     in
     base.mkComponent {
+      inherit name;
       package = application;
       python = application;
     };

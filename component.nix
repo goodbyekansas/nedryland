@@ -1,18 +1,43 @@
 pkgs:
+let
+  enableChecksOnComponent = component:
+    builtins.mapAttrs
+      (n: v:
+        if pkgs.lib.isDerivation v then
+          v.overrideAttrs
+            (oldAttrs: {
+              doCheck = true;
 
+              # Python packages don't have a checkPhase, only an installCheckPhase
+              doInstallCheck = true;
+            } // (if v.stdenv.hostPlatform != v.stdenv.buildPlatform && oldAttrs.doCrossCheck or false then {
+              preInstallPhases = [ "crossCheckPhase" ];
+              crossCheckPhase = oldAttrs.checkPhase or "";
+              nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
+            } else { }))
+        else v)
+      component;
+in
 {
   mkComponent =
-    attrs@{ package, deployment ? { }, docs ? null, ... }:
+    enableChecks: path: mkCombinedDeployment: attrs@{ name, ... }:
     let
-      comp = (
-        attrs // {
-          inherit package deployment docs;
+      component' =
+        (attrs // {
+          inherit name path;
           isNedrylandComponent = true;
-          __toString = self: "Nedryland component: ${self.name or self.package.name}";
-        }
-      );
+          __toString = self: "Nedryland component: ${self.name}";
+        } // (if attrs ? deployment && attrs.deployment != { } then {
+          # the deploy target is simply the sum of everything
+          # in the deployment set
+          deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
+        } else { }));
+
+      component = if enableChecks then enableChecksOnComponent component' else component';
     in
-    comp;
+    (component // {
+      allTargets = pkgs.lib.unique (builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component));
+    });
 
   mapComponentsRecursive = f: set:
     let
@@ -30,28 +55,4 @@ pkgs:
         builtins.mapAttrs g set;
     in
     recurse [ ] set;
-
-
-  initComponent = component: path: mkCombinedDeployment:
-    # order is important here, components can set path manually
-    ({ inherit path; } // {
-      packageWithChecks =
-        component.package.overrideAttrs (
-          oldAttrs: {
-            doCheck = true;
-
-            # Python packages don't have a checkPhase, only an installCheckPhase
-            doInstallCheck = true;
-          } // (if component.package.stdenv.hostPlatform != component.package.stdenv.buildPlatform
-            && oldAttrs.doCrossCheck or false then {
-            preInstallPhases = [ "crossCheckPhase" ];
-            crossCheckPhase = oldAttrs.checkPhase or "";
-            nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
-          } else { })
-        );
-
-      # the deploy target is simply the sum of everything
-      # in the deployment set
-      deploy = mkCombinedDeployment "${component.package.name}-deploy" component.deployment;
-    } // component);
 }

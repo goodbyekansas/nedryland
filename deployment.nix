@@ -1,4 +1,4 @@
-{ pkgs, base }:
+pkgs: base:
 let
   # Function to create a deployment
   mkDeployment =

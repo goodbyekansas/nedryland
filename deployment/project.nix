@@ -1,6 +1,6 @@
 (import ../default.nix).mkProject {
   name = "deployment";
-  components = { callFile }: rec {
+  components = { callFile }: {
     terraform = callFile ./terraform/deployer.nix { };
   };
 }
