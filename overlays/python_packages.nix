@@ -77,9 +77,9 @@ in
             ];
 
             propagatedBuildInputs = [
+              super.future
               super.grpcio
               super.pyyaml
-              super.future
             ];
           };
 
@@ -107,8 +107,7 @@ in
             ];
 
             propagatedBuildInputs = [
-              super.pyyaml
-              super.future
+              super.packaging
               super.six
               pycue
             ];
