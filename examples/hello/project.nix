@@ -8,5 +8,11 @@
     numpyWrapper = callFile ./libraries/numpy-wrapper/numpy-wrapper.nix { };
     # Client that uses the above library to print a message
     pythonHello = callFile ./clients/hello/hello.nix { };
+    # This client 
+    pythonHelloE = callFile ./clients/helloExt/hello-ext.nix { };
   };
+  baseExtensions = [
+    # We add an extension for making the pythonHello more efficiently
+    ./extensions/python-numpywrapped.nix
+  ];
 }
