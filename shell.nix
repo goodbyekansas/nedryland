@@ -1,4 +1,4 @@
-{ pkgs, components, mapComponentsRecursive, parseConfig, extraShells ? { } }:
+{ pkgs, components, mapComponentsRecursive, parseConfig, enableChecksOnComponent, extraShells ? { } }:
 let
   config = parseConfig {
     key = "shells";
@@ -20,25 +20,39 @@ let
 in
 (mapComponentsRecursive
   (
-    attrName: component:
+    attrName: component':
       (
         let
+          # we want the check version of the component for
+          # the shell (but not for dependencies of it)
+          # that is the reason we are not using the check
+          # variant of the matrix
+          component = enableChecksOnComponent component';
           derivationShells =
             builtins.mapAttrs
               (name: drv:
                 let
                   targetName = "${component.name}.${name}";
-                  shellPkg = drv.drvAttrs // rec {
+                  shellPkg = (drv.drvAttrs // {
                     name = "${targetName}-shell";
-                    nativeBuildInputs = drv.shellInputs or [ ]
-                    ++ drv.checkInputs or [ ]
-                    ++ drv.installCheckInputs or [ ];
+
+                    # this will get merged with nativeBuildInputs
+                    # from "drv" inside mkShell so no need to
+                    # add to it here
+                    nativeBuildInputs = (drv.shellInputs or [ ]);
 
                     # we will get double shellhooks if we do not
                     # remove this here
                     inputsFrom = [ (builtins.removeAttrs drv [ "shellHook" ]) ];
 
+                    # set componentDir here to be able to access
+                    # it inside the shell as $componentDir if we wish
                     componentDir = builtins.toString component.path;
+
+                    # the standard shell hook will:
+                    # 1. change directory to the component dir
+                    # 2. run the shell hook defined in the target/derivation
+                    # 3. celebrate!
                     shellHook = ''
                       componentDir="$componentDir"
                       if [ -f "$componentDir" ]; then
@@ -51,7 +65,7 @@ in
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"
                     '';
-                  };
+                  });
                 in
                 pkgs.mkShell.override
                   {
