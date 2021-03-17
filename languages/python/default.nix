@@ -3,6 +3,10 @@ rec {
 
   mkPackage = import ./package.nix pkgs base;
 
+  # setup hook that creates a "link" file in the
+  # derivation that depends on this wheel derivation
+  wheelHook = pkgs.makeSetupHook { name = "copyWheelHook"; } ./wheelHook.sh;
+
   fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? pkgs.python3 }:
     let
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name version protoSources protoInputs; };
@@ -43,11 +47,8 @@ rec {
         setuptoolsLibrary = true;
       });
 
-      # setup hook that creates a "link" file in the
-      # derivation that depends on this wheel derivation
-      wheel = pkgs.makeSetupHook { name = "copyWheelHook"; } ./wheelHook.sh;
       packageWithWheel = package.overrideAttrs (oldAttrs: {
-        buildInputs = oldAttrs.buildInputs ++ [ wheel ];
+        buildInputs = oldAttrs.buildInputs ++ [ wheelHook ];
       });
     in
     base.mkComponent {

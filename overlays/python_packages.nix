@@ -13,6 +13,8 @@ let
   isDarwin = super.stdenv.isDarwin;
   fetchzip = super.fetchzip;
   tzdata = super.tzdata;
+
+  wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.sh;
 in
 (builtins.foldl'
   (combined: pythonVersion:
@@ -81,6 +83,9 @@ in
               super.grpcio
               super.pyyaml
             ];
+
+            # create a wheel for this since it does not come from pypi
+            buildInputs = [ wheelHook ];
           };
 
           pyoutline = super.buildPythonPackage rec {
@@ -111,6 +116,9 @@ in
               super.six
               pycue
             ];
+
+            # create a wheel for this since it does not come from pypi
+            buildInputs = [ wheelHook ];
           };
 
           grpcio-testing = super.buildPythonPackage rec {
