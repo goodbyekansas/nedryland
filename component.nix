@@ -1,5 +1,6 @@
 pkgs:
-let
+rec {
+
   enableChecksOnComponent = component:
     builtins.mapAttrs
       (n: v:
@@ -17,8 +18,7 @@ let
             } else { }))
         else v)
       component;
-in
-{
+
   mkComponent =
     enableChecks: path: mkCombinedDeployment: attrs@{ name, ... }:
     let

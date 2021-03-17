@@ -250,6 +250,7 @@ in
         shells = pkgs.callPackage ./shell.nix {
           inherit components;
           mapComponentsRecursive = minimalBase.mapComponentsRecursive;
+          enableChecksOnComponent = componentFns.enableChecksOnComponent;
           parseConfig = minimalBase.parseConfig;
           extraShells = appliedAttrs.extraShells or { };
         };
