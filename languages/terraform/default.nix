@@ -22,7 +22,8 @@
       inherit name;
       package = pkgs.stdenv.mkDerivation (safeAttrs // {
         inherit name;
-        src = builtins.path {
+        src = if pkgs.lib.isStorePath src then src else
+        builtins.path {
           inherit name;
           path = src;
           filter = (path: type:
