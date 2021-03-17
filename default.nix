@@ -204,7 +204,7 @@ in
             (
               comp: pkgs.lib.filterAttrs
                 (
-                  name: value: pkgs.lib.isDerivation value
+                  name: value: name != "allTargets" && pkgs.lib.isDerivation value
                 )
                 comp
             )
