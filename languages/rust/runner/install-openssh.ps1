@@ -13,5 +13,13 @@ $acl | Set-Acl
 
 Write-Output "Starting ssh server..."
 Start-Service sshd
+
+Write-Output "Murder Windows Update..."
+Set-Service wuauserv -StartupType Disabled
+Stop-Service wuauserv
+
+Write-Output "Disable Windows Defender Real Time Monitoring..."
+Set-MpPreference -DisableRealtimeMonitoring $true
+
 Write-Output "All done!"
 
