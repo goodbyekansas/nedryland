@@ -10,19 +10,23 @@
 , runCommand
 , stdenv
 , openssh
+, wineWowPackages
 }:
 let
   imageVersion = "2102";
+  determineCacheFolder = ''
+    cacheFolder=''${HOME}/.cache/nedryland
+    if [ -w /var/cache/nedryland ]; then
+      cacheFolder=/var/cache/nedryland
+    fi
+  '';
 in
 # do not want a 20 Gb download when building
 if lib.inNixShell && hostPlatform == "x86_64-pc-windows-gnu" && builtins.getEnv "WSL_DISTRO_NAME" == "" then
   {
     CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER = "${writeScriptBin "windows-runner" ''
       set -e
-      cacheFolder=''${HOME}/.cache/nedryland
-      if [ -w /var/cache/nedryland ]; then
-        cacheFolder=/var/cache/nedryland
-      fi
+      ${determineCacheFolder}
       echo -n "Waiting for ssh to come up..."
       sshFlags=("-o StrictHostKeyChecking=no" "-o UserKnownHostsFile=/dev/null" "-i $cacheFolder/windows-vm-ssh-key" "-p 5000" "-F ${openssh}/etc/ssh/ssh_config")
       until $(${openssh}/bin/ssh -q -o ConnectTimeout=1 ''${sshFlags[*]} User@localhost "if not exist "rust" mkdir rust && exit"); do
@@ -39,11 +43,22 @@ if lib.inNixShell && hostPlatform == "x86_64-pc-windows-gnu" && builtins.getEnv 
     postShell = ''
       ${attrs.postShell or ""}
 
+      ${if buildPlatform.isLinux then
+        ''
+        cargoWine() {
+          ${determineCacheFolder}
+          mkdir -p $cacheFolder/.wine
+
+          cacheFolder=$cacheFolder CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER="${writeScriptBin "wine-runner" ''
+            WINEPREFIX=$cacheFolder/.wine WINEDEBUG=fixme-all,warn WINEDLLOVERRIDES='mscoree,mshtml=' ${wineWowPackages.stable}/bin/wine64 "$1"
+          ''}/bin/wine-runner" cargo "$@"
+        }''
+        else
+          ""
+       }
+
       runWindowsVm() {
-        cacheFolder=''${HOME}/.cache/nedryland
-        if [ -w /var/cache/nedryland ]; then
-          cacheFolder=/var/cache/nedryland
-        fi
+        ${determineCacheFolder}
         imagePath="$cacheFolder/windows-vm-${imageVersion}.qcow2";
         imageTmpFs="$cacheFolder/windows-tmp-fs";
         if [ ! -f $imagePath ]; then
