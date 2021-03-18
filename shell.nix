@@ -75,6 +75,16 @@ in
               )
               (pkgs.lib.filterAttrs (n: v: pkgs.lib.isDerivation v) component);
 
+          # also include non-derivation attrsets in the passthru property of the top-level
+          # shell to support nested components
+          derivationsAndAttrsets = (
+            pkgs.lib.filterAttrs
+              (
+                n: v: builtins.isAttrs v && !pkgs.lib.isDerivation v
+              )
+              component
+          ) // derivationShells;
+
           defaultShell =
             if (builtins.length (builtins.attrValues derivationShells)) == 1 then
               builtins.head (builtins.attrValues derivationShells)
@@ -82,7 +92,7 @@ in
               derivationShells."${config.defaultTarget}";
         in
         defaultShell.overrideAttrs (oldAttrs: {
-          passthru = derivationShells;
+          passthru = derivationsAndAttrsets;
         })
       )
   )
