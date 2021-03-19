@@ -37,7 +37,8 @@ if lib.inNixShell && hostPlatform == "x86_64-pc-windows-gnu" && builtins.getEnv 
       executable=$(basename "$1")
       echo "ssh is up, running!"
       ${openssh}/bin/scp ''${sshFlags[*]/-p/-P} "$1" User@localhost:rust/$executable
-      ${openssh}/bin/ssh -t ''${sshFlags[*]} User@localhost ".\\rust\\$executable"
+      shift
+      ${openssh}/bin/ssh -t ''${sshFlags[*]} User@localhost ".\\rust\\$executable" "$@"
     ''}/bin/windows-runner";
 
     postShell = ''
