@@ -11,6 +11,7 @@
 , stdenv
 , openssh
 , wineWowPackages
+, bash
 }:
 let
   imageVersion = "2102";
@@ -25,20 +26,47 @@ in
 if lib.inNixShell && hostPlatform == "x86_64-pc-windows-gnu" && builtins.getEnv "WSL_DISTRO_NAME" == "" then
   {
     CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER = "${writeScriptBin "windows-runner" ''
+      #! ${bash}/bin/bash
       set -e
       ${determineCacheFolder}
       echo -n "Waiting for ssh to come up..."
-      sshFlags=("-o StrictHostKeyChecking=no" "-o UserKnownHostsFile=/dev/null" "-i $cacheFolder/windows-vm-ssh-key" "-p 5000" "-F ${openssh}/etc/ssh/ssh_config")
-      until $(${openssh}/bin/ssh -q -o ConnectTimeout=1 ''${sshFlags[*]} User@localhost "if not exist "rust" mkdir rust && exit"); do
+      sshFlags=("-o StrictHostKeyChecking=no" "-o BatchMode=yes" "-o UserKnownHostsFile=/dev/null" "-F ${openssh}/etc/ssh/ssh_config")
+
+      hostname="localhost"
+      username="User"
+      if [ -n "$NEDRYLAND_WINDOWS_HOST" ]; then
+          IFS='@' read user host <<< "$NEDRYLAND_WINDOWS_HOST"
+          if [ -n "$host" ]; then
+            hostname="$host"
+            username="$user"
+          else
+            hostname="$user"
+          fi
+
+          port=""
+          IFS=':' read host p <<< "$hostname"
+          if [ -n "$p" ]; then
+            hostname="$host"
+            port="$p"
+          fi
+
+          if [ -n "$port" ]; then
+             sshFlags+=("-p $port")
+          fi
+      else
+        sshFlags+=("-i $cacheFolder/windows-vm-ssh-key" "-p 5000" )
+      fi
+
+      until $(${openssh}/bin/ssh -q -o ConnectTimeout=1 ''${sshFlags[*]} "$username"@"$hostname" "if not exist "rust" mkdir rust && exit"); do
         echo -n "."
         sleep 4
       done
 
       executable=$(basename "$1")
       echo "ssh is up, running!"
-      ${openssh}/bin/scp ''${sshFlags[*]/-p/-P} "$1" User@localhost:rust/$executable
+      ${openssh}/bin/scp ''${sshFlags[*]/-p/-P} "$1" "$username"@"$hostname":rust/$executable
       shift
-      ${openssh}/bin/ssh -t ''${sshFlags[*]} User@localhost ".\\rust\\$executable" "$@"
+      ${openssh}/bin/ssh -t ''${sshFlags[*]} "$username"@"$hostname" ".\\rust\\$executable" "$@"
     ''}/bin/windows-runner";
 
     postShell = ''
@@ -125,7 +153,9 @@ if lib.inNixShell && hostPlatform == "x86_64-pc-windows-gnu" && builtins.getEnv 
            echo "P.S. It is totally not a virus D.S."
       }
       echo "🏘 To download and run a Windows VM, run: runWindowsVm."
-      echo "cargo run/test will try to use this VM to run the code"
+      echo "  cargo run/test will try to use this VM to run the code"
+      echo "  To use your own VM, set NEDRYLAND_WINDOWS_HOST to a hostname of"
+      echo "  a Windows machine that runs an SSH server and has your key"
     '';
   }
 else { }
