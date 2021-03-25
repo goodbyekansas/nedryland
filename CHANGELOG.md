@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `packageWithChecks` is no longer generated. See "Changed" for more details.
 
+### Fixed
+- shellInputs are now added to nativeBuildInputs instead of being an attribute on the
+  derivation since that caused them to always be evaluated.
+
 ## [0.8.1] - 2021-02-25
 
 ### Fixed

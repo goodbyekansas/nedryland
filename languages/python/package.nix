@@ -84,7 +84,7 @@ let
     }
     ./mypy-hook.sh;
   setupPyTemplate = if setuptoolsLibrary then ./setup-template-library else ./setup-template-application;
-  attrs = builtins.removeAttrs attrs_ [ "srcExclude" ];
+  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
@@ -116,7 +116,9 @@ pythonPkgs.buildPythonPackage (attrs // {
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs ++ [ mypyHook ];
+  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs
+    ++ [ mypyHook ]
+    ++ (pkgs.lib.lists.optionals pkgs.lib.inNixShell (attrs_.shellInputs or [ ]));
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
@@ -137,8 +139,6 @@ pythonPkgs.buildPythonPackage (attrs // {
     fi
     '' else ""}
   '';
-
-  shellInputs = [ ];
 
   shellHook = ''
     if [ -L setup.cfg ]; then
