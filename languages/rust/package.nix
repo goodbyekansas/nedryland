@@ -158,8 +158,9 @@ stdenv.mkDerivation
         removeReferencesTo
       ] ++ attrs.nativeBuildInputs or [ ]
       ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
-      ++ [ vendor ]
-      ++ (pkgs.lib.lists.optionals pkgs.lib.inNixShell (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks ]));
+      ++ [ vendor ];
+
+      passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks ]); };
 
       depsBuildBuild = [ buildPackages.stdenv.cc ]
       ++ pkgs.lib.optionals stdenv.buildPlatform.isDarwin [

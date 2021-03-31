@@ -117,8 +117,9 @@ pythonPkgs.buildPythonPackage (attrs // {
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
   nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs
-    ++ [ mypyHook ]
-    ++ (pkgs.lib.lists.optionals pkgs.lib.inNixShell (attrs_.shellInputs or [ ]));
+    ++ [ mypyHook ];
+
+  passthru = { shellInputs = (attrs_.shellInputs or [ ]); };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
