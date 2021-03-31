@@ -178,7 +178,8 @@ stdenv.mkDerivation
 
       configurePhase = attrs.configurePhase or ''
         runHook preConfigure
-        export CARGO_HOME=$PWD
+        export CARGO_HOME=$NIX_BUILD_TOP
+        export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=build-root"
         runHook postConfigure
       '';
 
