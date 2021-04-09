@@ -32,6 +32,12 @@ rec {
               ""
           } $out/bin
         '';
+        shellHook = ''
+          ${oldAttrs.shellHook or ""}
+          ${builtins.replaceStrings [ "-" ] [ "_" ] package.executableName or package.meta.name}() {
+            command cargo run -- "$@"
+          }
+        '';
       }
     );
 
