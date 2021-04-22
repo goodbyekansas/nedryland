@@ -20,8 +20,9 @@ rec {
       component;
 
   mkComponent =
-    enableChecks: path: mkCombinedDeployment: attrs@{ name, ... }:
+    enableChecks: path: mkCombinedDeployment: attrs'@{ name, subComponents ? { }, ... }:
     let
+      attrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
       component' =
         (attrs // {
           inherit name path;
@@ -36,7 +37,7 @@ rec {
       component = if enableChecks then enableChecksOnComponent component' else component';
     in
     (component // {
-      allTargets = pkgs.lib.unique (builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component));
+      allTargets = builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component);
     });
 
   mapComponentsRecursive = f: set:

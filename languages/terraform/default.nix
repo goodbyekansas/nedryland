@@ -1,7 +1,7 @@
 { base, pkgs }:
 {
   mkTerraformComponent =
-    attrs@{ name
+    attrs'@{ name
     , src
     , srcExclude ? [ ]
     , buildInputs ? [ ]
@@ -13,14 +13,15 @@
     , postDeployPhase ? ""
     , deployShellInputs ? [ ]
     , variables ? { }
+    , subComponents ? { }
     , ...
     }:
     let
-      safeAttrs = (builtins.removeAttrs attrs [ "variables" "srcExclude" ]);
+      attrs = (builtins.removeAttrs attrs' [ "variables" "srcExclude" "subComponents" ]);
     in
-    base.mkComponent rec {
-      inherit name;
-      package = pkgs.stdenv.mkDerivation (safeAttrs // {
+      base.mkComponent rec {
+      inherit name subComponents;
+      package = pkgs.stdenv.mkDerivation (attrs // {
         inherit name;
         src = if pkgs.lib.isStorePath src then src else
         builtins.path {
@@ -73,7 +74,7 @@
       });
 
       deployment = {
-        terraform = pkgs.lib.makeOverridable base.deployment.mkTerraformDeployment (safeAttrs // {
+        terraform = pkgs.lib.makeOverridable base.deployment.mkTerraformDeployment (attrs // {
           terraformPackage = package;
           inherit preDeployPhase postDeployPhase;
           shellInputs = deployShellInputs;
@@ -81,5 +82,5 @@
         });
       };
       terraform = package;
-    };
+      };
 }
