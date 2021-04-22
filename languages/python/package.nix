@@ -33,7 +33,7 @@ let
         mkdir -p $out/$(dirname $filePath)
 
         if [ ! -f $src/$filePath ] || [ -L $src/$filePath ]; then
-            echo "Using default \"$filePath\" because there is no \"$filePath\" in the source"
+            echo "Using default \"$filePath\" because there is no \"$filePath\" in the source, or it is generated"
             cp ${baseFile} $out/$filePath
             chmod +w $out/$filePath
 
@@ -45,7 +45,7 @@ let
             fi
             chmod -w $out/$filePath
         else
-            echo "Using ${name}'s $filePath since it exists in the source"
+            echo "Using ${name}'s $filePath since it exists in the source and is not generated"
             cp $src/$filePath $out/$filePath
         fi
       '';

@@ -19,7 +19,7 @@
     let
       attrs = (builtins.removeAttrs attrs' [ "variables" "srcExclude" "subComponents" ]);
     in
-      base.mkComponent rec {
+    base.mkComponent rec {
       inherit name subComponents;
       package = pkgs.stdenv.mkDerivation (attrs // {
         inherit name;
@@ -82,5 +82,5 @@
         });
       };
       terraform = package;
-      };
+    };
 }
