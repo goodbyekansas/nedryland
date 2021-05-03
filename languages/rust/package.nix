@@ -2,6 +2,7 @@
 , base
 , stdenv
 , buildPackages
+, rustVersion
 , rust # use this for toRustTarget
 }:
 
@@ -31,7 +32,7 @@ let
       )
     else
       (
-        pkgs.rust-bin.stable."1.50.0".rust.override {
+        pkgs.rust-bin.stable."${rustVersion}".rust.override {
           inherit targets extensions;
         }
       )

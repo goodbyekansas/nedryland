@@ -1,6 +1,6 @@
-{ base, pkgs }:
+{ base, pkgs, versions }:
 let
-  mkPackage = pkgs.callPackage ./package.nix { inherit base; };
+  mkPackage = pkgs.callPackage ./package.nix { inherit base; rustVersion = versions.rust; };
 
   # use `stdenv` to override mkPackage
   # if it is part of attrs
@@ -119,9 +119,38 @@ rec {
       rust = package;
     };
 
-  fromProtobuf = { name, protoSources, version, includeServices, protoInputs }:
+  fromProtobuf =
+    { name
+    , protoSources
+    , version
+    , includeServices
+    , protoInputs
+    , tonicVersion ? "=${versions.tonic}"
+    , tonicFeatures ? versions.tonicFeatures
+    , tonicBuildVersion ? "=${versions.tonicBuild}"
+    }:
     let
-      generatedCode = pkgs.callPackage ./protobuf.nix { inherit name protoSources version mkClient includeServices protoInputs; };
+      generatedCode = pkgs.callPackage ./protobuf.nix
+        {
+          inherit
+            name
+            protoSources
+            version
+            mkClient
+            includeServices
+            protoInputs
+            tonicVersion
+            tonicFeatures
+            tonicBuildVersion;
+          makeSetupHook = pkgs.makeSetupHook;
+          pyToml = pkgs.python38Packages.toml;
+        };
     in
-    mkLibrary { inherit name version; src = generatedCode; propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs; };
+    mkLibrary
+      {
+        inherit version;
+        name = "${name}-rust-protobuf";
+        src = generatedCode;
+        propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs;
+      };
 }

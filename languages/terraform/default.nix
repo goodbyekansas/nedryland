@@ -1,4 +1,4 @@
-{ base, pkgs }:
+{ base, pkgs, versions }:
 {
   mkTerraformComponent =
     attrs'@{ name
@@ -32,7 +32,7 @@
               && !(builtins.any (pred: pred path type) srcExclude)
           );
         };
-        buildInputs = [ pkgs.terraform_0_13 ] ++ buildInputs;
+        buildInputs = [ pkgs."${versions.terraform}" ] ++ buildInputs;
 
         checkPhase = ''
           terraform init -backend=false

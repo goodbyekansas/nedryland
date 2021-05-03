@@ -1,17 +1,16 @@
-self: super: {
+versions: self: super: {
   wasmer-with-run = self.rustPlatform.buildRustPackage rec {
     pname = "wasmer";
-    version = "0.17.0";
+    inherit (versions.wasmer) version cargoSha256;
 
     src = self.fetchFromGitHub {
       owner = "wasmerio";
       repo = pname;
       rev = version;
-      sha256 = "05g4h0xkqd14wnmijiiwmhk6l909fjxr6a2zplrjfxk5bypdalpm";
+      inherit (versions.wasmer) sha256;
       fetchSubmodules = true;
     };
 
-    cargoSha256 = "1ssmgx9fjvkq7ycyzjanqmlm5b80akllq6qyv3mj0k5fvs659wcq";
     cargoBuildFlags = [ "--features 'backend-cranelift'" ];
     nativeBuildInputs = with self; [ cmake pkg-config ];
 

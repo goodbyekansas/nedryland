@@ -1,63 +1,84 @@
-{ name, protoSources, version, mkClient, includeServices, protobuf, stdenv, rustfmt, protoInputs }:
+{ name
+, protoSources
+, version
+, mkClient
+, makeSetupHook
+, includeServices
+, protobuf
+, stdenv
+, rustfmt
+, protoInputs
+, tonicVersion
+, tonicFeatures
+, tonicBuildVersion
+, pyToml
+}:
 let
   protoIncludePaths = builtins.map (pi: pi.protobuf) protoInputs;
-  rustInputs = builtins.map (pi: "${pi.rust.package.name}:${pi.rust.package.src}") protoInputs;
-  tonicDependencyString = ''tonic = { version = "0.4", features = ["tls", "tls-roots"] }'';
+  rustInputs = builtins.map (pi: pi.rust.package.src) protoInputs;
+  tonicDependencyString = ''tonic = { version = "${tonicVersion}", features = [${builtins.concatStringsSep ", " (map (v: "\"${v}\"") tonicFeatures)}] }'';
 in
 stdenv.mkDerivation {
   inherit protoSources protoIncludePaths rustInputs;
-  rustProtoCompiler = (import ./protobuf/compiler { inherit mkClient protobuf; }).package;
-  name = "rust-${name}";
+  rustProtoCompiler = (import ./protobuf/compiler { inherit mkClient protobuf tonicBuildVersion makeSetupHook; }).package;
+  name = "${name}-rust-protobuf-src";
 
   PROTOC = "${protobuf}/bin/protoc";
 
-  src = builtins.path { path = ./protobuf/src; inherit name; };
+  src = builtins.path {
+    path = ./protobuf/src;
+    name = "${name}-rust-protobuf-files";
+  };
 
   # seem to need rustfmt, prob run on the resulting code
-  nativeBuildInputs = [ rustfmt ];
+  nativeBuildInputs = [ rustfmt pyToml ];
 
   buildPhase = ''
-        shopt -s extglob globstar nullglob
-        includes=""
-        for p in $protoIncludePaths; do
-          includes+=" -I $p"
-        done
-        externs=""
-        for extern in $rustInputs; do
-          IFS=: read name path <<< "$extern"
-          for f in $path/src/!(lib).rs; do
-            f=''${f##*/}
-            f=''${f%.rs}
-            externs+="--extern .$f=\"::$name::$f\" "
-          done
-        done
+    shopt -s extglob globstar nullglob
 
-        echo $rustProtoCompiler/bin/rust-protobuf-compiler \
-          -I $protoSources \
-          $includes \
-          ${if includeServices then "--build-services" else ""} \
-          $externs \
-          -o ./src \
-          $protoSources/**/*.proto
+    includes=""
+    for p in $protoIncludePaths; do
+      includes+=" -I $p"
+    done
 
-        $rustProtoCompiler/bin/rust-protobuf-compiler \
-          -I $protoSources \
-          $includes \
-          ${if includeServices then "--build-services" else ""} \
-          $externs \
-          -o ./src \
-          $protoSources/**/*.proto
+    cargoDependencies=()
+    externs=""
+    for input in $rustInputs; do
+      echo $extern
+      IFS=: read name version <<< $(python ${./get_name_and_version.py} "$input")
+      cargoDependencies+=("''${name} = { version=\"=''${version}\", registry=\"nix\" }")
+      for f in $input/src/!(lib).rs; do
+        f=''${f##*/}
+        f=''${f%.rs}
+        externs+="--extern .$f=\"::$name::$f\" "
+      done
+    done
 
-        substituteInPlace ./Cargo.toml \
-          --subst-var-by includeTonic ${if includeServices then "'${tonicDependencyString}'" else "''"} \
-          --subst-var-by packageName ${name} \
-          --subst-var-by version ${version} \
-          --subst-var-by external "${builtins.foldl'
-    (acc: cur: ''${acc}${cur.package.name} = { version = \"${cur.package.version}\", registry = \"nix\" }
-          '') ""
-    (builtins.map (pi: pi.rust) protoInputs)}"
+    cargoDependencies=$( IFS=$'\n'; echo "''${cargoDependencies[*]}" )
 
-        ${if includeServices then "echo 'pub use tonic;' >> ./src/lib.rs" else "" }
+    echo $rustProtoCompiler/bin/rust-protobuf-compiler \
+      -I $protoSources \
+      $includes \
+      ${if includeServices then "--build-services" else ""} \
+      $externs \
+      -o ./src \
+      $protoSources/**/*.proto
+
+    $rustProtoCompiler/bin/rust-protobuf-compiler \
+      -I $protoSources \
+      $includes \
+      ${if includeServices then "--build-services" else ""} \
+      $externs \
+      -o ./src \
+      $protoSources/**/*.proto
+
+    substituteInPlace ./Cargo.toml \
+      --subst-var-by includeTonic ${if includeServices then "'${tonicDependencyString}'" else "''"} \
+      --subst-var-by packageName ${name} \
+      --subst-var-by version ${version} \
+      --subst-var-by external "$cargoDependencies"
+
+    ${if includeServices then "echo 'pub use tonic;' >> ./src/lib.rs" else "" }
   '';
 
   installPhase = ''
