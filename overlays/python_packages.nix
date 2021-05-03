@@ -144,7 +144,7 @@ in
 
           clique = super.buildPythonPackage rec {
             pname = "clique";
-            version = "1.5.0";
+            version = "1.6.1";
 
             preBuild = ''
               export HOME=$PWD
@@ -152,7 +152,7 @@ in
 
             src = super.fetchPypi {
               inherit pname version;
-              sha256 = "c34a4eac30187a5b7d75bc8cf600ddc50ceef50a423772a4c96f1dc8440af5fa";
+              sha256 = "90165c1cf162d4dd1baef83ceaa1afc886b453e379094fa5b60ea470d1733e66";
             };
 
             doCheck = false;
@@ -160,7 +160,7 @@ in
 
           ftrack-python-api = super.buildPythonPackage rec {
             pname = "ftrack-python-api";
-            version = "2.0.0rc2";
+            version = "2.1.1";
 
             preBuild = ''
               export HOME=$PWD
@@ -168,7 +168,7 @@ in
 
             src = super.fetchPypi {
               inherit pname version;
-              sha256 = "77e20cd7ab2d9e45edba7dbbb3404e51b9919618f83f44902aab33f1b298fdc9";
+              sha256 = "1d33793beac356360e89c95aaf9886128929827a16ddad6c52183a94b542b42a";
             };
 
             doCheck = false;
@@ -181,6 +181,7 @@ in
               super.requests
               super.arrow
               super.six
+              super.appdirs
             ];
           };
 
