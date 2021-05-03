@@ -1,6 +1,8 @@
 let
   sources = import ./nix/sources.nix;
 
+  versions = import ./versions.nix;
+
   pkgs = with
     {
       overlay = _: pkgs:
@@ -20,10 +22,10 @@ let
           (import ./overlays/python_packages.nix)
 
           # comment here
-          (import ./overlays/wasmer.nix)
+          (import ./overlays/wasmer.nix versions)
 
           # more recent Wasi lib C (default was 2019)
-          (import ./overlays/wasilibc.nix)
+          (import ./overlays/wasilibc.nix versions)
 
           # darwin "fix" for mingw
           (import ./overlays/darwin-fix-mcfgthreads.nix)
@@ -86,7 +88,8 @@ in
               inherit
                 sources
                 callFile
-                callFunction;
+                callFunction
+                versions;
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
               mkComponent = mkComponent';
               mkClient = targets@{ name, ... }: mkComponent' targets;
@@ -94,7 +97,7 @@ in
               extend = import ./extend.nix pkgs.lib.toUpper;
               parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
               deployment = import ./deployment.nix pkgs minimalBase;
-              languages = import ./languages pkgs minimalBase;
+              languages = import ./languages pkgs minimalBase versions;
             };
           in
           minimalBase;

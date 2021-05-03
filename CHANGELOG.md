@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `versions.nix` which controls versions of some packages (rust, wasmer, wasmtime,
+  ...). The set of versions is also accessible from `base`.
 - `mkComponent` now accepts a `subComponents` set as an argument. The use of this is
   purely for convenience and will simply add the set of sub components to the component.
 - Add `mkTheme` and theme as an argument to `mkProject`.

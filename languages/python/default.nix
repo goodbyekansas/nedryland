@@ -1,4 +1,4 @@
-{ base, pkgs }:
+{ base, pkgs, versions }:
 rec {
 
   mkPackage = import ./package.nix pkgs base;
@@ -12,7 +12,8 @@ rec {
       generatedCode = pkgs.callPackage ./protobuf.nix { inherit name version protoSources protoInputs; };
     in
     mkLibrary {
-      inherit name version pythonVersion;
+      inherit version pythonVersion;
+      name = "${name}-python-protobuf";
       src = generatedCode;
       propagatedBuildInputs = (pypkgs: [ pypkgs.grpcio ] ++ builtins.map (pi: pi.python.package) protoInputs);
       doStandardTests = false; # We don't want to run our strict tests on generated code and stubs

@@ -1,4 +1,4 @@
-self: super:
+versions: self: super:
 let
   # set this to true to produce a wasilibc with debug symbols
   # TODO: there is probably a better place for this
@@ -22,13 +22,12 @@ in
   # https://github.com/bytecodealliance/wasmtime/pull/2494
   wasmtime = super.rustPlatform.buildRustPackage rec {
     pname = "wasmtime";
-    version = "0.22.1+40c4c6ac9";
+    version = versions.wasmtime.version;
 
     src = super.fetchFromGitHub {
       owner = "bytecodealliance";
       repo = pname;
-      rev = "40c4c6ac9bde95c72666d0cafb2ede6c7045edf9";
-      sha256 = "0p0a7167b2wg6x7xymvps604f94dr1gfm7kadnq333qchbjgn7sp";
+      inherit (versions.wasmtime) rev sha256;
       fetchSubmodules = true;
     };
     cargoSha256 = "1kkh7ssq557sg83vxnf6khw6lm74j83nkhkmyz4fnb78xr26ls5i";
@@ -57,12 +56,12 @@ in
   wasilibc = (super.wasilibc.override {
     stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_11.lldClangNoLibc);
   }).overrideAttrs (oldAttrs: {
-    name = "wasilibc-20201210";
+    name = "wasilibc";
+    version = versions.wasilibc.version;
     src = self.fetchFromGitHub {
       owner = "WebAssembly";
       repo = "wasi-libc";
-      rev = "5ccfab77b097a5d0184f91184952158aa5904c8d";
-      sha256 = "1kxcy616vnqw4q2xkng9q67mgmq3gw2h4z6hkcwrqw1fjjp5qnbz";
+      inherit (versions.wasilibc) rev sha256;
     };
 
     # we need to add two -isystem flags due to nix purity. The clang in Nix does not add any
