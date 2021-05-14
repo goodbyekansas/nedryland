@@ -200,7 +200,7 @@ in
           );
 
         resolvedComponents = appliedAttrs.components;
-        resolvedNedrylandComponents = (pkgs.lib.collect (value: value.isNedrylandComponent or false) resolvedComponents);
+        resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;
 
         # create a set of all available targets on all components
         # for use as one axis in the matrix
