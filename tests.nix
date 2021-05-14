@@ -6,6 +6,29 @@ let
     deployment = import ./deployment/project.nix;
   };
 
-  mappedTests = builtins.mapAttrs (name: project: (project.override { enableChecks = true; }).matrix.all) tests;
+  mappedTests = builtins.mapAttrs
+    (
+      name: project: (
+        project.override { enableChecks = true; }
+      ).matrix.all
+    )
+    tests;
+
+  pkgs = tests.hello.nixpkgs;
+  testNestedComponents = pkgs.stdenv.mkDerivation {
+    name = "test-nested-components";
+    phases = [ "checkNestedPhase" ];
+    nativeBuildInputs = tests.hello.matrix.all;
+    checkNestedPhase = ''
+      touch $out
+      if [[ ! "''${nativeBuildInputs[*]}" =~ "hello-nested" ]]; then
+        echo "ERROR: The \"all\" target in the \"hello\" project does \
+      not contain the expected \"hello-nested\" component".
+        exit 1
+      fi
+    '';
+  };
 in
-(mappedTests // { all = builtins.attrValues mappedTests; })
+(mappedTests // {
+  all = builtins.attrValues mappedTests ++ [ testNestedComponents ];
+})

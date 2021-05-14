@@ -20,25 +20,30 @@ rec {
       component;
 
   mkComponent =
-    enableChecks: path: mkCombinedDeployment: attrs'@{ name, subComponents ? { }, ... }:
+    enableChecks: path: mkCombinedDeployment:
     let
-      attrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
-      component' =
-        (attrs // {
-          inherit name path;
-          isNedrylandComponent = true;
-          __toString = self: "Nedryland component: ${self.name}";
-        } // (if attrs ? deployment && attrs.deployment != { } then {
-          # the deploy target is simply the sum of everything
-          # in the deployment set
-          deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
-        } else { }));
+      mkComponentInner = attrs'@{ name, subComponents ? { }, ... }:
+        let
+          attrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
+          component' =
+            (attrs // {
+              inherit name path;
+              isNedrylandComponent = true;
+              __toString = self: "Nedryland component: ${self.name}";
+            } // (if attrs ? deployment && attrs.deployment != { } then {
+              # the deploy target is simply the sum of everything
+              # in the deployment set
+              deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
+            } else { }));
 
-      component = if enableChecks then enableChecksOnComponent component' else component';
+          component = if enableChecks then enableChecksOnComponent component' else component';
+        in
+        (component // {
+          allTargets = builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component);
+          overrideAttrs = f: mkComponentInner (attrs' // (f component));
+        });
     in
-    (component // {
-      allTargets = builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component);
-    });
+    mkComponentInner;
 
   mapComponentsRecursive = f: set:
     let
@@ -56,4 +61,12 @@ rec {
         builtins.mapAttrs g set;
     in
     recurse [ ] set;
+
+  collectComponentsRecursive = set:
+    if set.isNedrylandComponent or false then
+      [ set ] ++ (builtins.concatMap collectComponentsRecursive (builtins.attrValues set))
+    else if builtins.isAttrs set && !pkgs.lib.isDerivation set then
+      builtins.concatMap collectComponentsRecursive (builtins.attrValues set)
+    else
+      [ ];
 }

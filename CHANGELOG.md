@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - shellInputs are now added to nativeBuildInputs instead of being an attribute on the
   derivation since that caused them to always be evaluated.
+- Nested components are now included in the "all" matrix target.
 
 ## [0.8.1] - 2021-02-25
 
