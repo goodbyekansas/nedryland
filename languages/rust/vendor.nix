@@ -1,4 +1,4 @@
-pkgs: rust: { name, buildInputs, propagatedBuildInputs }:
+pkgs: rust: { name, buildInputs, propagatedBuildInputs, extraCargoConfig }:
 let
   internalSetupHook = pkgs.makeSetupHook
     {
@@ -10,7 +10,7 @@ in
   # with our internal nix dependencies
 pkgs.stdenv.mkDerivation {
   name = "${name}-internal-deps";
-  inherit buildInputs propagatedBuildInputs;
+  inherit buildInputs propagatedBuildInputs extraCargoConfig;
 
   phases = [ "buildPhase" "installPhase" ];
   nativeBuildInputs = with pkgs; [ git cacert rust internalSetupHook ];
@@ -37,7 +37,7 @@ pkgs.stdenv.mkDerivation {
       cp -r vendored $out
       substitute ${./cargo-internal.config.toml} $out/cargo.config.toml \
        --subst-var-by vendorDir $out/vendored
-
+      echo "$extraCargoConfig" >> $out/cargo.config.toml
       mkdir -p "$out/nix-support"
       substituteAll "$setupHook" "$out/nix-support/setup-hook"
     fi
