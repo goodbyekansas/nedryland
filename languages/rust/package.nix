@@ -69,6 +69,7 @@ let
   vendor = import ./vendor.nix pkgs rustBin {
     inherit name;
     buildInputs = attrs.buildInputs or [ ];
+    extraCargoConfig = attrs.extraCargoConfig or "";
     propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
   };
 
