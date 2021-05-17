@@ -140,7 +140,7 @@ fn main() {
                         })
                         .transpose()
                 })
-                .filter_map(|f| f) // skip all files without filename
+                .flatten() // skip all files without filename
                 .map(|rf| rf.map(|f| f.split('.').map(str::to_owned).collect::<Vec<String>>()))
                 .try_fold(Entry::default(), |entry, rlist| {
                     rlist.map(|list| create_module_tree(&origpath, entry, &list, 0))

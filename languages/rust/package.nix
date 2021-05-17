@@ -26,17 +26,19 @@ let
   rustBin = (
     if useNightly != "" then
       (
-        pkgs.rust-bin.nightly."${useNightly}".rust.override {
+        pkgs.rust-bin.nightly."${useNightly}".default.override {
           inherit targets extensions;
         }
       )
     else
       (
-        pkgs.rust-bin.stable."${rustVersion}".rust.override {
+        pkgs.rust-bin.stable."${rustVersion.stable}".default.override {
           inherit targets extensions;
         }
       )
   );
+
+  rustAnalyzer = pkgs.rust-bin.nightly."${rustVersion.analyzer}".rust-analyzer-preview;
 
   commands = ''
     check() {
@@ -162,7 +164,7 @@ stdenv.mkDerivation
       ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
       ++ [ vendor ];
 
-      passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks ]); };
+      passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
 
       depsBuildBuild = [ buildPackages.stdenv.cc ]
       ++ pkgs.lib.optionals stdenv.buildPlatform.isDarwin [
