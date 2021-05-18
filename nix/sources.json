@@ -29,10 +29,10 @@
         "homepage": "",
         "owner": "goodbyekansas",
         "repo": "rust-overlay",
-        "rev": "ad488d49a693d7cf0096bcba6bffef70dbe96c3a",
-        "sha256": "1nz8j0gp9bb5cqbwabdgfdaw6ni0j2psk65lndlyyn3k8jjbj5if",
+        "rev": "70fc350a3f1c86ea1a573db8a6f170f2702bb5b9",
+        "sha256": "1mifv7f6akbmmq40ffbr37s0xql1kz9wpm8x5f1lf54awxhjn540",
         "type": "tarball",
-        "url": "https://github.com/goodbyekansas/rust-overlay/archive/ad488d49a693d7cf0096bcba6bffef70dbe96c3a.tar.gz",
+        "url": "https://github.com/goodbyekansas/rust-overlay/archive/70fc350a3f1c86ea1a573db8a6f170f2702bb5b9.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
