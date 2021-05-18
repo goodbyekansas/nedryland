@@ -24,15 +24,15 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "rust": {
-        "branch": "master",
+        "branch": "cross-compile-fixes",
         "description": "Pure and reproducible nix overlay for binary distributed rust toolchains",
         "homepage": "",
-        "owner": "oxalica",
+        "owner": "goodbyekansas",
         "repo": "rust-overlay",
-        "rev": "be2d768249f0b6e57b4e443a38edfa23ee004713",
-        "sha256": "0wlc719x2ccgigmwyp7p6xhvsxxwy5zsdfzfkp63w0a5xdsnkrc6",
+        "rev": "ad488d49a693d7cf0096bcba6bffef70dbe96c3a",
+        "sha256": "1nz8j0gp9bb5cqbwabdgfdaw6ni0j2psk65lndlyyn3k8jjbj5if",
         "type": "tarball",
-        "url": "https://github.com/oxalica/rust-overlay/archive/be2d768249f0b6e57b4e443a38edfa23ee004713.tar.gz",
+        "url": "https://github.com/goodbyekansas/rust-overlay/archive/ad488d49a693d7cf0096bcba6bffef70dbe96c3a.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
