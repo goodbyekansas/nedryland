@@ -83,8 +83,7 @@ let
       };
     }
     ./mypy-hook.sh;
-  setupPyTemplate = if setuptoolsLibrary then ./setup-template-library else ./setup-template-application;
-  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" ];
+  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;
@@ -133,13 +132,30 @@ pythonPkgs.buildPythonPackage (attrs // {
     rm -f .pylintrc
     ln -s $setupCfg setup.cfg
     ln -s $pylintrc .pylintrc
-    ${if format == "setuptools" then ''
-    if [ ! -f setup.py ]; then
-      echo "🤷🐍 No setup.py, generating..."
-      substituteAll ${setupPyTemplate} setup.py
-    fi
-    '' else ""}
   '';
+
+  targetSetup = base.mkTargetSetup {
+    name = "python";
+    markerFiles = attrs_.targetSetup.markerFiles or [ ] ++ [ "setup.py" ];
+    templateDir = pkgs.symlinkJoin {
+      name = "python-component-template";
+      paths = (
+        pkgs.lib.optional (attrs_ ? targetSetup.templateDir) attrs_.targetSetup.templateDir
+      ) ++ [ ./component-template ];
+    };
+    variables = ({
+      inherit version;
+      pname = name;
+      mainPackage = attrs_.targetSetup.mainPackage or (pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name));
+      entryPoint = if setuptoolsLibrary then "" else "\\\"${name}=${name}.main:main\\\"";
+    } // attrs_.targetSetup.variables or { });
+    variableQueries = ({
+      desc = "✍️ Write a short description for your function";
+      author = "🤓 Enter author name:";
+      email = "📧 Enter author email:";
+      url = "🏄 Enter author website url:";
+    } // attrs_.targetSetup.variableQueries or { });
+  };
 
   shellHook = ''
     if [ -L setup.cfg ]; then

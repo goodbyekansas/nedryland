@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `targetsetup.nix` which python and rust now uses to setup new components. Variable names
+  that exists in the project's config file under `components` are used instead of
+  prompting user. Sending the set targetSetup to `mkPackage` in rust and python will
+  combine attributes.  
 - `versions.nix` which controls versions of some packages (rust, wasmer, wasmtime,
   ...). The set of versions is also accessible from `base`.
 - `mkComponent` now accepts a `subComponents` set as an argument. The use of this is

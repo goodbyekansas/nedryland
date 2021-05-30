@@ -61,6 +61,7 @@ in
 
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
+                      ${if drv ? targetSetup then "${drv.targetSetup}/bin/target-setup" else ""}
                       echo 🐚 Running shell hook for \"${targetName}\"
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"

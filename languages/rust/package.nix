@@ -214,6 +214,38 @@ stdenv.mkDerivation
         find $out -type f -exec remove-references-to -t ${rustBin} '{}' +
       '';
 
+      targetSetup = base.mkTargetSetup {
+        name = "rust";
+        markerFiles = attrs.targetSetup.markerFiles or [ ] ++ [ "Cargo.toml" ];
+        # Right now we only have .gitignore in here because of
+        # https://github.com/rust-lang/cargo/issues/6357
+        # but this means that we can add other files as well if we want to
+        templateDir = pkgs.symlinkJoin {
+          name = "rust-component-template";
+          paths = (
+            pkgs.lib.optional (attrs ? targetSetup.templateDir) attrs.targetSetup.templateDir
+          ) ++ [ ./component-template ];
+        };
+        showTemplate = attrs.targetSetup.showTemplate or false;
+        variables =
+          let
+            cfg = base.parseConfig {
+              key = "components";
+              structure = {
+                author = null;
+                email = null;
+              };
+            };
+          in
+          ({
+            cargoLock = if filterCargoLock then "Cargo.lock" else "#Cargo.lock";
+            CARGO_NAME = cfg.author;
+            CARGO_EMAIL = cfg.email;
+          } // attrs.targetSetup.variables or { });
+        initCommands = ''cargo init
+        ${attrs.targetSetup.initCommands or ""}'';
+      };
+
       shellHook = ''
         runHook preShell
         export RUST_SRC_PATH=${rustSrcNoSymlinks}
