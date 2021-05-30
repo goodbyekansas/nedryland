@@ -1,5 +1,6 @@
 (import ../../default.nix).mkProject {
   name = "hello-example";
+  configFile = ./hello.toml;
 
   # The keys in the components set are used to depend on or reference components
   # they declare their actual name in their respective nix files
@@ -11,6 +12,11 @@
     # This client does the same thing as pythonHello but
     # uses the extension (see hello-ext.nix)
     pythonHelloE = callFile ./clients/helloExt/hello-ext.nix { };
+
+    # This is just a sample to show how the interactive shell
+    # can help you set up directories etc for new components.
+    # Note that author, email and url is taken from the config (./hello.toml).
+    shellSetup = callFile ./libraries/interactive-shell-setup/shell-setup.nix { };
   };
   baseExtensions = [
     # We add an extension for making the pythonHello more efficiently

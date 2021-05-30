@@ -84,18 +84,20 @@ in
         createMinimalBase = { mkComponent }:
           let
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment;
+            parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
             minimalBase = {
               inherit
                 sources
                 callFile
                 callFunction
+                parseConfig
                 versions;
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
+              mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
               mkClient = targets@{ name, ... }: mkComponent' targets;
               mkService = targets@{ name, ... }: mkComponent' targets;
               extend = import ./extend.nix pkgs.lib.toUpper;
-              parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;
             };
