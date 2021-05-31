@@ -4,7 +4,7 @@ rec {
   enableChecksOnComponent = component:
     builtins.mapAttrs
       (n: v:
-        if pkgs.lib.isDerivation v then
+        if pkgs.lib.isDerivation v && v ? overrideAttrs then
           v.overrideAttrs
             (oldAttrs: {
               doCheck = true;
