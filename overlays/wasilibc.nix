@@ -6,12 +6,12 @@ let
 in
 {
   # create statically built versions of the llvm libraries (wasi does not support dynamic linking)
-  llvmPackages_11 = super.llvmPackages_11 // {
-    libraries = super.llvmPackages_11.libraries // rec {
-      libcxxabi = super.llvmPackages_11.libraries.libcxxabi.override {
+  llvmPackages_12 = super.llvmPackages_12 // {
+    libraries = super.llvmPackages_12.libraries // rec {
+      libcxxabi = super.llvmPackages_12.libraries.libcxxabi.override {
         enableShared = false;
       };
-      libcxx = super.llvmPackages_11.libraries.libcxx.override {
+      libcxx = super.llvmPackages_12.libraries.libcxx.override {
         enableShared = false;
         inherit libcxxabi;
       };
@@ -22,7 +22,7 @@ in
   # https://github.com/bytecodealliance/wasmtime/pull/2494
   wasmtime = super.rustPlatform.buildRustPackage rec {
     pname = "wasmtime";
-    version = versions.wasmtime.version;
+    inherit (versions.wasmtime) version cargoSha256;
 
     src = super.fetchFromGitHub {
       owner = "bytecodealliance";
@@ -30,7 +30,7 @@ in
       inherit (versions.wasmtime) rev sha256;
       fetchSubmodules = true;
     };
-    cargoSha256 = "1kkh7ssq557sg83vxnf6khw6lm74j83nkhkmyz4fnb78xr26ls5i";
+
 
     nativeBuildInputs = [ super.python super.cmake super.clang ] ++
       super.lib.optionals super.stdenv.isDarwin [ super.xcbuild ];
@@ -49,12 +49,12 @@ in
     };
   };
 
-  # convenience stdenv that uses clang 11 for wasi
-  clang11Stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_11.lldClang);
+  # convenience stdenv that uses clang 12 for wasi
+  clang12Stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.lldClang);
 
-  # override wasilibc with a newer version that is compiled with clang 11
+  # override wasilibc with a newer version that is compiled with clang 12
   wasilibc = (super.wasilibc.override {
-    stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_11.lldClangNoLibc);
+    stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.lldClangNoLibc);
   }).overrideAttrs (oldAttrs: {
     name = "wasilibc";
     version = versions.wasilibc.version;
@@ -80,11 +80,11 @@ in
     dontStripHost = true;
 
     makeFlagsArray = oldAttrs.makeFlagsArray or [ ] ++ [
-      "WASM_CFLAGS=-g -isystem ../sysroot/include -isystem sysroot/include"
+      "WASM_CFLAGS=-g -isystem ../sysroot/include -isystem sysroot/include -Wno-unused-command-line-argument"
     ];
   } else {
     makeFlagsArray = oldAttrs.makeFlagsArray or [ ] ++ [
-      "WASM_CFLAGS=-O2 -DNDEBUG -isystem ../sysroot/include -isystem sysroot/include"
+      "WASM_CFLAGS=-O2 -DNDEBUG -isystem ../sysroot/include -isystem sysroot/include -Wno-unused-command-line-argument"
     ];
   }));
 }
