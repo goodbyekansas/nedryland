@@ -1,7 +1,7 @@
 {
   rust = {
     stable = "1.52.1";
-    analyzer = "2021-05-11";
+    analyzer = "2021-05-30";
   };
 
   # tonic version needs to be matched with
@@ -11,14 +11,16 @@
   tonicBuild = "0.4.2";
 
   wasilibc = {
-    version = "20201210";
-    rev = "5ccfab77b097a5d0184f91184952158aa5904c8d";
-    sha256 = "1kxcy616vnqw4q2xkng9q67mgmq3gw2h4z6hkcwrqw1fjjp5qnbz";
+    version = "20210526";
+    rev = "3c4a3f94d1ce685a672ec9a642f1ae42dae16eb1";
+    sha256 = "0amxbr7g94053g4brdl6nr05b5l36bf5yq9s2l5sya17sf2lajps";
   };
+
   wasmtime = {
     version = "0.22.1+40c4c6ac9";
     rev = "40c4c6ac9bde95c72666d0cafb2ede6c7045edf9";
     sha256 = "0p0a7167b2wg6x7xymvps604f94dr1gfm7kadnq333qchbjgn7sp";
+    cargoSha256 = "1kkh7ssq557sg83vxnf6khw6lm74j83nkhkmyz4fnb78xr26ls5i";
   };
 
   terraform = "terraform_0_13";

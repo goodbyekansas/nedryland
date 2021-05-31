@@ -121,8 +121,22 @@ let
   # cross compiling
   ccForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}cc";
   cxxForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}c++";
+  linkerForBuild = ccForBuild;
+
   ccForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
   cxxForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}c++";
+  # after https://github.com/rust-lang/rust/commit/6615ee89be2290c96aa7d4ab24dc94e23a8c7080
+  # `--as-needed` is wrongfully added to wasm-ld even though it isn't a GNU linker
+  # workaround it by removing the argument before passing along
+  # this can safely be reomved when that is fixed
+  linkerForHost = if stdenv.hostPlatform.isWasi then "${(pkgs.writeScriptBin "rust-linker-bug-workaround" ''
+    for param in "$@"; do
+      [[ ! $param == '-Wl,--as-needed' ]] && newparams+=("$param")
+    done
+    set -- "''${newparams[@]}"
+    ${ccForHost} "''${newparams[@]}"
+  '')}/bin/rust-linker-bug-workaround" else ccForHost;
+
 
   hostTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.hostPlatform);
   buildTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.buildPlatform);
@@ -263,7 +277,7 @@ stdenv.mkDerivation
       let
         flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
         ++ pkgs.lib.optional warningsAsErrors "-D warnings"
-        ++ pkgs.lib.optional (hostTriple == "wasm32_wasi") "-Clinker-flavor=gcc";
+        ++ pkgs.lib.optional (stdenv.hostPlatform.isWasi) "-Clinker-flavor=gcc";
       in
       if flagList != [ ] then {
         RUSTFLAGS = builtins.concatStringsSep " " flagList;
@@ -271,11 +285,11 @@ stdenv.mkDerivation
     ) // (
       if hostTriple != buildTriple then {
         # cross-things
-        "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${ccForHost}";
+        "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${linkerForHost}";
         "CC_${stdenv.lib.toUpper hostTriple}" = "${ccForHost}";
         "CXX_${stdenv.lib.toUpper hostTriple}" = "${cxxForHost}";
 
-        "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${ccForBuild}";
+        "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${linkerForBuild}";
         "CC_${stdenv.lib.toUpper buildTriple}" = "${ccForBuild}";
         "CXX_${stdenv.lib.toUpper buildTriple}" = "${cxxForBuild}";
       } else { }
