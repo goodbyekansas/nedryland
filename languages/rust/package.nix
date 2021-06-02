@@ -129,6 +129,7 @@ let
   # `--as-needed` is wrongfully added to wasm-ld even though it isn't a GNU linker
   # workaround it by removing the argument before passing along
   # this can safely be removed when that is fixed
+  # https://github.com/rust-lang/rust/pull/85920
   linkerForHost =
     if stdenv.hostPlatform.isWasi then "${(pkgs.writeScriptBin "rust-linker-bug-workaround" ''
     for param in "$@"; do
