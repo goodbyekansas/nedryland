@@ -135,7 +135,7 @@ pythonPkgs.buildPythonPackage (attrs // {
   '';
 
   targetSetup = base.mkTargetSetup {
-    name = "python";
+    name = attrs_.targetSetup.name or "python";
     markerFiles = attrs_.targetSetup.markerFiles or [ ] ++ [ "setup.py" ];
     templateDir = pkgs.symlinkJoin {
       name = "python-component-template";
@@ -146,7 +146,7 @@ pythonPkgs.buildPythonPackage (attrs // {
     variables = ({
       inherit version;
       pname = name;
-      mainPackage = attrs_.targetSetup.mainPackage or (pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name));
+      mainPackage = pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name);
       entryPoint = if setuptoolsLibrary then "" else "\\\"${name}=${name}.main:main\\\"";
     } // attrs_.targetSetup.variables or { });
     variableQueries = ({

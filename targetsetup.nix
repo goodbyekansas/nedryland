@@ -26,7 +26,7 @@ let
   templateDir' = if templateDir != null then (builtins.toString templateDir) else "";
 in
 pkgs.writeTextFile {
-  name = "target-setup-${name}";
+  name = "target-setup-${builtins.replaceStrings [ " " ] [ "-" ] name}";
   executable = true;
   destination = "/bin/target-setup";
   text =
