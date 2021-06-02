@@ -132,6 +132,7 @@ let
   # https://github.com/rust-lang/rust/pull/85920
   linkerForHost =
     if stdenv.hostPlatform.isWasi then "${(pkgs.writeScriptBin "rust-linker-bug-workaround" ''
+    #!${pkgs.bash}/bin/bash
     for param in "$@"; do
       [[ ! $param == '-Wl,--as-needed' ]] && newparams+=("$param")
     done
