@@ -231,7 +231,7 @@ stdenv.mkDerivation
       '';
 
       targetSetup = base.mkTargetSetup {
-        name = "rust";
+        name = attrs.targetSetup.name or "rust";
         markerFiles = attrs.targetSetup.markerFiles or [ ] ++ [ "Cargo.toml" ];
         # Right now we only have .gitignore in here because of
         # https://github.com/rust-lang/cargo/issues/6357
