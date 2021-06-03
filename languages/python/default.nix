@@ -90,4 +90,6 @@ rec {
       package = application;
       python = application;
     };
+
+  mkService = mkClient;
 }
