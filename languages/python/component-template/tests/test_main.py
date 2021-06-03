@@ -1,4 +1,6 @@
-import @mainPackage@
+""" Tests for @mainPackage@ in @pname@ """
+import @mainPackage@.main
 
 def test_main() -> None:
-    @mainPackage@.main()
+    """ Tests for the main function """
+    @mainPackage@.main.main()
