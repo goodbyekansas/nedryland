@@ -9,5 +9,5 @@ setup(
     author_email="@email@",
     description="@desc@",
     packages=find_packages(),
-    entry_points=[@entryPoint@],
+    entry_points=@entryPoint@,
 )

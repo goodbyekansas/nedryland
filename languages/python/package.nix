@@ -143,11 +143,11 @@ pythonPkgs.buildPythonPackage (attrs // {
         pkgs.lib.optional (attrs_ ? targetSetup.templateDir) attrs_.targetSetup.templateDir
       ) ++ [ ./component-template ];
     };
-    variables = ({
+    variables = (rec {
       inherit version;
       pname = name;
       mainPackage = pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name);
-      entryPoint = if setuptoolsLibrary then "" else "\\\"${name}=${name}.main:main\\\"";
+      entryPoint = if setuptoolsLibrary then "{}" else "{\\\"console_scripts\\\": [\\\"${name}=${mainPackage}.main:main\\\"]}";
     } // attrs_.targetSetup.variables or { });
     variableQueries = ({
       desc = "✍️ Write a short description for your function";
@@ -155,6 +155,7 @@ pythonPkgs.buildPythonPackage (attrs // {
       email = "📧 Enter author email:";
       url = "🏄 Enter author website url:";
     } // attrs_.targetSetup.variableQueries or { });
+    initCommands = "black .";
   };
 
   shellHook = ''
