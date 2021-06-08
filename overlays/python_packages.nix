@@ -12,7 +12,9 @@ let
   ];
   isDarwin = super.stdenv.isDarwin;
   fetchzip = super.fetchzip;
+  fetchFromGitHub = super.fetchFromGitHub;
   tzdata = super.tzdata;
+  superPkgs = super.pkgs;
 
   wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.sh;
 in
@@ -193,6 +195,73 @@ in
               sha256 = "0x47f6vkh81hcffs5fk4xrlcyrcssgisw85cw5m2829sv8x8mmqg";
             };
             propagatedBuildInputs = [ super.spacy ];
+          };
+
+          pdoc = super.buildPythonPackage rec {
+            pname = "pdoc";
+            version = "7.1.1";
+            src = fetchzip {
+              url = "https://github.com/mitmproxy/pdoc/archive/refs/tags/v7.1.1.tar.gz";
+              sha256 = "1rxxkg94qflcnh05gp5fs025jd7vriqb20y9qs7xr542rhbajhxw";
+            };
+            propagatedBuildInputs = [ super.jinja2 super.pygments super.markupsafe super.astunparse ];
+            doCheck = false;
+          };
+
+          babel = super.buildPythonPackage rec {
+            pname = "Babel";
+            version = "2.9.1";
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "bc0c176f9f6a994582230df350aa6e05ba2ebe4b3ac317eab29d9be5d2768da0";
+            };
+            propagatedBuildInputs = [ super.pytz ];
+            doCheck = false;
+          };
+
+          # Sphinx and sphinx_rtd_theme is on a custom branch to work with logos on the internet
+          sphinx = super.buildPythonPackage rec {
+            pname = "Sphinx";
+            version = "4.0.2";
+            src = fetchFromGitHub {
+              owner = "goodbyekansas";
+              repo = pname;
+              rev = "d16631791bb8288968834b6afcbcf9b805c17e74";
+              sha256 = "02jh5vb2v7ydrswp17k4fjwfz2dnil1g4g7v3mcq4di5k9357r9k";
+            };
+            propagatedBuildInputs = [
+              super.jinja2
+              super.pygments
+              super.docutils
+              super.snowballstemmer
+              super.sphinxcontrib-applehelp
+              super.sphinxcontrib-devhelp
+              super.sphinxcontrib-jsmath
+              super.sphinxcontrib-htmlhelp
+              super.sphinxcontrib-serializinghtml
+              super.sphinxcontrib-qthelp
+              babel
+              super.alabaster
+              super.imagesize
+              super.requests
+              super.setuptools
+              super.packaging
+            ];
+            doCheck = false;
+          };
+
+          sphinx_rtd_theme = super.buildPythonPackage rec {
+            pname = "sphinx_rtd_theme";
+            version = "0.5.2";
+            src = fetchFromGitHub {
+              owner = "goodbyekansas";
+              repo = pname;
+              rev = "c4baa88e42b49c7a0593d330cb51547e4dc8bd53";
+              sha256 = "0mvsnfh0lxd1s0ddnlwalmnrrybz6dx77vn4qq79ifz7n2yfd0gd";
+            };
+
+            CI = 1; # Don't use NPM to fetch assets. Assets are included in sdist.
+            propagatedBuildInputs = [ sphinx super.docutils ];
           };
 
           cloudevents = super.buildPythonPackage rec {

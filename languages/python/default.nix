@@ -1,7 +1,8 @@
 { base, pkgs, versions }:
 rec {
-
   mkPackage = import ./package.nix pkgs base;
+
+  mkDocs = import ./docs.nix pkgs base.parseConfig;
 
   # setup hook that creates a "link" file in the
   # derivation that depends on this wheel derivation
@@ -52,10 +53,11 @@ rec {
         buildInputs = oldAttrs.buildInputs ++ [ wheelHook ];
       });
     in
-    base.mkComponent {
+    base.mkLibrary {
       inherit name;
       package = packageWithWheel;
       python = packageWithWheel;
+      docs = mkDocs attrs;
     };
 
   mkClient =
@@ -85,11 +87,44 @@ rec {
       });
       application = pythonVersion.pkgs.toPythonApplication package;
     in
-    base.mkComponent {
+    base.mkClient {
       inherit name;
+      docs = mkDocs attrs;
       package = application;
       python = application;
     };
 
-  mkService = mkClient;
+  mkService =
+    attrs@{ name
+    , version
+    , src
+    , pythonVersion
+    , checkInputs ? (pythonPkgs: [ ])
+    , buildInputs ? (pythonPkgs: [ ])
+    , nativeBuildInputs ? (pythonPkgs: [ ])
+    , preBuild ? ""
+    , doStandardTests ? true
+    , ...
+    }:
+    let
+      package = mkPackage (attrs // {
+        inherit
+          name
+          version
+          pythonVersion
+          checkInputs
+          buildInputs
+          nativeBuildInputs
+          preBuild
+          src
+          doStandardTests;
+      });
+      application = pythonVersion.pkgs.toPythonApplication package;
+    in
+    base.mkService {
+      inherit name;
+      docs = mkDocs attrs;
+      package = application;
+      python = application;
+    };
 }

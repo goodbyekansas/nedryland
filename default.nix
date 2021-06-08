@@ -83,7 +83,7 @@ in
         # create the non-extended base
         createMinimalBase = { mkComponent }:
           let
-            mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment;
+            mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
             minimalBase = {
               inherit
@@ -96,8 +96,9 @@ in
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
-              mkClient = targets@{ name, ... }: mkComponent' targets;
-              mkService = targets@{ name, ... }: mkComponent' targets;
+              mkClient = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "client"; });
+              mkService = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "service"; });
+              mkLibrary = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "library"; });
               extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;

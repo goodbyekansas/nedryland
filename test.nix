@@ -4,6 +4,7 @@ let
     protobuf = import ./examples/protobuf/project.nix;
     hello = import ./examples/hello/project.nix;
     deployment = import ./deployment/project.nix;
+    documentation = import ./examples/documentation/project.nix;
   };
 
   pkgs = tests.hello.nixpkgs;

@@ -4,6 +4,7 @@ let
     rust = pkgs.callPackage ./rust { inherit base versions; };
     python = pkgs.callPackage ./python { inherit base versions; };
     terraform = pkgs.callPackage ./terraform { inherit base versions; };
+    markdown = pkgs.callPackage ./markdown { inherit base; };
   };
   allWithProto = (all // { protobuf = pkgs.callPackage ./protobuf { languages = all; }; });
 in

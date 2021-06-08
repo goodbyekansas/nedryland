@@ -17,10 +17,6 @@ let
     };
   };
 
-in
-rec {
-  inherit mkPackage;
-
   toApplication = package:
     package.overrideAttrs (
       oldAttrs: {
@@ -42,6 +38,47 @@ rec {
         '';
       }
     );
+
+  mkDocs = attrs@{ name, ... }: ((attrs.docs or { }) // {
+    generated = mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
+      name = "${attrs.name}-api-reference";
+      buildPhase = ''
+        cargo doc --all --no-deps --all-features
+      '';
+      installPhase = ''
+        cp -r target/doc $out
+      '';
+    });
+  });
+
+  mkComponentWith = func:
+    attrs@ { name, src, deployment ? { }, ... }:
+    let
+      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
+      package = toApplication (mkPackage pkgAttrs);
+      crossTargets = builtins.mapAttrs
+        (target: targetAttrs:
+          assert pkgs.lib.assertMsg
+            (builtins.hasAttr target supportedCrossTargets)
+            "Cross compilation target \"${target}\" is not supported!";
+          let
+            targetSpec = builtins.getAttr target supportedCrossTargets;
+          in
+          toApplication (mkPackageWithStdenv
+            targetSpec.stdenv
+            (pkgAttrs // targetAttrs // targetSpec.attrs)
+          )
+        ) attrs.crossTargets or { };
+    in
+    func ({
+      inherit deployment name package;
+      docs = mkDocs attrs;
+      rust = package;
+    } // crossTargets);
+
+in
+rec {
+  inherit mkPackage toApplication mkDocs;
 
   toLibrary = package:
     let
@@ -86,41 +123,15 @@ rec {
         }
       ));
     in
-    base.mkComponent {
+    base.mkLibrary {
       inherit deployment name package;
+      docs = mkDocs attrs;
       rust = package;
     };
 
-  mkClient =
-    attrs@
-    { name
-    , src
-    , deployment ? { }
-    , ...
-    }:
-    let
-      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
-      package = toApplication (mkPackage pkgAttrs);
-      crossTargets = builtins.mapAttrs
-        (target: targetAttrs:
-          assert pkgs.lib.assertMsg
-            (builtins.hasAttr target supportedCrossTargets)
-            "Cross compilation target \"${target}\" is not supported!";
-          let
-            targetSpec = builtins.getAttr target supportedCrossTargets;
-          in
-          toApplication (mkPackageWithStdenv
-            targetSpec.stdenv
-            (pkgAttrs // targetAttrs // targetSpec.attrs)
-          )
-        ) attrs.crossTargets or { };
-    in
-    base.mkComponent ({
-      inherit deployment name package;
-      rust = package;
-    } // crossTargets);
+  mkClient = mkComponentWith base.mkClient;
 
-  mkService = mkClient;
+  mkService = mkComponentWith base.mkService;
 
   fromProtobuf =
     { name
