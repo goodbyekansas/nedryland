@@ -1,0 +1,6 @@
+[book]
+authors = ["Spoderman"]
+language = "en"
+multilingual = false
+src = "."
+title = "Install instructions"

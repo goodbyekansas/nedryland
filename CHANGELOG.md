@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Markdown as a language and functions to turn markdown into html.
+- `docs` as a target which can have requirements in the config file.
+- Generated docs for rust and python that is merged with user written docs.
 - Priority functions for determining deployment order in a combined deployment.
   Use `first` or `last` to set the deployment order of the component, or `priority` to set
   the priority explicitly.

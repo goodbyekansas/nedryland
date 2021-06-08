@@ -83,7 +83,7 @@ let
       };
     }
     ./mypy-hook.sh;
-  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" ];
+  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit version setupCfg pylintrc format preBuild;

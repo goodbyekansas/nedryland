@@ -1,0 +1,15 @@
+[docs]
+# This setting directs base.languages.markdown.mkProjectDoc
+# to use the named generator. Individual components can still
+# call the other functions directly.
+markdown = { htmlGenerator = "mdbook" }
+logo = "https://placeholder.com/wp-content/uploads/2018/10/placeholder.com-logo4.png"
+
+# Requirements forces components of the named type to contain
+# certain keys in their docs attribute.
+[docs.requirements]
+client = [ "manual", "about" ]
+service = [ "installInstructions" ]
+
+[docs.python]
+sphinx-theme = "rtd"
