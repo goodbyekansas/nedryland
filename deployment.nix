@@ -98,7 +98,7 @@ in
             acc: curr: ''
               ${acc}
               echo "📡👽 Deploying ${curr}..."
-              ${builtins.getAttr curr deployments}/bin/deploy 2>&1 | sed "s/^/ 🛸 ''${esc}[36m[${curr}]''${esc}[0m /"
+              ${builtins.getAttr curr deployments}/bin/deploy "$@" 2>&1 | sed "s/^/ 🛸 ''${esc}[36m[${curr}]''${esc}[0m /"
             ''
           )
           ''
