@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Priority functions for determining deployment order in a combined deployment.
+  Use `first` or `last` to set the deployment order of the component, or `priority` to set
+  the priority explicitly.
 - `targetsetup.nix` which python and rust now uses to setup new components. Variable names
   that exists in the project's config file under `components` are used instead of
   prompting user. Sending the set targetSetup to `mkPackage` in rust and python will
@@ -33,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `packageWithChecks` is no longer generated. See "Changed" for more details.
 
 ### Fixed
+- Argument to combined deployment works the same as for regular deployment.
 - shellInputs are now added to nativeBuildInputs instead of being an attribute on the
   derivation since that caused them to always be evaluated.
 - Nested components are now included in the "all" matrix target.
