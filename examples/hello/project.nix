@@ -17,6 +17,12 @@
     # can help you set up directories etc for new components.
     # Note that author, email and url is taken from the config (./hello.toml).
     shellSetup = callFile ./libraries/interactive-shell-setup/shell-setup.nix { };
+
+    # A sample for deploying a single component.
+    singleDeployment = callFile ./deployment/single.nix { };
+
+    # A component with a combined deployment.
+    combinedDeployment = callFile ./deployment/combined.nix { };
   };
   baseExtensions = [
     # We add an extension for making the pythonHello more efficiently

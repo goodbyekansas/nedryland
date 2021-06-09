@@ -37,4 +37,4 @@ jobs:
         cp .github/workflows/setup/nix.conf ~/.config/nix/nix.conf
 
     - name: Run all tests
-      run: nix build -L -f tests.nix all --max-jobs 0 --keep-going
+      run: nix build -L -f test.nix all --max-jobs 0 --keep-going

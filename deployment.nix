@@ -82,15 +82,49 @@ let
         destination = "/bin/shell";
       };
     in
-    pkgs.symlinkJoin { inherit name; paths = [ deploy ] ++ pkgs.lib.optional deployShell shell; };
+    pkgs.symlinkJoin {
+      inherit name;
+      paths = [ deploy ] ++ pkgs.lib.optional deployShell shell;
+    };
 in
 {
   inherit mkDeployment;
+
+  first = deployment: deployment.overrideAttrs (_: {
+    passthru = {
+      priority = 1;
+    };
+  });
+
+  last = deployment: deployment.overrideAttrs (_: {
+    passthru = {
+      priority = 999999;
+    };
+  });
+
+  priority = priority: deployment: deployment.overrideAttrs (_: {
+    passthru = {
+      inherit priority;
+    };
+  });
+
   mkCombinedDeployment = name: deployments:
     if builtins.length (builtins.attrNames deployments) == 1 then
       builtins.head (builtins.attrValues deployments)
     else
-      mkDeployment {
+      let
+        sortedDeployments = builtins.map (value: value.name) (
+          builtins.sort (first: second: builtins.lessThan first.priority second.priority)
+            (
+              pkgs.lib.mapAttrsToList
+                (
+                  name: value: { inherit name; priority = value.priority or 1000; }
+                )
+                deployments
+            )
+        );
+      in
+      (mkDeployment {
         inherit name;
         deployShell = false;
         deployPhase = builtins.foldl'
@@ -106,8 +140,9 @@ in
             set -e
             esc=$(printf '\033')
           ''
-          (builtins.attrNames deployments);
-      };
+          sortedDeployments;
+      }).overrideAttrs (_: { passthru = { inherit sortedDeployments; }; });
+
   mkFileUploadDeployment = files: { };
   mkTerraformDeployment = import ./deployment/terraform/terraform.nix { inherit base pkgs mkDeployment; };
 }
