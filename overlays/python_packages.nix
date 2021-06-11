@@ -185,6 +185,16 @@ in
             ];
           };
 
+          spacy-english = super.buildPythonPackage {
+            name = "spacy-english";
+            version = "2.3.1";
+            src = fetchzip {
+              url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz";
+              sha256 = "0x47f6vkh81hcffs5fk4xrlcyrcssgisw85cw5m2829sv8x8mmqg";
+            };
+            propagatedBuildInputs = [ super.spacy ];
+          };
+
           cloudevents = super.buildPythonPackage rec {
             pname = "cloudevents";
             version = "0.3.0";
