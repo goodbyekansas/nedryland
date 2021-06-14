@@ -193,6 +193,8 @@ in
               sha256 = "0x47f6vkh81hcffs5fk4xrlcyrcssgisw85cw5m2829sv8x8mmqg";
             };
             propagatedBuildInputs = [ super.spacy ];
+
+            buildInputs = [ wheelHook ];
           };
 
           cloudevents = super.buildPythonPackage rec {
