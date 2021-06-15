@@ -172,6 +172,7 @@ stdenv.mkDerivation
       strictDeps = true;
       disallowedReferences = [ vendor ];
       src = invariantSource;
+      vendoredDependencies = vendor;
 
       nativeBuildInputs = with pkgs; [
         cacert
