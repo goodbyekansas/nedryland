@@ -1,20 +1,22 @@
 { base, pkgs, versions }:
 let
   mkPackage = pkgs.callPackage ./package.nix { inherit base; rustVersion = versions.rust; };
+  mkPackageWithStdenv = stdenv: attrs:
+    (mkPackage.override
+      {
+        inherit stdenv;
+      }) attrs;
 
-  # use `stdenv` to override mkPackage
-  # if it is part of attrs
-  mkPackageOverrideStdenv = attrs:
-    let
-      mkPackage' =
-        if attrs ? stdenv then
-          mkPackage.override
-            {
-              stdenv = attrs.stdenv;
-            }
-        else mkPackage;
-    in
-    mkPackage' attrs;
+  supportedCrossTargets = {
+    windows = {
+      stdenv = pkgs.pkgsCross.mingwW64.stdenv;
+      attrs = {
+        targets = [ "x86_64-pc-windows-gnu" ];
+        defaultTarget = "x86_64-pc-windows-gnu";
+      };
+    };
+  };
+
 in
 rec {
   inherit mkPackage;
@@ -78,7 +80,7 @@ rec {
     , ...
     }:
     let
-      package = toLibrary (mkPackageOverrideStdenv (
+      package = toLibrary (mkPackage (
         (builtins.removeAttrs attrs [ "deployment" ]) // {
           filterCargoLock = true;
         }
@@ -97,27 +99,28 @@ rec {
     , ...
     }:
     let
-      package = toApplication (mkPackageOverrideStdenv (builtins.removeAttrs attrs [ "deployment" ]));
+      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
+      package = toApplication (mkPackage pkgAttrs);
+      crossTargets = builtins.mapAttrs
+        (target: targetAttrs:
+          assert pkgs.lib.assertMsg
+            (builtins.hasAttr target supportedCrossTargets)
+            "Cross compilation target \"${target}\" is not supported!";
+          let
+            targetSpec = builtins.getAttr target supportedCrossTargets;
+          in
+          toApplication (mkPackageWithStdenv
+            targetSpec.stdenv
+            (pkgAttrs // targetAttrs // targetSpec.attrs)
+          )
+        ) attrs.crossTargets or { };
     in
-    base.mkClient {
+    base.mkComponent ({
       inherit deployment name package;
       rust = package;
-    };
+    } // crossTargets);
 
-  mkService =
-    attrs@
-    { name
-    , src
-    , deployment ? { }
-    , ...
-    }:
-    let
-      package = toApplication (mkPackageOverrideStdenv (builtins.removeAttrs attrs [ "deployment" ]));
-    in
-    base.mkService {
-      inherit deployment name package;
-      rust = package;
-    };
+  mkService = mkClient;
 
   fromProtobuf =
     { name
