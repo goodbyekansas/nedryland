@@ -91,7 +91,8 @@ in
                 callFile
                 callFunction
                 parseConfig
-                versions;
+                versions
+                enableChecks;
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
