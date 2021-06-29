@@ -1,7 +1,7 @@
 {
   rust = {
-    stable = "1.52.1";
-    analyzer = "2021-05-30";
+    stable = "1.53.0";
+    analyzer = "2021-06-29";
   };
 
   # tonic version needs to be matched with
