@@ -1,6 +1,6 @@
 [package]
 name = "rust-protobuf-compiler"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Goodbye Kansas Pipeline team <pipeline@goodbyekansas.com>"]
 edition = "2018"
 

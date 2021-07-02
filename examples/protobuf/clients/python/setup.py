@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="protobuf-client-example",
-    version="0.1.0",
+    version="1.0.0",
     author="GBK Pipeline Team",
     author_email="pipeline@goodbyekansas.com",
     description="Example client showing transitive protobuf dependencies",

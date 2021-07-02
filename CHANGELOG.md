@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 1.0.0
+
 ### Added
 - Markdown as a language and functions to turn markdown into html.
 - `docs` as a target which can have requirements in the config file.

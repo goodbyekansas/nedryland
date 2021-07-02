@@ -1,7 +1,7 @@
 { base, pkgs }:
 base.languages.python.mkLibrary {
   name = "numpy-wrapper";
-  version = "0.1.0";
+  version = "1.0.0";
   src = ./.;
   pythonVersion = pkgs.python3;
   # We define this as a function that will be called with the
