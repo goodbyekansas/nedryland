@@ -1,7 +1,7 @@
 { base, python3 }:
 base.languages.python.mkLibrary {
   name = "shell-Setup";
-  version = "0.1.0";
+  version = "1.0.0";
   src = ./.;
 
   pythonVersion = python3;

@@ -4,7 +4,7 @@
 
 base.languages.python.mkClient {
   name = "hello-nested";
-  version = "0.1.0";
+  version = "1.0.0";
   src = ./.;
   pythonVersion = python3;
   # Here we don't use pp with numpyWrapper since it's our own

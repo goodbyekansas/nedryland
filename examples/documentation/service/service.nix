@@ -1,7 +1,7 @@
 { base, python38 }:
 base.languages.rust.mkService {
   name = "awesome-service";
-  version = "0.1.0";
+  version = "1.0.0";
   src = ./.;
   docs = {
     # mkProjectDocs uses the function named in the project config
