@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - changelog python package override
 
+### Changed
+- strings starting with "./" in the config file are interpreted as paths relative to the
+  config file.
+
 ## 1.0.0 - 2021-07-03
 
 ### Added
