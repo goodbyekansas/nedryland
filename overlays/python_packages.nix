@@ -264,6 +264,19 @@ in
             propagatedBuildInputs = [ sphinx super.docutils ];
           };
 
+          keepachangelog = super.buildPythonPackage rec{
+            pname = "keepachangelog";
+            version = "2.0.0.dev1";
+
+            src = fetchFromGitHub {
+              owner = "Colin-b";
+              repo = pname;
+              rev = "82523116d91c7009a28fa3c082d790891e441ebd";
+              sha256 = "0fx9i17l6c6i58vcglvafpkqbwn9xw81c623sy0qvga78x90y5c6";
+            };
+            doCheck = false;
+          };
+
           cloudevents = super.buildPythonPackage rec {
             pname = "cloudevents";
             version = "0.3.0";
