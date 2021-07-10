@@ -84,7 +84,7 @@ in
         createMinimalBase = { mkComponent }:
           let
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
-            parseConfig = import ./config.nix pkgs configContent (pkgs.lib.toUpper name);
+            parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
             minimalBase = {
               inherit
                 sources
@@ -202,6 +202,7 @@ in
               builtins.readFile appliedAttrs.configFile
             else ""
           );
+        configRoot = if appliedAttrs ? configFile then builtins.dirOf appliedAttrs.configFile else null;
 
         resolvedComponents = appliedAttrs.components;
         resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;

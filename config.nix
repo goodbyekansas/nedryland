@@ -1,7 +1,19 @@
-pkgs: configContent: prefix: { key, structure }:
+pkgs: configContent: configRoot: prefix: { key, structure }:
 let
   parsedConfig = builtins.fromTOML configContent;
-  subConfig = (if builtins.hasAttr key parsedConfig then builtins.getAttr key parsedConfig else { });
+  subConfig = pkgs.lib.mapAttrsRecursive
+    (name: value:
+      if
+        (configRoot != null
+          && builtins.isString value
+          && builtins.substring 0 2 value == "./"
+        ) then
+        builtins.path
+          {
+            name = "nedryland-config-${builtins.concatStringsSep "-" name}";
+            path = configRoot + "/${value}";
+          } else value)
+    (if builtins.hasAttr key parsedConfig then builtins.getAttr key parsedConfig else { });
 in
 with builtins;
 pkgs.lib.mapAttrsRecursiveCond
