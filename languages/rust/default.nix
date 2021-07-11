@@ -72,7 +72,7 @@ let
     in
     func ({
       inherit deployment name package;
-      docs = mkDocs attrs;
+      docs = mkDocs pkgAttrs;
       rust = package;
     } // crossTargets);
 
