@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - strings starting with "./" in the config file are interpreted as paths relative to the
   config file.
 
+  ### Fixed
+- Rust components with cross compilation targets can generate docs.
+
 ## 1.0.0 - 2021-07-03
 
 ### Added
