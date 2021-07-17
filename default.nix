@@ -29,6 +29,9 @@ let
 
           # darwin "fix" for mingw
           (import ./overlays/darwin-fix-mcfgthreads.nix)
+
+          # extra pkgs from future versions of nixpkgs
+          (import ./overlays/backported-packages.nix)
         ];
         config = { };
       };

@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- changelog python package override
+- keepachangelog python package
+- Use a version of github-release from newer nixpkgs
 
 ### Changed
-- strings starting with "./" in the config file are interpreted as paths relative to the
+- Strings starting with "./" in the config file are interpreted as paths relative to the
   config file.
 
-  ### Fixed
+### Fixed
 - Rust components with cross compilation targets can generate docs.
 
 ## 1.0.0 - 2021-07-03
