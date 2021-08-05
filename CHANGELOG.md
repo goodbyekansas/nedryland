@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2021-08-05
+
 ### Added
 - keepachangelog python package
 - Use a version of github-release from newer nixpkgs
@@ -17,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Rust components with cross compilation targets can generate docs.
 
-## 1.0.0 - 2021-07-03
+## [1.0.0] - 2021-07-03
 
 ### Added
 - Markdown as a language and functions to turn markdown into html.
