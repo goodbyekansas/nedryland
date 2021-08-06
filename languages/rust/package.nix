@@ -11,7 +11,7 @@ attrs@{ name
 , srcExclude ? [ ]
 , extensions ? [ ]
 , targets ? [ ]
-, defaultTarget ? ""
+, defaultTarget ? stdenv.hostPlatform.config
 , useNightly ? ""
 , extraChecks ? ""
 , buildFeatures ? [ ]
@@ -272,12 +272,8 @@ stdenv.mkDerivation
         ${shellHook}
         runHook postShell
       '';
-
-    } // (
-      if defaultTarget != "" then {
-        CARGO_BUILD_TARGET = defaultTarget;
-      } else { }
-    ) // runnerAttrs // (
+      CARGO_BUILD_TARGET = defaultTarget;
+    } // runnerAttrs // (
       let
         flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
         ++ pkgs.lib.optional warningsAsErrors "-D warnings"

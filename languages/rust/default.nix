@@ -23,7 +23,7 @@ let
         installPhase = ''
           ${oldAttrs.installPhase}
           mkdir -p $out/bin
-          cp target/${package.defaultTarget or ""}/release/${package.executableName or package.meta.name}${
+          cp target/''${CARGO_BUILD_TARGET:-}/release/${package.executableName or package.meta.name}${
             if pkgs.lib.hasInfix "-windows-" package.defaultTarget or "" then
               ".exe"
             else
