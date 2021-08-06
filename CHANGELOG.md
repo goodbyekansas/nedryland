@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Rust: Always set a target subdirectory when building, not only for cross compile. This way
+  switching between targets will not trigger an unnecessary rebuild 🥝.
+
 ## [1.1.0] - 2021-08-05
 
 ### Added
