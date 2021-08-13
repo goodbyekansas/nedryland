@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Rust components with cross compilation targets can generate docs.
+- Nixfmt in the `ci` attribute will always use bash.
+- Nixfmt in the `ci` attribute can now handle file names with spaces.
 
 ## [1.0.0] - 2021-07-03
 
