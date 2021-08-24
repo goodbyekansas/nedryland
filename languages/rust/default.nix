@@ -117,17 +117,31 @@ rec {
     , ...
     }:
     let
+      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
       package = toLibrary (mkPackage (
-        (builtins.removeAttrs attrs [ "deployment" ]) // {
+        pkgAttrs // {
           filterCargoLock = true;
         }
       ));
+      crossTargets = builtins.mapAttrs
+        (target: targetAttrs:
+          assert pkgs.lib.assertMsg
+            (builtins.hasAttr target supportedCrossTargets)
+            "Cross compilation target \"${target}\" is not supported!";
+          let
+            targetSpec = builtins.getAttr target supportedCrossTargets;
+          in
+          toApplication (mkPackageWithStdenv
+            targetSpec.stdenv
+            (pkgAttrs // targetAttrs // targetSpec.attrs)
+          )
+        ) attrs.crossTargets or { };
     in
-    base.mkLibrary {
+    base.mkLibrary ({
       inherit deployment name package;
-      docs = mkDocs attrs;
+      docs = mkDocs pkgAttrs;
       rust = package;
-    };
+    } // crossTargets);
 
   mkClient = mkComponentWith base.mkClient;
 
