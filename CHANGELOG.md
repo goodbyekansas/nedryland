@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - keepachangelog python package
 - Use a version of github-release from newer nixpkgs
+- Cross target for rust libraries, only needed to do development (nix-shell), the
+  dependency should still be on the package and the platform of the dependant will build
+  it for the correct target.
 
 ### Changed
 - Strings starting with "./" in the config file are interpreted as paths relative to the
