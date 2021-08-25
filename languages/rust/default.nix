@@ -51,24 +51,27 @@ let
     });
   });
 
+  toCrossTargets = crossTargets: pkgAttrs: intoFunction: builtins.mapAttrs
+    (target: targetAttrs:
+      assert pkgs.lib.assertMsg
+        (builtins.hasAttr target supportedCrossTargets)
+        "Cross compilation target \"${target}\" is not supported!";
+      let
+        targetSpec = builtins.getAttr target supportedCrossTargets;
+      in
+      intoFunction (mkPackageWithStdenv
+        targetSpec.stdenv
+        (pkgAttrs // targetAttrs // targetSpec.attrs)
+      )
+    )
+    crossTargets;
+
   mkComponentWith = func:
     attrs@ { name, src, deployment ? { }, ... }:
     let
       pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
       package = toApplication (mkPackage pkgAttrs);
-      crossTargets = builtins.mapAttrs
-        (target: targetAttrs:
-          assert pkgs.lib.assertMsg
-            (builtins.hasAttr target supportedCrossTargets)
-            "Cross compilation target \"${target}\" is not supported!";
-          let
-            targetSpec = builtins.getAttr target supportedCrossTargets;
-          in
-          toApplication (mkPackageWithStdenv
-            targetSpec.stdenv
-            (pkgAttrs // targetAttrs // targetSpec.attrs)
-          )
-        ) attrs.crossTargets or { };
+      crossTargets = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toApplication;
     in
     func ({
       inherit deployment name package;
@@ -123,19 +126,7 @@ rec {
           filterCargoLock = true;
         }
       ));
-      crossTargets = builtins.mapAttrs
-        (target: targetAttrs:
-          assert pkgs.lib.assertMsg
-            (builtins.hasAttr target supportedCrossTargets)
-            "Cross compilation target \"${target}\" is not supported!";
-          let
-            targetSpec = builtins.getAttr target supportedCrossTargets;
-          in
-          toApplication (mkPackageWithStdenv
-            targetSpec.stdenv
-            (pkgAttrs // targetAttrs // targetSpec.attrs)
-          )
-        ) attrs.crossTargets or { };
+      crossTargets = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toLibrary;
     in
     base.mkLibrary ({
       inherit deployment name package;
