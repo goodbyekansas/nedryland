@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2021-08-31
+
+### Added 
+- Cross target for rust libraries, only needed to do development (nix-shell), the
+  dependency should still be on the package and the platform of the dependant will build
+  it for the correct target.
+
 ### Fixed
 - Rust: Always set a target subdirectory when building, not only for cross compile. This way
   switching between targets will not trigger an unnecessary rebuild 🥝.
@@ -15,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - keepachangelog python package
 - Use a version of github-release from newer nixpkgs
-- Cross target for rust libraries, only needed to do development (nix-shell), the
-  dependency should still be on the package and the platform of the dependant will build
-  it for the correct target.
 
 ### Changed
 - Strings starting with "./" in the config file are interpreted as paths relative to the
