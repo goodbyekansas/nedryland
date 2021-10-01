@@ -60,6 +60,10 @@ in
             nativeBuildInputs = [
               super.numpy
             ];
+
+            propagatedBuildInputs = [
+              super.networkx
+            ];
           };
 
           pycue = super.buildPythonPackage rec {
