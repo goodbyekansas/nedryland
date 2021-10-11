@@ -54,20 +54,6 @@ let
     }
   '';
 
-  invariantSource =
-    if !(pkgs.lib.isStorePath src) then
-      (builtins.path {
-        path = src;
-        inherit name;
-        filter =
-          (
-            path: type: !(type == "directory" && baseNameOf path == "target")
-              && !(type == "directory" && baseNameOf path == ".cargo")
-              && !(filterCargoLock && type == "regular" && baseNameOf path == "Cargo.lock")
-              && !(builtins.any (pred: pred path type) srcExclude)
-          );
-      }) else src;
-
   vendor = import ./vendor.nix pkgs rustBin {
     inherit name;
     buildInputs = attrs.buildInputs or [ ];
@@ -165,13 +151,16 @@ let
     runners;
 
 in
-stdenv.mkDerivation
+base.mkDerivation
   (
     safeAttrs // {
-      inherit name;
+      inherit stdenv;
       strictDeps = true;
       disallowedReferences = [ vendor ];
-      src = invariantSource;
+      srcFilter = path: type: !(type == "directory" && baseNameOf path == "target")
+      && !(type == "directory" && baseNameOf path == ".cargo")
+      && !(filterCargoLock && type == "regular" && baseNameOf path == "Cargo.lock")
+      && !(builtins.any (pred: pred path type) srcExclude);
       vendoredDependencies = vendor;
 
       nativeBuildInputs = with pkgs; [

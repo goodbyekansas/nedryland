@@ -2,7 +2,7 @@
 rec {
   mkPackage = import ./package.nix pkgs base;
 
-  mkDocs = import ./docs.nix pkgs base.parseConfig;
+  mkDocs = import ./docs.nix base pkgs.lib;
 
   # setup hook that creates a "link" file in the
   # derivation that depends on this wheel derivation
@@ -10,7 +10,7 @@ rec {
 
   fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? pkgs.python3 }:
     let
-      generatedCode = pkgs.callPackage ./protobuf.nix { inherit name version protoSources protoInputs; };
+      generatedCode = pkgs.callPackage ./protobuf.nix { inherit base name version protoSources protoInputs; };
     in
     mkLibrary {
       inherit version pythonVersion;

@@ -1,0 +1,5 @@
+This is different from same-things-1 but it doesn't matter because it's gitignored!
+same thing 1 has a lot train emojis, that is lame. We store all the cool emojis here:
+👾 💀 🗡️ 🔫 🕶️
+🧀
+You can verify this by building both, they will have the same nix store path!

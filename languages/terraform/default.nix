@@ -21,7 +21,7 @@
     in
     base.mkComponent rec {
       inherit name subComponents;
-      package = pkgs.stdenv.mkDerivation (attrs // {
+      package = base.mkDerivation (attrs // {
         inherit name;
         src = if pkgs.lib.isStorePath src then src else
         builtins.path {

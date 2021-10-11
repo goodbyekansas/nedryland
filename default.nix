@@ -32,6 +32,9 @@ let
 
           # extra pkgs from future versions of nixpkgs
           (import ./overlays/backported-packages.nix)
+
+          # gitignore source
+          (self: super: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
         ];
         config = { };
       };
@@ -96,6 +99,28 @@ in
                 parseConfig
                 versions
                 enableChecks;
+              mkDerivation = attrs@{ name, stdenv ? pkgs.stdenv, ... }:
+                let
+                  customerFilter = src: filter:
+                    let
+                      # IMPORTANT: use a let binding like this to memoize info about the git directories.
+                      srcIgnored = pkgs.gitignoreFilter src;
+                    in
+                    path: type:
+                      srcIgnored path type
+                      || (filter path type);
+                  filteredSrc =
+                    if attrs ? srcFilter && attrs ? src then
+                      pkgs.lib.cleanSourceWith
+                        {
+                          inherit (attrs) src;
+                          filter = customerFilter attrs.src attrs.srcFilter;
+                          name = "${name}-source";
+                        } else pkgs.gitignoreSource attrs.src;
+                in
+                stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" ]) // (pkgs.lib.optionalAttrs (attrs ? src) {
+                  src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
+                }));
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';

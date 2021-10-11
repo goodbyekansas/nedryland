@@ -2,7 +2,7 @@ pkgs: base: attrs@{ name, ... }:
 base.mkComponent {
   inherit name;
   nedrylandType = attrs.nedrylandType or "documentation";
-  package = pkgs.stdenv.mkDerivation {
+  package = base.mkDerivation {
     name = "${name}-package";
     src = attrs.src;
     buildInputs = [ pkgs.mkdocs ];

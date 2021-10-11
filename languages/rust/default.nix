@@ -152,6 +152,7 @@ rec {
       generatedCode = pkgs.callPackage ./protobuf.nix
         {
           inherit
+            base
             name
             protoSources
             version

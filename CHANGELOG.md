@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- "gitingore.nix" for src. This will make all of our own components ignore files that
+  are inside gitignore in src.
+
+### Added
+- `base.mkDerivation` which uses the new git ignore feature. It can take a stdenv and
+  srcFilter input to customize what happens. srcFilter should be a function that takes 2
+  inputs, `path: type: ` like [cleanSourceWith] (https://github.com/NixOS/nixpkgs/blob/0e55920d5f79fbd336ac1a6e5f10e8ee16363d26/lib/sources.nix#L87)
+
 ## [1.2.0] - 2021-08-31
 
 ### Added 

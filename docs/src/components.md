@@ -10,10 +10,10 @@ create a folder `example-component` and create a file `example-component.nix` in
 put the following content:
 
 ```nix
-{ pkgs, base }:
+{ base }:
 
 base.mkComponent {
-  package = pkgs.stdenv.mkDerivation {
+  package = base.mkDerivation {
     name = "example-component";
     src = ./.;
 
@@ -24,8 +24,11 @@ base.mkComponent {
 }
 ```
 
-This declares a component with a `package` target and uses the standard nix `mkDerivation`
-[function](https://nixos.org/nixpkgs/manual/#sec-using-stdenv).
+This declares a component with a `package` target and uses Nedryland's `mkDerivation`
+which is a wrapper around the standard `stdenv.mkDerivation`
+[function](https://nixos.org/nixpkgs/manual/#sec-using-stdenv) but with an added filter
+to exclude git-ignored files from the source before building.
+.
 
 ## Exposing your Component
 
