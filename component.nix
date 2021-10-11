@@ -1,8 +1,8 @@
 pkgs:
 rec {
-  enableChecksOnComponent = component:
+  enableChecksOnComponent =
     builtins.mapAttrs
-      (n: v:
+      (_: v:
         if pkgs.lib.isDerivation v && v ? overrideAttrs then
           v.overrideAttrs
             (oldAttrs: {
@@ -15,8 +15,7 @@ rec {
               crossCheckPhase = oldAttrs.checkPhase or "";
               nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
             } else { }))
-        else v)
-      component;
+        else v);
 
   mkComponent =
     enableChecks: path: mkCombinedDeployment: parseConfig:
@@ -35,7 +34,7 @@ rec {
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
             } else { }) // (if attrs ? docs then {
               docs = pkgs.lib.mapAttrs
-                (name: doc:
+                (_: doc:
                   if pkgs.lib.isDerivation doc then doc
                   else doc.package)
                 attrs.docs;
@@ -56,15 +55,15 @@ rec {
           "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames component.docs or { })}.'';
         (component
           // {
-          allTargets = builtins.attrValues (pkgs.lib.filterAttrs (n: x: pkgs.lib.isDerivation x) component);
+          allTargets = builtins.attrValues (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component);
           overrideAttrs = f: mkComponentInner (attrs' // (f component));
         });
     in
     mkComponentInner;
 
-  mapComponentsRecursive = f: set:
+  mapComponentsRecursive = f:
     let
-      recurse = path: set:
+      recurse = path:
         let
           g =
             name: value:
@@ -75,9 +74,9 @@ rec {
                 else value
               );
         in
-        builtins.mapAttrs g set;
+        builtins.mapAttrs g;
     in
-    recurse [ ] set;
+    recurse [ ];
 
   collectComponentsRecursive = set:
     if set.isNedrylandComponent or false then

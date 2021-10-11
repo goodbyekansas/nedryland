@@ -17,11 +17,22 @@ jobs:
   shell-check:
     runs-on: ubuntu-latest
 
+    steps:
     - uses: actions/checkout@v2
     - name: Install Nix
       uses: cachix/install-nix-action@v12
     - name: Check the shell scripts 🐢 🐌 💶
       run:  nix-build -A ci && result/bin/shellcheck
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Nix
+      uses: cachix/install-nix-action@v12
+    - name: Lint .nix files 🦕 📝 👀
+      run:  nix-build -A ci && result/bin/nix-lint
 
   test:
     runs-on: ubuntu-latest

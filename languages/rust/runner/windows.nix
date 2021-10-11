@@ -1,14 +1,11 @@
 { buildPlatform
 , hostPlatform
 , attrs
-, fetchzip
 , qemu
 , lib
 , writeScriptBin
 , curl
 , unzip
-, runCommand
-, stdenv
 , openssh
 , wineWowPackages
 , bash

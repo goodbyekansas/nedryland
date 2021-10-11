@@ -17,12 +17,13 @@ let
 in
 with builtins;
 pkgs.lib.mapAttrsRecursiveCond
-  (a: isAttrs a)
+  builtins.isAttrs
   (
-    path: value:
-      let
-        envVarValue = getEnv "${prefix}_${key}_${concatStringsSep "_" path}";
-      in
-      if envVarValue != "" then envVarValue else (pkgs.lib.attrByPath path value subConfig)
+    path:
+    let
+      envVarValue = getEnv "${prefix}_${key}_${builtins.concatStringsSep "_" path}";
+    in
+    value:
+    if envVarValue != "" then envVarValue else (pkgs.lib.attrByPath path value subConfig)
   )
   structure

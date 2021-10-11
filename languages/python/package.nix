@@ -113,15 +113,15 @@ pythonPkgs.buildPythonPackage (attrs // {
     python-language-server
     pyls-mypy
     pyls-isort
-  ] ++ attrs.checkInputs or (x: [ ]) pythonPkgs;
+  ] ++ attrs.checkInputs or (_: [ ]) pythonPkgs;
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = attrs.buildInputs or (x: [ ]) pythonPkgs;
+  buildInputs = attrs.buildInputs or (_: [ ]) pythonPkgs;
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = attrs.nativeBuildInputs or (x: [ ]) pythonPkgs
+  nativeBuildInputs = attrs.nativeBuildInputs or (_: [ ]) pythonPkgs
     ++ [ mypyHook ];
 
   passthru = { shellInputs = (attrs_.shellInputs or [ ]); };
@@ -129,7 +129,7 @@ pythonPkgs.buildPythonPackage (attrs // {
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
   # Items listed in install_requires go here
-  propagatedBuildInputs = attrs.propagatedBuildInputs or (x: [ ]) pythonPkgs;
+  propagatedBuildInputs = attrs.propagatedBuildInputs or (_: [ ]) pythonPkgs;
 
   doCheck = false;
 

@@ -7,9 +7,9 @@
   version = "1.0.0";
   src = ./.;
   pythonVersion = python3;
-  # Here we don't use pp with numpyWrapper since it's our own
+  # Here we just use numpyWrapper since it's our own
   # package and not part of the python version packages.
-  propagatedBuildInputs = (pp: [ numpyWrapper.package ]);
-}).overrideAttrs (oldAttrs: {
+  propagatedBuildInputs = (_: [ numpyWrapper.package ]);
+}).overrideAttrs (_: {
   nested = base.callFile ../hello-nested/hello-nested.nix { };
 })

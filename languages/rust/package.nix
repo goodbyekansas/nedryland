@@ -7,7 +7,6 @@
 }:
 
 attrs@{ name
-, src
 , srcExclude ? [ ]
 , extensions ? [ ]
 , targets ? [ ]

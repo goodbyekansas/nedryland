@@ -9,13 +9,13 @@ pkgs: parseConfig:
 }:
 let
   attrsToLines = f: attrs: builtins.concatStringsSep "\n" (pkgs.lib.mapAttrsToList f attrs);
-  componentConfig = pkgs.lib.filterAttrs (k: v: v != null) (parseConfig {
+  componentConfig = pkgs.lib.filterAttrs (_: v: v != null) (parseConfig {
     key = "components";
-    structure = pkgs.lib.mapAttrs (k: v: null) (variableQueries // variables);
+    structure = pkgs.lib.mapAttrs (_: _: null) (variableQueries // variables);
   });
   vars = attrsToLines
     (k: v: "${k}=\"${v}\"\nexport ${k}")
-    ((pkgs.lib.filterAttrs (k: v: v != null) variables) // componentConfig);
+    ((pkgs.lib.filterAttrs (_: v: v != null) variables) // componentConfig);
   readVarStdin = attrsToLines
     (varName: varQuery: ''
       echo "${varQuery}"

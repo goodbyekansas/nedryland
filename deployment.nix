@@ -1,11 +1,10 @@
-pkgs: base:
+pkgs:
 let
   # Function to create a deployment
   mkDeployment =
     attrs@ { name
     , deployPhase
     , inputs ? [ ]
-    , shellInputs ? [ ]
     , deployShell ? true
     , preDeployPhase ? ""
     , postDeployPhase ? ""
@@ -87,6 +86,7 @@ let
       paths = [ deploy ] ++ pkgs.lib.optional deployShell shell;
     };
 in
+base:
 {
   inherit mkDeployment;
 
@@ -143,6 +143,6 @@ in
           sortedDeployments;
       }).overrideAttrs (_: { passthru = { inherit sortedDeployments; }; });
 
-  mkFileUploadDeployment = files: { };
+  mkFileUploadDeployment = _: { };
   mkTerraformDeployment = import ./deployment/terraform/terraform.nix { inherit base pkgs mkDeployment; };
 }

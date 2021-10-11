@@ -6,7 +6,6 @@
 , makeSetupHook
 , includeServices
 , protobuf
-, stdenv
 , rustfmt
 , protoInputs
 , tonicVersion

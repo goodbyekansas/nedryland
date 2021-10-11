@@ -1,4 +1,4 @@
-{ buildPlatform, hostPlatform, writeTextFile, attrs }:
+{ hostPlatform, writeTextFile, attrs, ... }:
 if hostPlatform == "wasm32-wasi" then {
   # run the tests through virtual vm, create a temp directory and map it to the vm
   CARGO_TARGET_WASM32_WASI_RUNNER = (

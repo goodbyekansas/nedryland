@@ -8,7 +8,7 @@ base.extend.mkExtension {
         base.languages.python.mkClient {
           inherit name version src;
           pythonVersion = python3;
-          propagatedBuildInputs = (pp: [ numpyWrapper.package ] ++ (attrs.propagatedBuildInputs or (x: [ ]) pp));
+          propagatedBuildInputs = (pp: [ numpyWrapper.package ] ++ (attrs.propagatedBuildInputs or (_: [ ]) pp));
           shellHook = ''
             echo "This component was made through the extension!"
           '';

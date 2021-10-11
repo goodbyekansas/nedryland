@@ -1,4 +1,4 @@
-versions: self: super: {
+versions: self: _: {
   wasmer-with-run = self.rustPlatform.buildRustPackage rec {
     pname = "wasmer";
     inherit (versions.wasmer) version cargoSha256;

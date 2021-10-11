@@ -1,4 +1,4 @@
-{ base, python38 }:
+{ base }:
 base.languages.rust.mkService {
   name = "awesome-service";
   version = "1.0.0";

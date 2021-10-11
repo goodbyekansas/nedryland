@@ -1,5 +1,5 @@
 # Remove packages from this file when we update the nixpkgs version to include them
-self: super: {
+self: _: {
   # from 21.05
   github-release = self.buildGoPackage rec {
     pname = "github-release";
