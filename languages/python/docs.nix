@@ -4,7 +4,7 @@ let
     inherit generated;
   } // attrs.docs or { });
 
-  docsConfig = (lib.filterAttrs (k: v: v != "" && v != [ ]) (base.parseConfig {
+  docsConfig = (lib.filterAttrs (_: v: v != "" && v != [ ]) (base.parseConfig {
     key = "docs";
     structure = {
       python = {
@@ -24,7 +24,7 @@ let
     };
   }."${docsConfig.python.sphinx-theme}" or null;
 
-  componentConfig = (lib.filterAttrs (k: v: v != "") (base.parseConfig {
+  componentConfig = (lib.filterAttrs (_: v: v != "") (base.parseConfig {
     key = "components";
     structure = { author = ""; };
   }));
@@ -48,11 +48,11 @@ let
       ) else { };
 in
 {
-  __functor = self: attrs: self."${docsConfig.python.generator}" attrs;
+  __functor = self: self."${docsConfig.python.generator}";
 
   sphinx = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
     inherit src;
-    name = "${attrs.name}-api-reference";
+    name = "${name}-api-reference";
     nedrylandType = "documentation";
     buildInputs = [ pythonVersion.pkgs.sphinx4 ] ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
       ++ (attrs.buildInputs or (_: [ ]) pythonVersion.pkgs) ++ (attrs.propagatedBuildInputs or (_: [ ]) pythonVersion.pkgs);
@@ -66,8 +66,8 @@ in
         --full \
         --follow-links \
         --append-syspath \
-        -H "${attrs.name}" \
-        -V "${attrs.version}" \
+        -H "${name}" \
+        ${lib.optionalString (attrs ? version) "-V ${attrs.version}"} \
         -A "${author}" \
         -o doc-source \
         .
@@ -88,12 +88,12 @@ in
 
   pdoc = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
     inherit src;
-    name = "${attrs.name}-api-reference";
+    name = "${name}-api-reference";
     nedrylandType = "documentation";
     buildInputs = [ pythonVersion.pkgs.pdoc ]
-      ++ ((attrs.buildInputs or (_: [ ])) attrs.pythonVersion)
-      ++ (attrs.propagatedBuildInputs or (_: [ ])) attrs.pythonVersion;
-    nativeBuildInputs = ((attrs.nativeBuildInputs or (_: [ ])) attrs.pythonVersion);
+      ++ ((attrs.buildInputs or (_: [ ])) pythonVersion)
+      ++ (attrs.propagatedBuildInputs or (_: [ ])) pythonVersion;
+    nativeBuildInputs = ((attrs.nativeBuildInputs or (_: [ ])) pythonVersion);
     configurePhase = ''
       modules=$(python ${./print-module-names.py})
       ${if logo != { } then "cp -r ${./pdoc-template} ./template" else ""}

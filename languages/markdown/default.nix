@@ -1,6 +1,6 @@
 { base, pkgs }:
 let
-  docsConfig = pkgs.lib.filterAttrs (k: v: v != "" && v != [ ]) (base.parseConfig {
+  docsConfig = pkgs.lib.filterAttrs (_: v: v != "" && v != [ ]) (base.parseConfig {
     key = "docs";
     structure = {
       markdown = {

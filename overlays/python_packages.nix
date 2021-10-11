@@ -1,4 +1,4 @@
-self: super:
+_: super:
 let
   pythonVersions = [
     {
@@ -14,16 +14,15 @@ let
   fetchzip = super.fetchzip;
   fetchFromGitHub = super.fetchFromGitHub;
   tzdata = super.tzdata;
-  superPkgs = super.pkgs;
 
   wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.bash;
 in
 (builtins.foldl'
   (combined: pythonVersion:
-    (combined // rec {
+    (combined // {
       # pkgs.<python-version>.pkgs
       "${pythonVersion.attr}" = pythonVersion.pkg.override {
-        packageOverrides = self: super: rec {
+        packageOverrides = _: super: rec {
 
           quadprog = super.buildPythonPackage rec {
             pname = "quadprog";
@@ -320,7 +319,7 @@ in
 
           # these tests seems broken for python 3.8 on macos
           # https://hydra.nixos.org/job/nixpkgs/nixpkgs-20.09-darwin/python38Packages.python-language-server.x86_64-darwin
-          python-language-server = super.python-language-server.overrideAttrs (oldAttrs:
+          python-language-server = super.python-language-server.overrideAttrs (_:
             (if isDarwin then {
               doCheck = false;
               doInstallCheck = false;

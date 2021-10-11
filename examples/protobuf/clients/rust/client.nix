@@ -1,4 +1,4 @@
-{ base, protocols, baseProtocols }:
+{ base, protocols }:
 base.languages.rust.mkClient {
   name = "rust-client";
   buildInputs = [ protocols.rust.package ];

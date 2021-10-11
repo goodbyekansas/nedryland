@@ -11,7 +11,7 @@ let
       if components.isNedrylandComponent or false then
         [ components."${config.defaultTarget}" ]
       else
-        builtins.map (c: getAllPackages c) (builtins.filter (c: builtins.isAttrs c) (builtins.attrValues components))
+        builtins.map getAllPackages (builtins.filter builtins.isAttrs (builtins.attrValues components))
     );
 
   all = pkgs.mkShell {
@@ -20,7 +20,7 @@ let
 in
 (mapComponentsRecursive
   (
-    attrName: component':
+    _: component':
       (
         let
           # we want the check version of the component for
@@ -74,14 +74,14 @@ in
                   }
                   shellPkg
               )
-              (pkgs.lib.filterAttrs (n: v: pkgs.lib.isDerivation v) component);
+              (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component);
 
           # also include non-derivation attrsets in the passthru property of the top-level
           # shell to support nested components
           derivationsAndAttrsets = (
             pkgs.lib.filterAttrs
               (
-                n: v: builtins.isAttrs v && !pkgs.lib.isDerivation v
+                _: v: builtins.isAttrs v && !pkgs.lib.isDerivation v
               )
               component
           ) // derivationShells;
@@ -92,7 +92,7 @@ in
             else
               derivationShells."${config.defaultTarget}";
         in
-        defaultShell.overrideAttrs (oldAttrs: {
+        defaultShell.overrideAttrs (_: {
           passthru = derivationsAndAttrsets;
         })
       )

@@ -12,7 +12,6 @@
     , preDeployPhase ? ""
     , postDeployPhase ? ""
     , deployShellInputs ? [ ]
-    , variables ? { }
     , subComponents ? { }
     , ...
     }:

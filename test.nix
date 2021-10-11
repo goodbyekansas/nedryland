@@ -11,7 +11,7 @@ let
 
   mappedTests = (builtins.mapAttrs
     (
-      name: project: (
+      _: project: (
         project.override { enableChecks = true; }
       ).matrix.all
     )

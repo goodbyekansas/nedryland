@@ -1,2 +1,2 @@
-pkgs: attrs@{ name, ... }:
+_pkgs: attrs@{ ... }:
 attrs

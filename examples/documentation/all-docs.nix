@@ -4,9 +4,9 @@ let
     "all-docs"
     (lib.flatten (lib.mapAttrsToList
       (n: v: lib.mapAttrsToList
-        (n': v': {
+        (n': path: {
+          inherit path;
           name = "${n}-${n'}";
-          path = v';
         })
         v.docs)
       components))

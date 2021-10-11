@@ -1,11 +1,11 @@
 { base, pkgs, versions }:
 let
   mkPackage = pkgs.callPackage ./package.nix { inherit base; rustVersion = versions.rust; };
-  mkPackageWithStdenv = stdenv: attrs:
-    (mkPackage.override
+  mkPackageWithStdenv = stdenv:
+    mkPackage.override
       {
         inherit stdenv;
-      }) attrs;
+      };
 
   supportedCrossTargets = {
     windows = {
@@ -41,7 +41,7 @@ let
 
   mkDocs = attrs@{ name, ... }: ((attrs.docs or { }) // {
     generated = mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
-      name = "${attrs.name}-api-reference";
+      name = "${name}-api-reference";
       buildPhase = ''
         cargo doc --all --no-deps --all-features
       '';
@@ -67,7 +67,7 @@ let
     crossTargets;
 
   mkComponentWith = func:
-    attrs@ { name, src, deployment ? { }, ... }:
+    attrs@ { name, deployment ? { }, ... }:
     let
       pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
       package = toApplication (mkPackage pkgAttrs);
@@ -79,19 +79,17 @@ let
       rust = package;
     } // crossTargets);
 
+  checksumHook = pkgs.makeSetupHook
+    {
+      name = "generate-cargo-checksums";
+      deps = [ pkgs.jq pkgs.coreutils ];
+    }
+    ./generateCargoChecksums.sh;
 in
 rec {
   inherit mkPackage toApplication mkDocs;
 
   toLibrary = package:
-    let
-      checksumHook = pkgs.makeSetupHook
-        {
-          name = "generate-cargo-checksums";
-          deps = [ pkgs.jq pkgs.coreutils ];
-        }
-        ./generateCargoChecksums.sh;
-    in
     package.overrideAttrs (
       oldAttrs: {
 
@@ -115,7 +113,6 @@ rec {
   mkLibrary =
     attrs@
     { name
-    , src
     , deployment ? { }
     , ...
     }:

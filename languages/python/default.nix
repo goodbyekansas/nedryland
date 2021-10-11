@@ -1,4 +1,4 @@
-{ base, pkgs, versions }:
+{ base, pkgs }:
 rec {
   mkPackage = import ./package.nix pkgs base;
 
@@ -25,10 +25,10 @@ rec {
     , version
     , src
     , pythonVersion
-    , checkInputs ? (pythonPkgs: [ ])
-    , buildInputs ? (pythonPkgs: [ ])
-    , nativeBuildInputs ? (pythonPkgs: [ ])
-    , propagatedBuildInputs ? (pythonPkgs: [ ])
+    , checkInputs ? (_: [ ])
+    , buildInputs ? (_: [ ])
+    , nativeBuildInputs ? (_: [ ])
+    , propagatedBuildInputs ? (_: [ ])
     , preBuild ? ""
     , doStandardTests ? true
     , ...
@@ -65,9 +65,9 @@ rec {
     , version
     , src
     , pythonVersion
-    , checkInputs ? (pythonPkgs: [ ])
-    , buildInputs ? (pythonPkgs: [ ])
-    , nativeBuildInputs ? (pythonPkgs: [ ])
+    , checkInputs ? (_: [ ])
+    , buildInputs ? (_: [ ])
+    , nativeBuildInputs ? (_: [ ])
     , preBuild ? ""
     , doStandardTests ? true
     , ...
@@ -99,9 +99,9 @@ rec {
     , version
     , src
     , pythonVersion
-    , checkInputs ? (pythonPkgs: [ ])
-    , buildInputs ? (pythonPkgs: [ ])
-    , nativeBuildInputs ? (pythonPkgs: [ ])
+    , checkInputs ? (_: [ ])
+    , buildInputs ? (_: [ ])
+    , nativeBuildInputs ? (_: [ ])
     , preBuild ? ""
     , doStandardTests ? true
     , ...

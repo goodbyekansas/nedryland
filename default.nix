@@ -6,7 +6,7 @@ let
 
   pkgs = with
     {
-      overlay = _: pkgs:
+      overlay = _: _pkgs:
         {
           niv = import sources.niv { };
         };
@@ -35,7 +35,7 @@ let
           (import ./overlays/backported-packages.nix)
 
           # gitignore source
-          (self: super: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
+          (self: _: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
         ];
         config = { allowUnfreePredicate = (pkg: builtins.elem (builtins.parseDrvName pkg.name).name unFreePkgs); };
       };
@@ -58,6 +58,8 @@ in
       nixpkgsFmt = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
       diff = "${pkgs.diffutils}/bin/diff";
       mktemp = "${pkgs.mktemp}/bin/mktemp";
+      shellcheck = "${pkgs.shellcheck}/bin/shellcheck";
+      nixLinter = "${pkgs.nix-linter}/bin/nix-linter";
       # Pointless to do this on a remote machine.
       preferLocalBuild = true;
       allowSubstitutes = false;
@@ -69,7 +71,11 @@ in
       chmod +x "$n"
       n=$out/bin/shellcheck
       mkdir -p "$(dirname "$n")"
-      cp ${./ci/shellcheck.bash} $n
+      substituteAll ${./ci/shellcheck.bash} $n
+      chmod +x "$n"
+      n=$out/bin/nix-lint
+      mkdir -p "$(dirname "$n")"
+      substituteAll ${./ci/nix-lint.sh} $n
       chmod +x "$n"
     '';
 
@@ -77,13 +83,6 @@ in
 
   mkProject =
     attrs@{ name
-    , components
-    , baseExtensions ? [ ]
-    , extraShells ? { }
-    , configFile ? null
-    , lib ? { }
-    , dependencies ? [ ]
-    , themes ? { }
     , ...
     }:
     pkgs.lib.makeOverridable
@@ -106,11 +105,12 @@ in
                 enableChecks;
               mkDerivation = attrs@{ name, stdenv ? pkgs.stdenv, ... }:
                 let
-                  customerFilter = src: filter:
+                  customerFilter = src:
                     let
                       # IMPORTANT: use a let binding like this to memoize info about the git directories.
                       srcIgnored = pkgs.gitignoreFilter src;
                     in
+                    filter:
                     path: type:
                       srcIgnored path type
                       || (filter path type);
@@ -129,9 +129,9 @@ in
               mapComponentsRecursive = componentFns.mapComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
-              mkClient = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "client"; });
-              mkService = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "service"; });
-              mkLibrary = targets@{ name, ... }: mkComponent' (targets // { nedrylandType = "library"; });
+              mkClient = targets: mkComponent' (targets // { nedrylandType = "client"; });
+              mkService = targets: mkComponent' (targets // { nedrylandType = "service"; });
+              mkLibrary = targets: mkComponent' (targets // { nedrylandType = "library"; });
               extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;
@@ -188,36 +188,35 @@ in
         minimalBase = pkgs.lib.makeOverridable createMinimalBase {
           mkComponent = componentFns.mkComponent enableChecks ./.;
         };
-        base = (extendBase minimalBase) // { inherit themes; };
 
         # callFile and callFunction will auto-populate dependencies
         # on nixpkgs, base members and project components
-        callFile = path: overrides: callFunction (import path) path overrides;
-        callFunction = function: path: overrides: pkgs.lib.makeOverridable
-          (
-            overrides:
-            let
-              args = builtins.functionArgs function;
-              newBase = extendBase (minimalBase.override {
-                # burn the path into mkComponent
-                mkComponent = componentFns.mkComponent enableChecks path;
-              });
-            in
-            function
-              (
-                (builtins.intersectAttrs args pkgs)
-                // (builtins.intersectAttrs args resolvedComponents)
-                // (builtins.intersectAttrs args { base = newBase; })
-                // overrides
-              )
-          )
-          overrides;
+        callFile = path: callFunction (import path) path;
+        callFunction = function: path:
+          let
+            args = builtins.functionArgs function;
+            newBase = extendBase (minimalBase.override {
+              # burn the path into mkComponent
+              mkComponent = componentFns.mkComponent enableChecks path;
+            });
+          in
+          pkgs.lib.makeOverridable
+            (
+              overrides:
+              function
+                (
+                  (builtins.intersectAttrs args pkgs)
+                  // (builtins.intersectAttrs args resolvedComponents)
+                  // (builtins.intersectAttrs args { base = newBase; })
+                  // overrides
+                )
+            );
 
         # we support most arguments to mkProject being functions
         # that accept a minimal base
         appliedAttrs =
           builtins.mapAttrs
-            (n: v:
+            (_: v:
               # intersect with minimal base (without extensions) to avoid cyclic deps
               if builtins.isFunction v then
                 v (builtins.intersectAttrs (builtins.functionArgs v) minimalBase)
@@ -245,11 +244,10 @@ in
         allTargets = ((pkgs.lib.zipAttrs (
           builtins.map
             (
-              comp: pkgs.lib.filterAttrs
+              pkgs.lib.filterAttrs
                 (
                   name: value: name != "allTargets" && pkgs.lib.isDerivation value
                 )
-                comp
             )
             resolvedNedrylandComponents
         )) // {
@@ -264,7 +262,7 @@ in
         # any extra attributes are assumed to be targets in the matrix
         extraTargets = builtins.mapAttrs
           (
-            name: value: if builtins.isFunction value then value resolvedComponents else value
+            _: value: if builtins.isFunction value then value resolvedComponents else value
           )
           (builtins.removeAttrs appliedAttrs [
             "components"

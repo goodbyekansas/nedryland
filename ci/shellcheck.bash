@@ -1,6 +1,4 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -i bash -p shellcheck
-# shellcheck shell=bash
+#! /usr/bin/env bash
 
 is_bash() {
     [[ $1 == *.sh ]] && return 0
@@ -13,7 +11,7 @@ EXIT_CODE=0
 
 while IFS= read -r -d $'' file; do
     if is_bash "$file"; then
-        shellcheck -W0 -s bash "$file"
+        @shellcheck@ -W0 -s bash "$file"
         EXIT_CODE=$((EXIT_CODE + $?))
     fi
 done < <(find . -type f \! -path "./.git/*" -print0)
