@@ -1,8 +1,8 @@
-{ stdenv, name, version, protoSources, python3, protoInputs }:
+{ base, name, version, protoSources, python3, protoInputs }:
 let
   protoIncludePaths = builtins.map (pi: pi.protobuf) protoInputs;
 in
-stdenv.mkDerivation {
+base.mkDerivation {
   inherit protoSources protoIncludePaths;
   name = "python-${name}";
   src = ./protobuf;

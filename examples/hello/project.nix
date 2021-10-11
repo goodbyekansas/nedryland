@@ -23,6 +23,9 @@
 
     # A component with a combined deployment.
     combinedDeployment = callFile ./deployment/combined.nix { };
+
+    sameThing1 = callFile ./libraries/same-things-1/same-thing.nix { };
+    sameThing2 = callFile ./libraries/same-things-2/same-thing.nix { };
   };
   baseExtensions = [
     # We add an extension for making the pythonHello more efficiently

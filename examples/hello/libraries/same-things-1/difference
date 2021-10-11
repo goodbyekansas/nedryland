@@ -1,0 +1,7 @@
+This is different from same-things-2 but it doesn't matter because it's gitignored!
+Look!
+Here are a log train emojis:
+🚂 🚈
+🚆 🚋 🚅 🚄 
+🚉
+You can verify this by building both, they will have the same nix store path!

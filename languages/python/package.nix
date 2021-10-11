@@ -11,11 +11,19 @@ pkgs: base: attrs_@{ name
             }:
 let
   pythonPkgs = pythonVersion.pkgs;
+  customerFilter = src:
+    let
+      # IMPORTANT: use a let binding like this to memoize info about the git directories.
+      srcIgnored = pkgs.gitignoreFilter src;
+    in
+    path: type:
+      (srcIgnored path type)
+      || !(builtins.any (pred: pred path type) srcExclude);
   invariantSrc = if pkgs.lib.isStorePath src then src else
-  (builtins.path {
-    inherit name;
-    path = src;
-    filter = (path: type: !(builtins.any (pred: pred path type) srcExclude));
+  (pkgs.lib.cleanSourceWith {
+    name = "${name}-source";
+    inherit src;
+    filter = customerFilter src;
   });
   commands = ''
     check() {
@@ -23,7 +31,7 @@ let
     }
   '';
 
-  extendFile = { src, filePath, baseFile, name }:
+  extendFile = { filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
       inherit filePath;
       src = invariantSrc;
@@ -55,7 +63,6 @@ let
       filePath = "setup.cfg";
       baseFile = ./setup.cfg;
       inherit name;
-      src = invariantSrc;
       }}/setup.cfg'';
 
   pylintrc = ''
@@ -63,7 +70,6 @@ let
       filePath = "pylintrc";
       baseFile = ./pylintrc;
       inherit name;
-      src = invariantSrc;
       }}/pylintrc
   '';
 

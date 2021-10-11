@@ -1,4 +1,5 @@
-{ name
+{ base
+, name
 , protoSources
 , version
 , mkClient
@@ -18,17 +19,14 @@ let
   rustInputs = builtins.map (pi: pi.rust.package.src) protoInputs;
   tonicDependencyString = ''tonic = { version = "${tonicVersion}", features = [${builtins.concatStringsSep ", " (map (v: "\"${v}\"") tonicFeatures)}] }'';
 in
-stdenv.mkDerivation {
+base.mkDerivation {
   inherit protoSources protoIncludePaths rustInputs;
   rustProtoCompiler = (import ./protobuf/compiler { inherit mkClient protobuf tonicBuildVersion makeSetupHook; }).package;
   name = "${name}-rust-protobuf-src";
 
   PROTOC = "${protobuf}/bin/protoc";
 
-  src = builtins.path {
-    path = ./protobuf/src;
-    name = "${name}-rust-protobuf-files";
-  };
+  src = ./protobuf/src;
 
   # seem to need rustfmt, prob run on the resulting code
   nativeBuildInputs = [ rustfmt pyToml ];

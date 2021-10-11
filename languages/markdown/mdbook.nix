@@ -16,8 +16,9 @@ in
 base.mkComponent {
   inherit name;
   nedrylandType = attrs.nedrylandType or "documentation";
-  package = pkgs.stdenv.mkDerivation (attrs // {
+  package = base.mkDerivation (attrs // {
     name = "${name}-package";
+    src = attrs.src;
     buildInputs = [ pkgs.mdbook ];
     unpackPhase = ''
       if [ -d $src ]; then

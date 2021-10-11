@@ -6,6 +6,6 @@ let
     terraform = pkgs.callPackage ./terraform { inherit base versions; };
     markdown = pkgs.callPackage ./markdown { inherit base; };
   };
-  allWithProto = (all // { protobuf = pkgs.callPackage ./protobuf { languages = all; }; });
+  allWithProto = (all // { protobuf = pkgs.callPackage ./protobuf { languages = all; }; inherit (pkgs) gitignoreSource; });
 in
 (builtins.mapAttrs (name: value: (value // { inherit name; })) allWithProto)

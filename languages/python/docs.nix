@@ -1,10 +1,10 @@
-pkgs: parseConfig:
+base: lib:
 let
   combineDocs = attrs: generated: ({
     inherit generated;
   } // attrs.docs or { });
 
-  docsConfig = (pkgs.lib.filterAttrs (k: v: v != "" && v != [ ]) (parseConfig {
+  docsConfig = (lib.filterAttrs (k: v: v != "" && v != [ ]) (base.parseConfig {
     key = "docs";
     structure = {
       python = {
@@ -24,7 +24,7 @@ let
     };
   }."${docsConfig.python.sphinx-theme}" or null;
 
-  componentConfig = (pkgs.lib.filterAttrs (k: v: v != "") (parseConfig {
+  componentConfig = (lib.filterAttrs (k: v: v != "") (base.parseConfig {
     key = "components";
     structure = { author = ""; };
   }));
@@ -50,20 +50,17 @@ in
 {
   __functor = self: attrs: self."${docsConfig.python.generator}" attrs;
 
-  sphinx = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (pkgs.stdenv.mkDerivation {
+  sphinx = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
+    inherit src;
     name = "${attrs.name}-api-reference";
     nedrylandType = "documentation";
-    buildInputs = [ pythonVersion.pkgs.sphinx ] ++ pkgs.lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
+    buildInputs = [ pythonVersion.pkgs.sphinx ] ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
       ++ (attrs.buildInputs or (_: [ ]) pythonVersion.pkgs) ++ (attrs.propagatedBuildInputs or (_: [ ]) pythonVersion.pkgs);
-    src = builtins.filterSource
-      (path: type:
-        (
-          builtins.match ".*\.py" (baseNameOf path) != null
-        )
-        && baseNameOf path != "setup.py"
-        || type == "directory"
-      )
-      src;
+    srcFilter = path: type: (
+      builtins.match ".*\.py" (baseNameOf path) != null
+    )
+    && baseNameOf path != "setup.py"
+    || type == "directory";
     configurePhase = ''
       sphinx-apidoc \
         --full \
@@ -89,10 +86,10 @@ in
     '';
   });
 
-  pdoc = attrs@{ name, pythonVersion, ... }: combineDocs attrs (pkgs.stdenv.mkDerivation {
+  pdoc = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
+    inherit src;
     name = "${attrs.name}-api-reference";
     nedrylandType = "documentation";
-    src = attrs.src;
     buildInputs = [ pythonVersion.pkgs.pdoc ]
       ++ ((attrs.buildInputs or (_: [ ])) attrs.pythonVersion)
       ++ (attrs.propagatedBuildInputs or (_: [ ])) attrs.pythonVersion;
