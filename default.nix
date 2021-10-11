@@ -67,6 +67,10 @@ in
       mkdir -p "$(dirname "$n")"
       substituteAll ${./ci/nix-fmt.bash} $n
       chmod +x "$n"
+      n=$out/bin/shellcheck
+      mkdir -p "$(dirname "$n")"
+      cp ${./ci/shellcheck.bash} $n
+      chmod +x "$n"
     '';
 
   mkTheme = import ./mktheme.nix pkgs;

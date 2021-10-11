@@ -1,3 +1,5 @@
+#! /usr/bin/env bash
+
 createCargoConfig() {
     if [ -f .cargo/config.toml ] && [ ! -L .cargo/config.toml ]; then
       echo -e "\e[31mERROR: $PWD/.cargo/config.toml exists and is not a link.\e[0m"
