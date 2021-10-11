@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add an optional argument as input in `default.nix` such that it is possible to
   explicitly define names of unfree packages that can be installed despite being unfree
   for a project when importing Nedryland. 
+- Shellcheck is now available as part of the `ci` component.
 
 ## [1.2.0] - 2021-08-31
 

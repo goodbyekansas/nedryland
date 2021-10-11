@@ -1,3 +1,5 @@
+#! /usr/bin/env bash
+
 addRustDeps() {
   if [ -d "$1/src/rust" ]; then
     for dep in "$1/src/rust/"*; do
@@ -6,4 +8,4 @@ addRustDeps() {
   fi
 }
 
-addEnvHooks "$targetOffset" addRustDeps
+addEnvHooks "${targetOffset:-}" addRustDeps

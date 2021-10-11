@@ -6,7 +6,7 @@ rec {
 
   # setup hook that creates a "link" file in the
   # derivation that depends on this wheel derivation
-  wheelHook = pkgs.makeSetupHook { name = "copyWheelHook"; } ./wheelHook.sh;
+  wheelHook = pkgs.makeSetupHook { name = "copyWheelHook"; } ./wheelHook.bash;
 
   fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? pkgs.python3 }:
     let

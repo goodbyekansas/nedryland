@@ -16,7 +16,7 @@ let
   tzdata = super.tzdata;
   superPkgs = super.pkgs;
 
-  wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.sh;
+  wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.bash;
 in
 (builtins.foldl'
   (combined: pythonVersion:
