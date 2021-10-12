@@ -19,7 +19,7 @@ let
 
   sphinxTheme = {
     rtd = {
-      name = "sphinx_rtd_theme";
+      name = "sphinx4_rtd_theme";
       conf = "html_theme = \\\"sphinx_rtd_theme\\\"";
     };
   }."${docsConfig.python.sphinx-theme}" or null;
@@ -54,7 +54,7 @@ in
     inherit src;
     name = "${attrs.name}-api-reference";
     nedrylandType = "documentation";
-    buildInputs = [ pythonVersion.pkgs.sphinx ] ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
+    buildInputs = [ pythonVersion.pkgs.sphinx4 ] ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
       ++ (attrs.buildInputs or (_: [ ]) pythonVersion.pkgs) ++ (attrs.propagatedBuildInputs or (_: [ ]) pythonVersion.pkgs);
     srcFilter = path: type: (
       builtins.match ".*\.py" (baseNameOf path) != null

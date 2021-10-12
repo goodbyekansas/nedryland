@@ -224,12 +224,12 @@ in
           };
 
           # Sphinx and sphinx_rtd_theme is on a custom branch to work with logos on the internet
-          sphinx = super.buildPythonPackage rec {
-            pname = "Sphinx";
+          sphinx4 = super.buildPythonPackage rec {
+            pname = "Sphinx4";
             version = "4.0.2";
             src = fetchFromGitHub {
               owner = "goodbyekansas";
-              repo = pname;
+              repo = "Sphinx";
               rev = "d16631791bb8288968834b6afcbcf9b805c17e74";
               sha256 = "02jh5vb2v7ydrswp17k4fjwfz2dnil1g4g7v3mcq4di5k9357r9k";
             };
@@ -254,18 +254,18 @@ in
             doCheck = false;
           };
 
-          sphinx_rtd_theme = super.buildPythonPackage rec {
-            pname = "sphinx_rtd_theme";
+          sphinx4_rtd_theme = super.buildPythonPackage {
+            pname = "sphinx4_rtd_theme";
             version = "0.5.2";
             src = fetchFromGitHub {
               owner = "goodbyekansas";
-              repo = pname;
+              repo = "sphinx_rtd_theme";
               rev = "c4baa88e42b49c7a0593d330cb51547e4dc8bd53";
               sha256 = "0mvsnfh0lxd1s0ddnlwalmnrrybz6dx77vn4qq79ifz7n2yfd0gd";
             };
 
             CI = 1; # Don't use NPM to fetch assets. Assets are included in sdist.
-            propagatedBuildInputs = [ sphinx super.docutils ];
+            propagatedBuildInputs = [ sphinx4 super.docutils ];
           };
 
           keepachangelog = super.buildPythonPackage rec{
