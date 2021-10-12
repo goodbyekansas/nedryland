@@ -1,4 +1,4 @@
-(import ../../default.nix).mkProject {
+(import ../../default.nix { }).mkProject {
   name = "hello-example";
   configFile = ./hello.toml;
 

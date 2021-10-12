@@ -1,5 +1,5 @@
 # Example project illustrating the protobuf generation functionality in Nedryland
-(import ../../default.nix).mkProject {
+(import ../../default.nix { }).mkProject {
   name = "protobuf-example";
   configFile = ./config.toml;
   components = { callFile }: {

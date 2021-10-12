@@ -1,3 +1,4 @@
+{ unFreePkgs ? [ ] }:
 let
   sources = import ./nix/sources.nix;
 
@@ -36,7 +37,7 @@ let
           # gitignore source
           (self: super: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
         ];
-        config = { };
+        config = { allowUnfreePredicate = (pkg: builtins.elem (builtins.parseDrvName pkg.name).name unFreePkgs); };
       };
 in
 {
