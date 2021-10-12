@@ -1,4 +1,4 @@
-(import ../../default.nix).mkProject {
+(import ../../default.nix { }).mkProject {
   name = "documented-project";
 
   # This config file displays some options for documentation
