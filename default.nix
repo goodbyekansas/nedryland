@@ -275,8 +275,8 @@ in
             "themes"
           ]);
       in
-      rec {
-        name = appliedAttrs.name;
+      (rec {
+        inherit (appliedAttrs) name;
 
         lib = appliedAttrs.lib or { };
         baseExtensions = appliedAttrs.baseExtensions or [ ];
@@ -296,7 +296,7 @@ in
           parseConfig = minimalBase.parseConfig;
           extraShells = appliedAttrs.extraShells or { };
         };
-      })
+      } // (pkgs.lib.optionalAttrs (appliedAttrs ? version) { inherit (appliedAttrs) version; })))
       {
         # checks are off by default, to turn on, call override on
         # the return value from mkProject and set enableChecks = true
