@@ -17,7 +17,7 @@ let nedryland = import (
     name = "nedryland";
     url = "git@github.com:goodbyekansas/nedryland.git";
     ref = "refs/tags/0.8.0";
-  });
+  } { });
 ```
 
 Then, we need to declare the project. To do that, we use the function `mkProject`.
