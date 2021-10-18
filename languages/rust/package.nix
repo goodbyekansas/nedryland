@@ -1,6 +1,7 @@
 { pkgs
 , base
 , stdenv
+, lib
 , buildPackages
 , rustVersion
 , rust # use this for toRustTarget
@@ -167,7 +168,7 @@ base.mkDerivation
         rustBin
         removeReferencesTo
       ] ++ attrs.nativeBuildInputs or [ ]
-      ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer-with-run ])
+      ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ])
       ++ [ vendor ];
 
       passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
@@ -273,13 +274,13 @@ base.mkDerivation
     ) // (
       if hostTriple != buildTriple then {
         # cross-things
-        "CARGO_TARGET_${stdenv.lib.toUpper hostTriple}_LINKER" = "${linkerForHost}";
-        "CC_${stdenv.lib.toUpper hostTriple}" = "${ccForHost}";
-        "CXX_${stdenv.lib.toUpper hostTriple}" = "${cxxForHost}";
+        "CARGO_TARGET_${lib.toUpper hostTriple}_LINKER" = "${linkerForHost}";
+        "CC_${lib.toUpper hostTriple}" = "${ccForHost}";
+        "CXX_${lib.toUpper hostTriple}" = "${cxxForHost}";
 
-        "CARGO_TARGET_${stdenv.lib.toUpper buildTriple}_LINKER" = "${linkerForBuild}";
-        "CC_${stdenv.lib.toUpper buildTriple}" = "${ccForBuild}";
-        "CXX_${stdenv.lib.toUpper buildTriple}" = "${cxxForBuild}";
+        "CARGO_TARGET_${lib.toUpper buildTriple}_LINKER" = "${linkerForBuild}";
+        "CC_${lib.toUpper buildTriple}" = "${ccForBuild}";
+        "CXX_${lib.toUpper buildTriple}" = "${cxxForBuild}";
       } else { }
     )
   )

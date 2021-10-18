@@ -7,7 +7,7 @@
 Nedryland is a collection of utilities and a build system for microservice architecture solutions.
 Nedryland is built upon [Nix](https://nixos.org/nix/). Nix is a functional package manager for Unix
 systems that promises reproducible and deterministic builds and build outputs. There is also
-[nixpkgs](https://github.com/NixOS/nixpkgs), a collection of over 60 000 packages for the Nix
+[nixpkgs](https://github.com/NixOS/nixpkgs), a collection of over 80 000 packages for the Nix
 package manager that can be used to get dependencies for builds etc.
 
 There is also [NixOS](https://nixos.org) which builds on the ideas of Nix to create a whole Linux

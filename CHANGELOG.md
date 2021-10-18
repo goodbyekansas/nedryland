@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are inside gitignore in src.
 - Project files importing Nedryland or `default.nix` need to be called as a set and not
   a function.
+- Switched nixpkgs from the 20.09 branch to 21.05.
 
 ### Added
 - `base.mkDerivation` which uses the new git ignore feature. It can take a stdenv and
