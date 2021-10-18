@@ -41,7 +41,8 @@ def plan(args: argparse.Namespace) -> None:
     _setup_sources(source=args.source)
     _run_terraform(command="init")
     _run_terraform(
-        command="plan", args=["-no-color"] + ([f"-out={args.out}"] if args.out else []),
+        command="plan",
+        args=["-no-color"] + ([f"-out={args.out}"] if args.out else []),
     )
 
 

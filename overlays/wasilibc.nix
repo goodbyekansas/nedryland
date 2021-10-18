@@ -50,11 +50,11 @@ versions: self: super:
   };
 
   # convenience stdenv that uses clang 12 for wasi
-  clang12Stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.lldClang);
+  clang12Stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.clangUseLLVM);
 
   # override wasilibc with a newer version that is compiled with clang 12
   wasilibc = (super.wasilibc.override {
-    stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.lldClangNoLibc);
+    stdenv = (super.overrideCC super.stdenv super.buildPackages.llvmPackages_12.clangNoLibc);
   }).overrideAttrs (oldAttrs: {
     name = "wasilibc";
     version = versions.wasilibc.version;

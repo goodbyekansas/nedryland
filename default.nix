@@ -22,9 +22,6 @@ let
           # extra pip packages
           (import ./overlays/python_packages.nix)
 
-          # comment here
-          (import ./overlays/wasmer.nix versions)
-
           # more recent Wasi lib C (default was 2019)
           (import ./overlays/wasilibc.nix versions)
 
