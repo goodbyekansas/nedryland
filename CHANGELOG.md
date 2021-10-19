@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2021-10-20
+
 ### Fixed
 - Change sphinx and sphinx_rtd_theme to sphinx4 and sphinx4_rtd_theme respectively in
   order to make sure that we don't invalidate the build for anything that needs Sphinx.
