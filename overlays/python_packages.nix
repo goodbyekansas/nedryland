@@ -42,29 +42,6 @@ in
             ];
           };
 
-          trimesh = super.buildPythonPackage rec {
-            pname = "trimesh";
-            version = "3.9.7";
-
-            src = super.fetchPypi {
-              inherit pname version;
-              sha256 = "1qsiypqh83sb3hx07x0jn3cvygrxx1qvj282w19xsvac399pdpb3";
-            };
-
-            preBuild = ''
-              export HOME=$PWD
-            '';
-
-            doCheck = false;
-            nativeBuildInputs = [
-              super.numpy
-            ];
-
-            propagatedBuildInputs = [
-              super.networkx
-            ];
-          };
-
           pycue = super.buildPythonPackage rec {
             pname = "pycue";
             version = "0.8.8";
@@ -163,9 +140,37 @@ in
             doCheck = false;
           };
 
+          # Borrowed from nixpkgs 20.09 for ftrack which has an upper version limit
+          arrow-0-15 = super.buildPythonPackage rec {
+            pname = "arrow";
+            version = "0.15.8";
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "edc31dc051db12c95da9bac0271cd1027b8e36912daf6d4580af53b23e62721a";
+            };
+
+            propagatedBuildInputs = [ super.dateutil ];
+
+            checkInputs = [
+              super.dateparser
+              super.pytestCheckHook
+              super.pytestcov
+              super.pytest-mock
+              super.pytz
+              super.simplejson
+              super.sphinx
+            ];
+
+            # ParserError: Could not parse timezone expression "America/Nuuk"
+            disabledTests = [
+              "test_parse_tz_name_zzz"
+            ];
+          };
+
           ftrack-python-api = super.buildPythonPackage rec {
             pname = "ftrack-python-api";
-            version = "2.1.1";
+            version = "2.2.0";
 
             preBuild = ''
               export HOME=$PWD
@@ -173,7 +178,7 @@ in
 
             src = super.fetchPypi {
               inherit pname version;
-              sha256 = "1d33793beac356360e89c95aaf9886128929827a16ddad6c52183a94b542b42a";
+              sha256 = "13d4vg5p0k63nmv9raax1jd8gmswlj1ibf4md0kb8gcr8kdq0imi";
             };
 
             doCheck = false;
@@ -184,18 +189,18 @@ in
               super.pyparsing
               super.future
               super.requests
-              super.arrow
+              arrow-0-15
               super.six
               super.appdirs
             ];
           };
 
-          spacy-english = super.buildPythonPackage {
+          spacy-english = super.buildPythonPackage rec {
             name = "spacy-english";
-            version = "2.3.1";
+            version = "3.0.0";
             src = fetchzip {
-              url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz";
-              sha256 = "0x47f6vkh81hcffs5fk4xrlcyrcssgisw85cw5m2829sv8x8mmqg";
+              url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-${version}/en_core_web_sm-${version}.tar.gz";
+              sha256 = "0bd3i104pk9w3cq8pv7n3hm9qq66l4cvk8bpms9wrivh5xpg6fsk";
             };
             propagatedBuildInputs = [ super.spacy ];
           };
@@ -324,15 +329,6 @@ in
               doCheck = false;
               doInstallCheck = false;
             } else { }));
-
-          pytest-pylint = super.pytest-pylint.overrideAttrs (oldAttrs: rec {
-            version = "0.18.0";
-            src = super.fetchPypi {
-              pname = oldAttrs.pname;
-              inherit version;
-              sha256 = "790c7a8019fab08e59bd3812db1657a01995a975af8b1c6ce95b9aa39d61da27";
-            };
-          });
         };
       };
 

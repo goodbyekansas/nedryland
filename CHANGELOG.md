@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Various overlays that were depending on specific versions in nixpkgs 20.09.
+
 ## [2.0.0] - 2021-10-20
 
 ### Fixed
