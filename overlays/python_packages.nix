@@ -140,6 +140,26 @@ in
             doCheck = false;
           };
 
+          markdown-include = super.buildPythonPackage rec {
+            pname = "markdown-include";
+            version = "0.6.0";
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "18p4qfhazvskcg6xsdv1np8m1gc1llyabp311xzhqy7p6q76hpbg";
+            };
+
+            doCheck = false;
+
+            propagatedBuildInputs = [
+              super.markdown
+            ];
+          };
+
           # Borrowed from nixpkgs 20.09 for ftrack which has an upper version limit
           arrow-0-15 = super.buildPythonPackage rec {
             pname = "arrow";
