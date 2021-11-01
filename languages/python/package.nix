@@ -73,14 +73,18 @@ let
       }}/pylintrc
   '';
 
-  standardTests = (
-    if doStandardTests then {
-      checkPhase = ''
-        echo "Running pytest (with pylint, flake8, mypy, isort and black) 🧪"
-        pytest --pylint --black --mypy --flake8 --isort ./
-      '';
-    } else { }
-  );
+  standardTests = {
+    checkPhase = if (attrs ? checkPhase) then attrs.checkPhase else
+    (
+      if doStandardTests then
+        ''
+          echo "Running pytest (with pylint, flake8, mypy, isort and black) 🧪"
+          pytest --pylint --black --mypy --flake8 --isort ./
+        ''
+      else ""
+    );
+  };
+
   mypyHook = pkgs.makeSetupHook
     {
       name = "mypy-hook";
@@ -133,7 +137,7 @@ pythonPkgs.buildPythonPackage (attrs // {
 
   doCheck = false;
 
-  configurePhase = ''
+  configurePhase = attrs.configurePhase or ''
     rm -f setup.cfg
     rm -f .pylintrc
     ln -s $setupCfg setup.cfg

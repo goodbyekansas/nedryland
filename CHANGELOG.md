@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- python components can now override configurePhase.
+- python components can now override checkPhase which has higher priority than
+  doStandardTests logic.
+
 ## [2.1.0] - 2021-10-25
 
 ### Added
