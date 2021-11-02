@@ -10,7 +10,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Nix
-      uses: cachix/install-nix-action@v12
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.4/install
     - name: Format Nedryland 👓 🦖💨
       run:  nix-build -A ci && result/bin/nixfmt
 
@@ -20,7 +22,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Nix
-      uses: cachix/install-nix-action@v12
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.4/install
     - name: Check the shell scripts 🐢 🐌 💶
       run:  nix-build -A ci && result/bin/shellcheck
 
@@ -30,7 +34,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Nix
-      uses: cachix/install-nix-action@v12
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.4/install
     - name: Lint .nix files 🦕 📝 👀
       run:  nix-build -A ci && result/bin/nix-lint
 
@@ -49,7 +55,9 @@ jobs:
       run: .github/workflows/setup/setup-builders-ssh.sh
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v12
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.4/install
 
     - name: Create Nix configuration
       run: |
