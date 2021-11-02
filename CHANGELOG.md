@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Ability to download a Windows VM for running Rust code on. The usefulness of the feature
+  did simply not warrant the complexity. Instead, you can set
+  `NEDRYLAND_WINDOWS_HOST` to a machine where you have passwordless SSH access and
+  cargo will use that machine for `run/test`.
+
 ## [2.2.0] - 2021-11-01
 
 ### Added
