@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Set isort profile to black to avoid conflicting linting between isort and black.
+
 ### Removed
 
 - Ability to download a Windows VM for running Rust code on. The usefulness of the feature
