@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- python package keyrings-google-artifactregistry-auth which is
+  "keyrings.google-artifactregistry-auth" on pypi.
+
 ### Fixed
 - Set isort profile to black to avoid conflicting linting between isort and black.
 
