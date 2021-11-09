@@ -1,6 +1,6 @@
 { base, pkgs }:
 rec {
-  mkPackage = import ./package.nix pkgs base;
+  mkPackage = import ./package.nix pkgs base wheelHook;
 
   mkDocs = import ./docs.nix base pkgs.lib;
 
@@ -48,15 +48,10 @@ rec {
           doStandardTests;
         setuptoolsLibrary = true;
       });
-
-      packageWithWheel = package.overrideAttrs (oldAttrs: {
-        buildInputs = oldAttrs.buildInputs ++ [ wheelHook ];
-      });
     in
     base.mkLibrary {
-      inherit name;
-      package = packageWithWheel;
-      python = packageWithWheel;
+      inherit name package;
+      python = package;
       docs = mkDocs attrs;
     };
 
