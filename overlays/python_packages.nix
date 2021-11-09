@@ -305,6 +305,23 @@ in
             doCheck = false;
           };
 
+          keyrings-google-artifactregistry-auth = super.buildPythonPackage rec {
+            pname = "keyrings.google-artifactregistry-auth";
+            version = "0.0.3";
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "0dfvr7k3q1422ls11h1957dpj9c7djd6ppb2pjzph5svfp0rpxjl";
+            };
+            doCheck = false;
+            propagatedBuildInputs = with super; [
+              keyring
+              google-auth
+              requests
+              pluggy
+            ];
+          };
+
           cloudevents = super.buildPythonPackage rec {
             pname = "cloudevents";
             version = "0.3.0";
