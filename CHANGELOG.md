@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - python package keyrings-google-artifactregistry-auth which is
   "keyrings.google-artifactregistry-auth" on pypi.
+- python clients now also build wheels.
+- mypy ignore_missing_imports is now set globally.
 
 ### Fixed
 - Set isort profile to black to avoid conflicting linting between isort and black.
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   did simply not warrant the complexity. Instead, you can set
   `NEDRYLAND_WINDOWS_HOST` to a machine where you have passwordless SSH access and
   cargo will use that machine for `run/test`.
+
+### Changed
+- Python wheels will now be build to $out/nedryland instead of just $out.
 
 ## [2.2.0] - 2021-11-01
 

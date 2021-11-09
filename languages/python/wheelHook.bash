@@ -6,10 +6,10 @@ setWheelLink() {
   shopt -s nullglob
   mkdir -p "${out:-}"/nedryland
 
-  cp dist/*.whl "$out"/
+  cp dist/*.whl "$out"/nedryland
 
   # first, get all wheels for this derivation
-  wheels=("$out"/*.whl)
+  wheels=("$out"/nedryland/*.whl)
   if [ ! ${#wheels[@]} -eq 0 ]; then
     echo -n "${wheels[@]}" >"$out"/nedryland/wheels
   fi
