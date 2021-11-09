@@ -1,14 +1,14 @@
-pkgs: base: attrs_@{ name
-            , version
-            , src
-            , pythonVersion
-            , srcExclude ? [ ]
-            , preBuild ? ""
-            , format ? "setuptools"
-            , setuptoolsLibrary ? false
-            , doStandardTests ? true
-            , ...
-            }:
+pkgs: base: wheelHook: attrs_@{ name
+                       , version
+                       , src
+                       , pythonVersion
+                       , srcExclude ? [ ]
+                       , preBuild ? ""
+                       , format ? "setuptools"
+                       , setuptoolsLibrary ? false
+                       , doStandardTests ? true
+                       , ...
+                       }:
 let
   pythonPkgs = pythonVersion.pkgs;
   customerFilter = src:
@@ -121,7 +121,7 @@ pythonPkgs.buildPythonPackage (attrs // {
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = attrs.buildInputs or (_: [ ]) pythonPkgs;
+  buildInputs = attrs.buildInputs or (_: [ ]) pythonPkgs ++ pkgs.lib.optional (format == "setuptools") wheelHook;
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
