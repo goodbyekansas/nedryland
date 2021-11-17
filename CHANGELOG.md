@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Set isort profile to black to avoid conflicting linting between isort and black.
+- Set flake8 configuration to ignore E203 whitespace before ':' to avoid conflicting
+  linting between flake8 and black.
 
 ### Changed
 - Python wheels will now be build to $out/nedryland instead of just $out.
