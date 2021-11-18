@@ -1,14 +1,14 @@
 {
   rust = {
-    stable = "1.53.0";
-    analyzer = "2021-06-29";
+    stable = "1.56.1";
+    analyzer = "2021-11-17";
   };
 
   # tonic version needs to be matched with
   # a tonic-build version
-  tonic = "0.4.3";
+  tonic = "0.6.1";
   tonicFeatures = [ "tls" "tls-roots" ];
-  tonicBuild = "0.4.2";
+  tonicBuild = "0.6.0";
 
   wasilibc = {
     version = "20210526";

@@ -1,4 +1,4 @@
-{ mkClient, protobuf, tonicBuildVersion, makeSetupHook }:
+{ base, protobuf, tonicBuildVersion, makeSetupHook }:
 let
   changeTonicBuildVersionHook = makeSetupHook
     {
@@ -8,7 +8,7 @@ let
       };
     } ./changeTonicBuildVersion.sh;
 in
-mkClient {
+base.languages.rust.mkClient {
   name = "rust-protobuf-compiler";
   src = ./.;
   PROTOC = "${protobuf}/bin/protoc";

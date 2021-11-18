@@ -2,8 +2,6 @@
 , name
 , protoSources
 , version
-, mkClient
-, makeSetupHook
 , includeServices
 , protobuf
 , rustfmt
@@ -20,7 +18,7 @@ let
 in
 base.mkDerivation {
   inherit protoSources protoIncludePaths rustInputs;
-  rustProtoCompiler = (import ./protobuf/compiler { inherit mkClient protobuf tonicBuildVersion makeSetupHook; }).package;
+  rustProtoCompiler = (base.callFile ./protobuf/compiler { inherit tonicBuildVersion; }).package;
   name = "${name}-rust-protobuf-src";
 
   PROTOC = "${protobuf}/bin/protoc";
