@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 bytes = "1"
-prost = "0.7"
+prost = "0.9.0"
 tempfile = "3"
 @includeTonic@
 @external@

@@ -153,13 +153,11 @@ rec {
             name
             protoSources
             version
-            mkClient
             includeServices
             protoInputs
             tonicVersion
             tonicFeatures
             tonicBuildVersion;
-          makeSetupHook = pkgs.makeSetupHook;
           pyToml = pkgs.python38Packages.toml;
         };
     in

@@ -7,15 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - python package keyrings-google-artifactregistry-auth which is
   "keyrings.google-artifactregistry-auth" on pypi.
 - python clients now also build wheels.
 - mypy ignore_missing_imports is now set globally.
 
 ### Fixed
+
 - Set isort profile to black to avoid conflicting linting between isort and black.
 - Set flake8 configuration to ignore E203 whitespace before ':' to avoid conflicting
   linting between flake8 and black.
+- Protobuf compiler shell working directory
 
 ### Removed
 
@@ -26,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Python wheels will now be build to $out/nedryland instead of just $out.
+
+### Updated Versions
+
+- Rust: 1.56.1
+- Rust Analyzer: 2021-11-17
+- Tonic: 0.6.1
+- Tonic build: 0.6.0
 
 ## [2.2.0] - 2021-11-01
 
