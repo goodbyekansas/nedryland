@@ -40,13 +40,14 @@ let
     );
 
   mkDocs = attrs@{ name, ... }: ((attrs.docs or { }) // {
-    generated = mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
+    api = mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
       name = "${name}-api-reference";
       buildPhase = ''
-        cargo doc --all --no-deps --all-features
+        cargo doc --workspace --no-deps --all-features
       '';
       installPhase = ''
-        cp -r target/doc $out
+        mkdir -p $out/share/doc/api/${name}
+        cp -r target/''${CARGO_BUILD_TARGET:-}/doc/. $out/share/doc/api/${name}
       '';
     });
   });

@@ -10,7 +10,8 @@ base.languages.python.mkClient {
       name = "client-manual";
       src = ./manual;
     };
-    about = base.languages.markdown.mkMdbook {
+
+    about = base.languages.markdown.mkSinglePage {
       name = "client-about";
       src = ./about.md;
     };

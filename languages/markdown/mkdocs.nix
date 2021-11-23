@@ -6,22 +6,14 @@ base.mkComponent {
     name = "${name}-package";
     src = attrs.src;
     buildInputs = [ pkgs.mkdocs ];
-    unpackPhase = ''
-      echo $src
-      if [ -d $src ]; then
-        ln -s $src/* .
-      else
-        mkdir docs
-        ln -s $src docs/index.md
-        echo "site_name: ${name}
-          nav:
-              - Home: index.md" > mkdocs.yml
-      fi
-    '';
+
     buildPhase = ''
       mkdocs build --verbose
     '';
-    installPhase = ''cp -r site $out'';
+    installPhase = ''
+      mkdir -p $out/share/doc/${name}
+      cp -r site/. $out/share/doc/${name}
+    '';
     shellHook = ''
       preview() {
         mkdocs serve &
