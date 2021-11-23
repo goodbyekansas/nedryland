@@ -36,15 +36,15 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "rust": {
-        "branch": "master",
+        "branch": "temp-fix-issue-59",
         "description": "Pure and reproducible nix overlay for binary distributed rust toolchains",
         "homepage": "",
-        "owner": "oxalica",
+        "owner": "goodbyekansas",
         "repo": "rust-overlay",
-        "rev": "85733f85cd860760e3ed536b6e8a6ed0cd1ebde4",
-        "sha256": "04z8a1jhly6sfjn7hxsylvjlb73pslsd36bg0spzhnjdkw97268b",
+        "rev": "6d7d67b9a5417651a3835d0d6a39c3512ac3b008",
+        "sha256": "1sjkqc8qa13w2172w1gv7hyz61fjm893p8agfm0i0b9npycpq34p",
         "type": "tarball",
-        "url": "https://github.com/oxalica/rust-overlay/archive/85733f85cd860760e3ed536b6e8a6ed0cd1ebde4.tar.gz",
+        "url": "https://github.com/goodbyekansas/rust-overlay/archive/6d7d67b9a5417651a3835d0d6a39c3512ac3b008.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

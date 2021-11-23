@@ -105,12 +105,12 @@ let
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" "srcExclude" "shellInputs" "docs" ];
 
   # cross compiling
-  ccForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}cc";
-  cxxForBuild = "${buildPackages.stdenv.cc}/bin/${buildPackages.stdenv.cc.targetPrefix}c++";
+  ccForBuild = "${buildPackages.stdenv.cc.targetPrefix}cc";
+  cxxForBuild = "${buildPackages.stdenv.cc.targetPrefix}c++";
   linkerForBuild = ccForBuild;
 
-  ccForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cc";
-  cxxForHost = "${stdenv.cc}/bin/${stdenv.cc.targetPrefix}c++";
+  ccForHost = "${stdenv.cc.targetPrefix}cc";
+  cxxForHost = "${stdenv.cc.targetPrefix}c++";
   # after https://github.com/rust-lang/rust/commit/6615ee89be2290c96aa7d4ab24dc94e23a8c7080
   # `--as-needed` is wrongfully added to wasm-ld even though it isn't a GNU linker
   # workaround it by removing the argument before passing along
