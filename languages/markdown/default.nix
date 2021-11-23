@@ -20,4 +20,17 @@ rec {
     import projectGenerator pkgs base;
   mkMdbook = import ./mdbook.nix pkgs base;
   mkDocs = import ./mkdocs.nix pkgs base;
+  mkSinglePage = { name, src }: base.mkDerivation {
+    inherit name src;
+    nativeBuildInputs = [ pkgs.python3.pkgs.markdown ];
+    phases = [ "buildPhase" "installPhase" ];
+    installPhase = ''
+      mkdir -p $out/share/doc/$name
+      cp $name.html $out/share/doc/$name/$name.html
+    '';
+
+    buildPhase = ''
+      python -m markdown --output_format=html --file=$name.html $src
+    '';
+  };
 }

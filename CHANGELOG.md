@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-
-- python package keyrings-google-artifactregistry-auth which is
+- Python package keyrings-google-artifactregistry-auth which is
   "keyrings.google-artifactregistry-auth" on pypi.
-- python clients now also build wheels.
-- mypy ignore_missing_imports is now set globally.
+- Python clients now also build wheels.
+- Mypy ignore_missing_imports is now set globally.
 - collectComponentsRecursive as a nedryland function.
+- base.languages.markdown.mkSinglePage for generating html from a single markdown.
 
 ### Fixed
 
@@ -27,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   did simply not warrant the complexity. Instead, you can set
   `NEDRYLAND_WINDOWS_HOST` to a machine where you have passwordless SSH access and
   cargo will use that machine for `run/test`.
+- Single page documentation via mdBook or mkDocs, a separate component type will be added
+  for that use case.
 
 ### Changed
 - Python wheels will now be build to $out/nedryland instead of just $out.
+- Generated API docs are now found under `api` instead of under `generated`
+- Api docs are written to share/doc/api/name and general docs to share/doc/name.
 
 ### Updated Versions
 

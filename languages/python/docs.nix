@@ -1,7 +1,7 @@
 base: lib:
 let
-  combineDocs = attrs: generated: ({
-    inherit generated;
+  combineDocs = attrs: api: ({
+    inherit api;
   } // attrs.docs or { });
 
   docsConfig = (lib.filterAttrs (_: v: v != "" && v != [ ]) (base.parseConfig {
@@ -82,7 +82,8 @@ in
       make html
     '';
     installPhase = ''
-      cp -r _build/html $out
+      mkdir -p $out/share/doc/api/${name}
+      cp -r _build/html/. $out/share/doc/api/${name}
     '';
   });
 
@@ -104,8 +105,9 @@ in
       pdoc -o docs "$modules" ${if logo != { } then "--template ./template" else ""}
     '';
     installPhase = ''
-      cp -r docs $out
-      ${if logo ? source then "cp ${logo.source} $out/${logo.path}" else ""}
+      mkdir -p $out/share/doc/api/${name}
+      cp -r docs $out/share/doc/api/${name}
+      ${if logo ? source then "cp ${logo.source} $out/share/doc/api/${name}/${logo.path}" else ""}
     '';
   });
 }

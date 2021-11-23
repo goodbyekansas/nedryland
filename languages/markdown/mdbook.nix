@@ -1,18 +1,4 @@
 pkgs: base: attrs@{ name, ... }:
-let
-  bookToml = attrs:
-    let
-      options = pkgs.lib.optional (attrs ? language) "language = \"${attrs.language}\""
-        ++ pkgs.lib.optional (attrs ? title) "title = \\\"${attrs.title}\\\""
-        ++ pkgs.lib.optional (attrs ? author) "author = \\\"${attrs.author}\\\""
-        ++ pkgs.lib.optional (attrs ? authors) "authors = [${builtins.concatStringsSep ", " (builtins.map (v: "\\\"${v}\\\"") attrs.authors)}]"
-        ++ pkgs.lib.optional (attrs ? description) "description = \\\"${attrs.description}\\\"";
-    in
-    ''
-      [book]
-      ${builtins.concatStringsSep "\n" options}
-    '';
-in
 base.mkComponent {
   inherit name;
   nedrylandType = attrs.nedrylandType or "documentation";
@@ -20,24 +6,13 @@ base.mkComponent {
     name = "${name}-package";
     src = attrs.src;
     buildInputs = [ pkgs.mdbook ];
-    unpackPhase = ''
-      if [ -d $src ]; then
-        ln -s $src src
-      else
-        mkdir src
-        ln -s $src ./src/README.md
-        echo "# $name
-        - [$name](./README.md)" > ./src/SUMMARY.md
-      fi
-    '';
-    configurePhase = ''
-      echo "${bookToml attrs}" > book.toml
-    '';
+
     buildPhase = ''
-      mdbook build
+      mdbook build --dest-dir book
     '';
     installPhase = ''
-      cp -r book $out
+      mkdir -p $out/share/doc
+      cp -r book/. $out/share/doc/${name}
     '';
     shellHook = ''
       preview() {
