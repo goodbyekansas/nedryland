@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "keyrings.google-artifactregistry-auth" on pypi.
 - python clients now also build wheels.
 - mypy ignore_missing_imports is now set globally.
+- collectComponentsRecursive as a nedryland function.
 
 ### Fixed
 

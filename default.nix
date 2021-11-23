@@ -125,7 +125,7 @@ in
                 stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" ]) // (pkgs.lib.optionalAttrs (attrs ? src) {
                   src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
                 }));
-              mapComponentsRecursive = componentFns.mapComponentsRecursive;
+              inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
               mkClient = targets: mkComponent' (targets // { nedrylandType = "client"; });
