@@ -1,8 +1,8 @@
 [package]
 name = "@packageName@"
 version = "@version@"
-authors = ["Goodbye Kansas Pipeline team <pipeline@goodbyekansas.com>"]
-edition = "2018"
+authors = ["Goodbye Kansas Pipeline Team <pipeline@goodbyekansas.com>"]
+edition = "2021"
 
 [dependencies]
 bytes = "1"
