@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2021-11-24
+
 ### Added
 - Python package keyrings-google-artifactregistry-auth which is
   "keyrings.google-artifactregistry-auth" on pypi.
