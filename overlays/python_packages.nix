@@ -124,6 +124,22 @@ in
             ];
           };
 
+          qt-dot-py = super.buildPythonPackage rec {
+            pname = "Qt.py";
+            version = "1.3.6";
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "0jj09hlj8xf728vq7cqq910yq36symxiqlh4wgp04il15xm6ay0d";
+            };
+
+            doCheck = false;
+          };
+
           clique = super.buildPythonPackage rec {
             pname = "clique";
             version = "1.6.1";
