@@ -111,8 +111,7 @@ in
                     in
                     filter:
                     path: type:
-                      srcIgnored path type
-                      || (filter path type);
+                      (srcIgnored path type) && (filter path type);
                   filteredSrc =
                     if attrs ? srcFilter && attrs ? src then
                       pkgs.lib.cleanSourceWith
