@@ -17,14 +17,17 @@ let
       srcIgnored = pkgs.gitignoreFilter src;
     in
     path: type:
-      (srcIgnored path type)
-      || !(builtins.any (pred: pred path type) srcExclude);
-  invariantSrc = if pkgs.lib.isStorePath src then src else
-  (pkgs.lib.cleanSourceWith {
-    name = "${name}-source";
-    inherit src;
-    filter = customerFilter src;
-  });
+      (srcIgnored path type) && !(builtins.any (pred: pred path type) srcExclude);
+  filteredSrc =
+    if srcExclude != [ ] && attrs_ ? src then
+      pkgs.lib.cleanSourceWith
+        {
+          inherit (attrs_) src;
+          filter = customerFilter attrs_.src;
+          name = "${name}-source";
+        } else pkgs.gitignoreSource attrs_.src;
+  src = if pkgs.lib.isStorePath attrs_.src then attrs_.src else filteredSrc;
+
   commands = ''
     check() {
         eval "$installCheckPhase"
@@ -33,8 +36,7 @@ let
 
   extendFile = { filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
-      inherit filePath;
-      src = invariantSrc;
+      inherit filePath src;
       name = "pyconfig-${builtins.baseNameOf filePath}";
       builder = builtins.toFile "builder.sh" ''
         source $stdenv/setup
@@ -96,9 +98,8 @@ let
   attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
-  inherit version setupCfg pylintrc format preBuild;
+  inherit src version setupCfg pylintrc format preBuild;
   pname = name;
-  src = invariantSrc;
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
   checkInputs = with pythonPkgs; [
