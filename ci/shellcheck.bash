@@ -10,7 +10,7 @@ is_bash() {
 EXIT_CODE=0
 
 while IFS= read -r -d $'' file; do
-    if is_bash "$file"; then
+    if ! git check-ignore -q "$file" && is_bash "$file"; then
         @shellcheck@ -W0 -s bash "$file"
         EXIT_CODE=$((EXIT_CODE + $?))
     fi
