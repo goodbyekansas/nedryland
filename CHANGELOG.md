@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Src filter for python now correctly excludes additional `srcExclude`s.
 - The CI tools shellcheck and nix-lint will no longer check git ignored files.
+- Deploy phases & variables can now use \ characters.
+- Deploy phases can now use nix attributes as environment variables in bash consistently.
 
 ## [3.0.1] - 2021-11-25
 
