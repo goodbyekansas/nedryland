@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Deploy phases & variables can now use \ characters.
+- Deploy phases can now use nix attributes as environment variables in bash consistently.
+
 ## [2.3.0] - 2021-11-29
 
 ### Added

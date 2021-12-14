@@ -11,7 +11,7 @@ let
     , ...
     }:
     let
-      env = attrs // {
+      env = builtins.removeAttrs attrs [ "preDeployPhase" "deployPhase" "postDeployPhase" ] // {
         buildInputs = inputs;
       };
       envVars = pkgs.writeTextFile {
@@ -19,7 +19,7 @@ let
         text = builtins.foldl'
           (acc: curr: ''
             ${acc}
-            declare -x ${curr}="${builtins.replaceStrings [ "$" "\"" ] [ "\\$" "\\\"" ] (builtins.toString (builtins.getAttr curr env))}"
+            declare -x ${curr}="${builtins.replaceStrings [ "$" "\"" "\\" ] [ "\\$" "\\\"" "\\\\" ] (builtins.toString (builtins.getAttr curr env))}"
           '')
           # These variables are needed for stdenvs setup
           ''
