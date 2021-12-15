@@ -23,7 +23,7 @@ attrs@{ name
 }:
 let
   # this controls the version of rust to use
-  rustBin = (
+  rustBin = ((
     if useNightly != "" then
       (
         pkgs.rust-bin.nightly."${useNightly}".default.override {
@@ -36,7 +36,12 @@ let
           inherit targets extensions;
         }
       )
-  );
+  ).overrideAttrs (_: {
+    # TODO: This is a workaround for cross compilation where the build platform compiler
+    # seems to use dependencies for the target platform. This probably has to do with our
+    # lack of splicing below. Investigate later.
+    propagatedBuildInputs = [ ];
+  }));
 
   rustAnalyzer = pkgs.rust-bin.nightly."${rustVersion.analyzer}".rust-analyzer-preview;
 
@@ -126,7 +131,6 @@ let
     ${ccForHost} "''${newparams[@]}"
   '')}/bin/rust-linker-bug-workaround" else ccForHost;
 
-
   hostTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.hostPlatform);
   buildTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.buildPlatform);
 
@@ -173,12 +177,7 @@ base.mkDerivation
 
       passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
 
-      depsBuildBuild = [ buildPackages.stdenv.cc ]
-      ++ pkgs.lib.optionals stdenv.buildPlatform.isDarwin [
-        # this is needed since https://github.com/rust-lang/libc/commit/3e4d684dcdd1dff363a45c70c914204013810155
-        # on macos
-        buildPackages.libiconv
-
+      depsBuildBuild = pkgs.lib.optionals stdenv.buildPlatform.isDarwin [
         # this is actually not always needed but life is
         # too short to figure out when so let's always
         # add it

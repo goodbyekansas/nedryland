@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed Versions
+- Update Rust to version 1.57.0.
+
 ### Fixed
 - Src filter for python now correctly excludes additional `srcExclude`s.
 - The CI tools shellcheck and nix-lint will no longer check git ignored files.
