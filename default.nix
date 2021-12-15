@@ -23,7 +23,7 @@ let
           (import ./overlays/python_packages.nix)
 
           # more recent Wasi lib C (default was 2019)
-          (import ./overlays/wasilibc.nix versions)
+          (import ./overlays/wasm.nix versions)
 
           # darwin "fix" for mingw
           (import ./overlays/darwin-fix-mcfgthreads.nix)
