@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Overlay for pocl, a CPU-only OpenCL implementation (http://portablecl.org/).
+
 ## [3.1.0] - 2021-12-16
 
 ### Changed Versions
