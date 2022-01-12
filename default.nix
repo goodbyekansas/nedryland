@@ -31,6 +31,9 @@ let
           # extra pkgs from future versions of nixpkgs
           (import ./overlays/backported-packages.nix)
 
+          # pocl, a CPU-only OpenCL implementation
+          (import ./overlays/pocl.nix)
+
           # gitignore source
           (self: _: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
         ];
