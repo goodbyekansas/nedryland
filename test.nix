@@ -21,6 +21,10 @@ let
     nestedComponents = import ./test/nested-components.nix pkgs tests.hello;
     sameWhenFiltered = import ./test/filter-source.nix pkgs.lib.assertMsg tests.hello.matrix.sameThing1 tests.hello.matrix.sameThing2;
     versionTest = import ./test/dependencies.nix tests.dependencies.matrix.nooo pkgs.lib.assertMsg;
+    rustCross = import ./test/rust-cross.nix {
+      inherit (pkgs.lib) assertMsg;
+      inherit (tests.hello.matrix) baseRust windowsRust crossRust;
+    };
   };
 in
 (mappedTests // {
