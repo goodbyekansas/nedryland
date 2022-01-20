@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Add support for rust cross target documentation.
+
+### Added
+- Support for not building the build platform for rust components.
+  Add `includeNative = false` to the crossTargets to not build for the build platform.
+
+### Changed
+- Rust components had a rust attribute that contained the build platform target.
+  Now it is a list containing all targets.
+
 ## [3.2.0] - 2022-01-14
 
 ### Added

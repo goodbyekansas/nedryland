@@ -17,6 +17,86 @@ let
     };
   };
 
+  getNativeTarget = attrs: package:
+    pkgs.lib.optionalAttrs (pkgs.lib.attrByPath [ "crossTargets" "includeNative" ] true attrs) {
+      inherit package;
+    };
+
+  toDocs = package:
+    package.overrideAttrs (
+      oldAttrs: {
+        buildPhase = ''
+          cargo doc --workspace --no-deps --all-features
+        '';
+        installPhase = ''
+          mkdir -p $out/share/doc/api/${oldAttrs.name}
+          cp -r target/''${CARGO_BUILD_TARGET:-}/doc/. $out/share/doc/api/${oldAttrs.name}
+        '';
+      }
+    );
+
+
+  mkDocs = attrs@{ name, ... }:
+    mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
+      name = "${name}-api-reference";
+      buildPhase = ''
+        cargo doc --workspace --no-deps --all-features
+      '';
+      installPhase = ''
+        mkdir -p $out/share/doc/api/${name}
+        cp -r target/''${CARGO_BUILD_TARGET:-}/doc/. $out/share/doc/api/${name}
+      '';
+    });
+
+  toCrossTargets = crossTargets: pkgAttrs: intoFunction: builtins.mapAttrs
+    (target: targetAttrs:
+      assert pkgs.lib.assertMsg
+        (builtins.hasAttr target supportedCrossTargets)
+        "Cross compilation target \"${target}\" is not supported!";
+      let
+        targetSpec = builtins.getAttr target supportedCrossTargets;
+      in
+      intoFunction (mkPackageWithStdenv
+        targetSpec.stdenv
+        (pkgAttrs // targetAttrs // targetSpec.attrs)
+      )
+    )
+    (builtins.removeAttrs crossTargets [ "includeNative" ]);
+
+  mkComponentWith = func: toFunction:
+    attrs@ { name, deployment ? { }, ... }:
+    let
+      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
+      crossTargets = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toFunction;
+      crossDocs = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toDocs;
+      nativeTarget = getNativeTarget attrs (toFunction (mkPackage pkgAttrs));
+      apiDocs =
+        pkgs.lib.optionalAttrs (pkgs.lib.attrByPath [ "crossTargets" "includeNative" ] true attrs)
+          {
+            package = mkDocs pkgAttrs;
+          } // crossDocs;
+    in
+    func ({
+      inherit deployment name;
+      rust = builtins.attrValues crossTargets ++ builtins.attrValues nativeTarget;
+    } // crossTargets // nativeTarget //
+    {
+      docs = {
+        api = apiDocs;
+      } // (attrs.docs or { });
+    }
+    );
+
+  checksumHook = pkgs.makeSetupHook
+    {
+      name = "generate-cargo-checksums";
+      deps = [ pkgs.jq pkgs.coreutils ];
+    }
+    ./generateCargoChecksums.sh;
+in
+rec {
+  inherit mkPackage mkDocs;
+
   toApplication = package:
     package.overrideAttrs (
       oldAttrs: {
@@ -39,57 +119,6 @@ let
       }
     );
 
-  mkDocs = attrs@{ name, ... }: ((attrs.docs or { }) // {
-    api = mkPackage (builtins.removeAttrs attrs [ "docs" ] // {
-      name = "${name}-api-reference";
-      buildPhase = ''
-        cargo doc --workspace --no-deps --all-features
-      '';
-      installPhase = ''
-        mkdir -p $out/share/doc/api/${name}
-        cp -r target/''${CARGO_BUILD_TARGET:-}/doc/. $out/share/doc/api/${name}
-      '';
-    });
-  });
-
-  toCrossTargets = crossTargets: pkgAttrs: intoFunction: builtins.mapAttrs
-    (target: targetAttrs:
-      assert pkgs.lib.assertMsg
-        (builtins.hasAttr target supportedCrossTargets)
-        "Cross compilation target \"${target}\" is not supported!";
-      let
-        targetSpec = builtins.getAttr target supportedCrossTargets;
-      in
-      intoFunction (mkPackageWithStdenv
-        targetSpec.stdenv
-        (pkgAttrs // targetAttrs // targetSpec.attrs)
-      )
-    )
-    crossTargets;
-
-  mkComponentWith = func:
-    attrs@ { name, deployment ? { }, ... }:
-    let
-      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
-      package = toApplication (mkPackage pkgAttrs);
-      crossTargets = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toApplication;
-    in
-    func ({
-      inherit deployment name package;
-      docs = mkDocs pkgAttrs;
-      rust = package;
-    } // crossTargets);
-
-  checksumHook = pkgs.makeSetupHook
-    {
-      name = "generate-cargo-checksums";
-      deps = [ pkgs.jq pkgs.coreutils ];
-    }
-    ./generateCargoChecksums.sh;
-in
-rec {
-  inherit mkPackage toApplication mkDocs;
-
   toLibrary = package:
     package.overrideAttrs (
       oldAttrs: {
@@ -111,30 +140,14 @@ rec {
       }
     );
 
-  mkLibrary =
-    attrs@
-    { name
-    , deployment ? { }
-    , ...
-    }:
-    let
-      pkgAttrs = builtins.removeAttrs attrs [ "deployment" "crossTargets" ];
-      package = toLibrary (mkPackage (
-        pkgAttrs // {
-          filterCargoLock = true;
-        }
-      ));
-      crossTargets = toCrossTargets (attrs.crossTargets or { }) pkgAttrs toLibrary;
-    in
-    base.mkLibrary ({
-      inherit deployment name package;
-      docs = mkDocs pkgAttrs;
-      rust = package;
-    } // crossTargets);
+  mkLibrary = attrs:
+    mkComponentWith base.mkLibrary toLibrary (attrs // {
+      filterCargoLock = true;
+    });
 
-  mkClient = mkComponentWith base.mkClient;
+  mkClient = mkComponentWith base.mkClient toApplication;
 
-  mkService = mkComponentWith base.mkService;
+  mkService = mkComponentWith base.mkService toApplication;
 
   fromProtobuf =
     { name

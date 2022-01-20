@@ -35,8 +35,15 @@ rec {
             } else { }) // (if attrs ? docs then {
               docs = pkgs.lib.mapAttrs
                 (_: doc:
-                  if pkgs.lib.isDerivation doc then doc
-                  else doc.package)
+                  let
+                    doc' =
+                      if pkgs.lib.isDerivation doc then doc
+                      else (if builtins.isAttrs doc && (doc.isNedrylandComponent or false) then doc.package else doc);
+                  in
+                  if pkgs.lib.isDerivation doc' then doc' else
+                  (if builtins.isAttrs doc' && (builtins.length (builtins.attrNames doc')) == 1 then
+                    builtins.head (builtins.attrValues doc') else doc')
+                )
                 attrs.docs;
             } else { }));
 
