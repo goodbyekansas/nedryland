@@ -13,6 +13,7 @@ let
       attrs = {
         targets = [ "x86_64-pc-windows-gnu" ];
         defaultTarget = "x86_64-pc-windows-gnu";
+        buildInputs = [ pkgs.pkgsCross.mingwW64.windows.pthreads ];
       };
     };
   };
@@ -55,10 +56,13 @@ let
         "Cross compilation target \"${target}\" is not supported!";
       let
         targetSpec = builtins.getAttr target supportedCrossTargets;
+        buildInputs = (targetSpec.attrs.buildInputs or [ ]) ++
+          (pkgAttrs.buildInputs or [ ]) ++
+          (targetAttrs.buildInputs or [ ]);
       in
       intoFunction (mkPackageWithStdenv
         targetSpec.stdenv
-        (pkgAttrs // targetAttrs // targetSpec.attrs)
+        (pkgAttrs // targetAttrs // targetSpec.attrs // { inherit buildInputs; })
       )
     )
     (builtins.removeAttrs crossTargets [ "includeNative" ]);
