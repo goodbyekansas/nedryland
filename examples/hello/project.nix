@@ -26,6 +26,11 @@
 
     sameThing1 = callFile ./libraries/same-things-1/same-thing.nix { };
     sameThing2 = callFile ./libraries/same-things-2/same-thing.nix { };
+
+    # Rust components with different cross compilation behaviours
+    baseRust = callFile ./clients/rusty-rust/rusty-rust.nix { }; # Build for build platform
+    windowsRust = callFile ./clients/rusty-rust/rusty-rust-windows.nix { }; # Build for windows only
+    crossRust = callFile ./clients/rusty-rust/rusty-rust-cross.nix { }; # Build all platforms
   };
   baseExtensions = [
     # We add an extension for making the pythonHello more efficiently
