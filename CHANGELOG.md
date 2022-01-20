@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for not building the build platform for rust components.
   Add `includeNative = false` to the crossTargets to not build for the build platform.
+- Pthreads as default build inputs for rust windows components.
 
 ### Changed
 - Rust components had a rust attribute that contained the build platform target.
