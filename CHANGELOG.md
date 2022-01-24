@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Documentation about documentation.
+- `components` (as a set and not just separate) is sent into components.
 
 ### Fixed
 - Rust respects `includeNative = false;` when building docs.
