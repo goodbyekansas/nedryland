@@ -208,7 +208,7 @@ in
               function
                 (
                   (builtins.intersectAttrs args pkgs)
-                  // (builtins.intersectAttrs args resolvedComponents)
+                  // (builtins.intersectAttrs args (resolvedComponents // { components = resolvedComponents; }))
                   // (builtins.intersectAttrs args { base = newBase; })
                   // overrides
                 )
