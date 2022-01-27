@@ -105,9 +105,9 @@ in
       pdoc -o docs "$modules" ${if logo != { } then "--template ./template" else ""}
     '';
     installPhase = ''
-      mkdir -p $out/share/doc/api/${name}
-      cp -r docs $out/share/doc/api/${name}
-      ${if logo ? source then "cp ${logo.source} $out/share/doc/api/${name}/${logo.path}" else ""}
+      mkdir -p $out/share/doc/${name}/api/
+      cp -r docs $out/share/doc/${name}/api/
+      ${if logo ? source then "cp ${logo.source} $out/share/doc/${name}/api/${logo.path}" else ""}
     '';
   });
 }

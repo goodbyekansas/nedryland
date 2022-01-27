@@ -136,6 +136,7 @@ in
               extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;
+              documentation = import ./documentation pkgs minimalBase;
             };
           in
           minimalBase;
@@ -290,7 +291,7 @@ in
         targets = allTargets // extraTargets;
         matrix = components // targets;
 
-        shells = pkgs.callPackage ./shell.nix {
+        shells = pkgs.callPackage ./shells.nix {
           inherit components;
           mapComponentsRecursive = minimalBase.mapComponentsRecursive;
           enableChecksOnComponent = componentFns.enableChecksOnComponent;

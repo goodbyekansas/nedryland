@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="nedryland">
+    <meta name="keywords" content="rust, rustlang, rust-lang">
+    <title>🦀 {{title}}</title>
+    <link rel="stylesheet" type="text/css" href="./normalize.css">
+    <link rel="stylesheet" type="text/css" href="./rustdoc.css" id="mainThemeStyle">
+    <link rel="stylesheet" type="text/css" href="./light.css" id="themeStyle">
+    <link rel="stylesheet" type="text/css" href="./dark.css" disabled="">
+    <link rel="stylesheet" type="text/css" href="./ayu.css" disabled="">
+    <script id="default-settings"></script>
+    <script src="./storage.js"></script>
+    <script src="./crates.js"></script>
+    <noscript>
+        <link rel="stylesheet" href="./noscript.css">
+    </noscript>
+    <link rel="alternate icon" type="image/png" href="./favicon-16x16.png">
+    <link rel="alternate icon" type="image/png" href="./favicon-32x32.png">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <style>
+        #main>ul>li {
+            list-style: circle;
+            margin-left: 2em;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body class="rustdoc">
+    <!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]-->
+
+    <section id="main" class="content">
+        <div>
+            <button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"
+                style="border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;">
+                <img width="18" height="18" alt="Pick another theme!" src="./brush.svg">
+            </button>
+            <div id="theme-choices" role="menu"></div>
+        </div>
+        <h1>🦀 Available crate targets 📦</h1>
+        {%- if links|length == 1 %}
+        <script>window.location.replace('./{{links[0].href}}/index.html');</script>
+        {%- endif %}
+        <ul>
+            {%- for link in links %}
+            <li><a class="primitive source" href="./{{link.href}}/index.html">{{link.name}}</a></li>
+            {%- endfor %}
+        </ul>
+    </section>
+    <script src="./main.js"></script>
+</body>
+</html>

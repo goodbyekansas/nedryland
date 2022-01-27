@@ -13,3 +13,7 @@ In addition to the package collection, components also get access to something c
 _base_ is a collection of Nedryland utilities for component declaration so it is essentially a big
 set of functions that relates to declaring components. The set of functions available in base can
 also be extended by other projects as described [here](../declare-project.md#extensions).
+
+## Documentation
+
+Components can also have associated documentation declared in the `docs` attribute. See [here](../components.md#documentation).

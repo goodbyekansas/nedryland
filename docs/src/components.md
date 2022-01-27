@@ -111,7 +111,6 @@ base.mkClient {
   buildPhase = ''
     touch $out/hello-world
   '';
-  };
 }
 ```
 
@@ -119,6 +118,28 @@ base.mkClient {
 This component type is not exposed directly in base but rather by the different language helpers
 (see below) and should be used to share common functionality in a library for the language in
 question.
+
+# Documentation
+
+Documentation can be added to a component by the argument `docs`, this argument has to
+be a set with derivations or metadata. In `base.documentation` there are helpers to
+create documentation derivations. When building the docs target of the component, a
+combination of all the derivation attributes will be created. Any non-derivation will be
+serialized to json and stored in `metadata.json` in `share/doc/<component-name>`.
+```nix
+base.mkComponent {
+  name = "documented-component";
+  ...
+  docs = {
+    user = base.documentation.mkMdbook {
+      src = ./docs/user;
+    }
+  }
+}
+```
+Python and Rust outputs an automatic doc target called `api` that is generated
+documentation from the source code. If you do not want that you can set the `api` member
+of the docs set to `null`.
 
 # Language Helpers
 Nedryland also contains helpers for some programming languages that can be used when implementing

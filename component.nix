@@ -28,24 +28,29 @@ rec {
               inherit name path nedrylandType;
               isNedrylandComponent = true;
               __toString = self: "Nedryland component: ${self.name}";
-            } // (if attrs ? deployment && attrs.deployment != { } then {
+            } // (pkgs.lib.optionalAttrs (attrs ? deployment && attrs.deployment != { }) {
               # the deploy target is simply the sum of everything
               # in the deployment set
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
-            } else { }) // (if attrs ? docs then {
-              docs = pkgs.lib.mapAttrs
-                (_: doc:
-                  let
-                    doc' =
-                      if pkgs.lib.isDerivation doc then doc
-                      else (if builtins.isAttrs doc && (doc.isNedrylandComponent or false) then doc.package else doc);
-                  in
-                  if pkgs.lib.isDerivation doc' then doc' else
-                  (if builtins.isAttrs doc' && (builtins.length (builtins.attrNames doc')) == 1 then
-                    builtins.head (builtins.attrValues doc') else doc')
-                )
-                attrs.docs;
-            } else { }));
+            }) // (pkgs.lib.optionalAttrs (attrs ? docs) {
+              # the docs target is a symlinkjoin of all sub-derivations
+              docs =
+                let
+                  resolvedDocDrvs = builtins.mapAttrs
+                    (key: func: (func.docfunction name key))
+                    (pkgs.lib.filterAttrs (_: v: builtins.isAttrs v && v ? docfunction) attrs.docs);
+                  attrsWithResolvedDocDrvs = attrs.docs // resolvedDocDrvs;
+                in
+                pkgs.symlinkJoin {
+                  name = "${name}-docs";
+                  paths = builtins.attrValues resolvedDocDrvs ++ (builtins.filter pkgs.lib.isDerivation (builtins.attrValues attrs.docs));
+                  passthru = attrsWithResolvedDocDrvs;
+                  postBuild = ''
+                    mkdir -p $out/share/doc/${name}/
+                    echo '${builtins.toJSON attrsWithResolvedDocDrvs}' > $out/share/doc/${name}/metadata.json
+                  '';
+                };
+            }));
 
           component = if enableChecks then enableChecksOnComponent component' else component';
           docsRequirement = (parseConfig {
@@ -56,10 +61,10 @@ rec {
         in
         assert pkgs.lib.assertMsg
           (docsRequirement != [ ] -> component ? docs && builtins.all
-            (e: builtins.elem e (builtins.attrNames component.docs))
+            (e: builtins.elem e (builtins.attrNames attrs.docs))
             docsRequirement)
           ''Projects config demands type "${component.nedrylandType}" to have at least: ${builtins.concatStringsSep ", " docsRequirement}.
-          "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames component.docs or { })}.'';
+          "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames attrs.docs or { })}.'';
         (component
           // {
           allTargets = builtins.attrValues (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component);

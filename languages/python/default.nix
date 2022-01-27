@@ -52,7 +52,7 @@ rec {
     base.mkLibrary {
       inherit name package;
       python = package;
-      docs = mkDocs attrs;
+      docs = (mkDocs attrs) // attrs.docs or { };
     };
 
   mkClient =
@@ -84,7 +84,7 @@ rec {
     in
     base.mkClient {
       inherit name;
-      docs = mkDocs attrs;
+      docs = (mkDocs attrs) // attrs.docs or { };
       package = application;
       python = application;
     };
@@ -118,7 +118,7 @@ rec {
     in
     base.mkService {
       inherit name;
-      docs = mkDocs attrs;
+      docs = (mkDocs attrs) // attrs.docs or { };
       package = application;
       python = application;
     };
