@@ -5,7 +5,7 @@ base.languages.rust.mkService {
   src = ./.;
   docs = {
     # mkProjectDocs uses the function named in the project config
-    installInstructions = base.languages.markdown.mkProjectDocs {
+    installInstructions = base.documentation.mkProjectDocs {
       name = "install-instructions";
       src = ./docs;
     };

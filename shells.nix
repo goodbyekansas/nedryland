@@ -34,6 +34,7 @@ in
                 let
                   targetName = "${component.name}.${name}";
                   shellPkg = (drv.drvAttrs // {
+                    inherit (drv) passthru;
                     name = "${targetName}-shell";
 
                     # this will get merged with nativeBuildInputs

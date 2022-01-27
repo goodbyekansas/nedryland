@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Documentation about documentation.
+
+### Fixed
+- Rust respects `includeNative = false;` when building docs.
+
+### Changed
+- The docs on a component is now expected to be a set of derivations and metadata.
+- All derivations in the docs set is symlinkjoined to one derivation.
+- All other attributes are serialized into json at $out/share/doc/metadata.json.
+- Docs derivations can declare a name and a type, by default the are chosen from the
+  component name type is the key in the docs set.
+- The structure of the output of docs is $out/share/doc/<component-name>.
+- Rust gets all targets merged into one derivation with a front page of links to the
+  different doc pages.
+- Markdown is no longer a language, the functions are instead in `base.documentation`.
+
 ## [3.3.0] - 2022-01-21
 ### Fixed
 - Add support for rust cross target documentation.
