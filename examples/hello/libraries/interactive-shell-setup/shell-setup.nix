@@ -1,6 +1,6 @@
 { base, python3 }:
 base.languages.python.mkLibrary {
-  name = "shell-Setup";
+  name = "shell-setup";
   version = "1.0.0";
   src = ./.;
 
@@ -9,5 +9,7 @@ base.languages.python.mkLibrary {
   # be built until someone enters the shell and does the setup.
   builder = builtins.toFile "shell-thingy" ''
     source $stdenv/setup
-    mkdir -p $out'';
+    touch $out
+  '';
+  format = "other";
 }

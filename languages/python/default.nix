@@ -1,16 +1,58 @@
-{ base, pkgs }:
-rec {
-  mkPackage = import ./package.nix pkgs base wheelHook;
+{ base, pkgs, lib, callPackage }:
+let
+  defaultPythonVersion = pkgs."${(base.parseConfig {
+    key = "python";
+    structure = {
+      version = "python3";
+    };
+  }).version}";
 
-  mkDocs = import ./docs.nix base pkgs.lib;
+  hooks = callPackage ./hooks { };
 
-  # setup hook that creates a "link" file in the
-  # derivation that depends on this wheel derivation
-  wheelHook = pkgs.makeSetupHook { name = "copyWheelHook"; } ./wheelHook.bash;
+  mkPackage = callPackage ./package.nix { inherit base defaultPythonVersion; };
 
-  fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? pkgs.python3 }:
+  mkDocs = callPackage ./docs.nix { inherit base defaultPythonVersion; };
+
+  addWheelOutput = pythonPackage:
+    pythonPackage.overrideAttrs (packageAttrs:
+      {
+        outputs = pythonPackage.outputs or [ "out" ] ++ [ "wheel" ];
+        postInstall = ''
+          ${pythonPackage.postInstall or ""}
+          mkdir -p "$wheel"
+          cp dist/*.whl "$wheel"
+        '';
+        nativeBuildInputs = packageAttrs.nativeBuildInputs or [ ] ++ [ hooks.wheelList ];
+      }
+    );
+
+  mkComponentWith = componentFunc: postPackageFunc: attrs:
     let
-      generatedCode = pkgs.callPackage ./protobuf.nix { inherit base name version protoSources protoInputs; };
+      # Only build wheel if we have a format that builds a wheel. Duh.
+      buildWheel = builtins.elem (attrs.format or "setuptools") [ "setuptools" "flit" "pyproject" ];
+      package =
+        let
+          pkg = postPackageFunc (mkPackage (attrs // {
+            checkInputs = (py: attrs.checkInputs or (_: [ ]) py ++ [ (hooks.check py) ]);
+            nativeBuildInputs = (py: attrs.nativeBuildInputs or (_: [ ]) py ++ [ (hooks.mypy py.python) ]);
+          }));
+        in
+        if buildWheel then addWheelOutput pkg else pkg;
+
+    in
+    componentFunc ({
+      inherit (attrs) name version;
+      inherit package;
+      docs = (mkDocs attrs) // attrs.docs or { };
+      python = package;
+    } // lib.optionalAttrs buildWheel { wheel = package.wheel; });
+in
+rec {
+  inherit mkDocs addWheelOutput hooks;
+
+  fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? defaultPythonVersion }:
+    let
+      generatedCode = callPackage ./protobuf.nix { inherit base name version protoSources protoInputs; };
     in
     mkLibrary {
       inherit version pythonVersion;
@@ -20,106 +62,11 @@ rec {
       doStandardTests = false; # We don't want to run our strict tests on generated code and stubs
     };
 
-  mkLibrary =
-    attrs@{ name
-    , version
-    , src
-    , pythonVersion
-    , checkInputs ? (_: [ ])
-    , buildInputs ? (_: [ ])
-    , nativeBuildInputs ? (_: [ ])
-    , propagatedBuildInputs ? (_: [ ])
-    , preBuild ? ""
-    , doStandardTests ? true
-    , ...
-    }:
-    let
-      package = mkPackage (attrs // {
-        inherit
-          name
-          version
-          pythonVersion
-          checkInputs
-          buildInputs
-          nativeBuildInputs
-          propagatedBuildInputs
-          preBuild
-          src
-          doStandardTests;
-        setuptoolsLibrary = true;
-      });
-    in
-    base.mkLibrary {
-      inherit name package;
-      python = package;
-      docs = (mkDocs attrs) // attrs.docs or { };
-    };
+  mkComponent = mkComponentWith base.mkComponent (x: x);
 
-  mkClient =
-    attrs@{ name
-    , version
-    , src
-    , pythonVersion
-    , checkInputs ? (_: [ ])
-    , buildInputs ? (_: [ ])
-    , nativeBuildInputs ? (_: [ ])
-    , preBuild ? ""
-    , doStandardTests ? true
-    , ...
-    }:
-    let
-      package = mkPackage (attrs // {
-        inherit
-          name
-          version
-          pythonVersion
-          checkInputs
-          buildInputs
-          nativeBuildInputs
-          preBuild
-          src
-          doStandardTests;
-      });
-      application = pythonVersion.pkgs.toPythonApplication package;
-    in
-    base.mkClient {
-      inherit name;
-      docs = (mkDocs attrs) // attrs.docs or { };
-      package = application;
-      python = application;
-    };
+  mkLibrary = attrs: mkComponentWith base.mkLibrary (x: x) (attrs // { setuptoolsLibrary = true; });
 
-  mkService =
-    attrs@{ name
-    , version
-    , src
-    , pythonVersion
-    , checkInputs ? (_: [ ])
-    , buildInputs ? (_: [ ])
-    , nativeBuildInputs ? (_: [ ])
-    , preBuild ? ""
-    , doStandardTests ? true
-    , ...
-    }:
-    let
-      package = mkPackage (attrs // {
-        inherit
-          name
-          version
-          pythonVersion
-          checkInputs
-          buildInputs
-          nativeBuildInputs
-          preBuild
-          src
-          doStandardTests;
-      });
-      application = pythonVersion.pkgs.toPythonApplication package;
-    in
-    base.mkService {
-      inherit name;
-      docs = (mkDocs attrs) // attrs.docs or { };
-      package = application;
-      python = application;
-    };
+  mkClient = attrs: mkComponentWith base.mkClient attrs.pythonVersion.pkgs.toPythonApplication attrs;
+
+  mkService = attrs: mkComponentWith base.mkService attrs.pythonVersion.pkgs.toPythonApplication attrs;
 }
