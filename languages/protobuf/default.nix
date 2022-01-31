@@ -1,4 +1,4 @@
-{ pkgs, languages }:
+{ base, pkgs, languages }:
 let
   allLanguages = builtins.attrValues languages;
 in
@@ -34,5 +34,22 @@ in
         })
         supportedLanguages
       )
-    ) // { protobuf = src; };
+    ) // {
+      protobuf = src;
+      docs.api = base.mkDerivation {
+        name = "${name}-generated-docs";
+        inherit src;
+        protoIncludePaths = builtins.map (pi: pi.protobuf) protoInputs;
+        nativeBuildInputs = with pkgs;[ grpc-tools protoc-gen-doc ];
+        builder = builtins.toFile "builder.sh" ''
+          source $stdenv/setup
+          includes=""
+          for p in $protoIncludePaths; do
+            includes+=" -I $p"
+          done
+          mkdir -p "$out/share/doc/${name}/api"
+          protoc --proto_path=$src $includes --doc_out="$out/share/doc/${name}/api/" --doc_opt=html,index.html $(find $src -name "*.proto" -print)
+        '';
+      };
+    };
 }
