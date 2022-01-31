@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nedryland components as python dependencies are resolved to package.
 - Nedryland components as rust dependencies are resolved to the cross target platform we are currently building for or package.
 - Generated documentation for protobuf.
+- `wheel` target for python components.
+- Print test coverage for python components checks.
+- Exposed `base.languages.python.hooks` with some hooks for checks, wheels and mypy.
 
 ### Fixed
 - Rust respects `includeNative = false;` when building docs.

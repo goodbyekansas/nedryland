@@ -1,4 +1,4 @@
-base: lib:
+{ base, lib }:
 let
   combineDocs = attrs: api: ({
     inherit api;
