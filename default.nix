@@ -97,6 +97,7 @@ in
           let
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
+            themes = appliedAttrs.themes;
             minimalBase = {
               inherit
                 sources
@@ -104,6 +105,7 @@ in
                 callFunction
                 parseConfig
                 versions
+                themes
                 enableChecks;
               mkDerivation = attrs@{ name, stdenv ? pkgs.stdenv, ... }:
                 let
