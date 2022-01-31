@@ -1,14 +1,15 @@
-pkgs: base: wheelHook: attrs_@{ name
-                       , version
-                       , src
-                       , pythonVersion
-                       , srcExclude ? [ ]
-                       , preBuild ? ""
-                       , format ? "setuptools"
-                       , setuptoolsLibrary ? false
-                       , doStandardTests ? true
-                       , ...
-                       }:
+{ base, pkgs, defaultPythonVersion }:
+args@{ name
+, version
+, src
+, pythonVersion ? defaultPythonVersion
+, srcExclude ? [ ]
+, preBuild ? ""
+, format ? "setuptools"
+, setuptoolsLibrary ? false
+, doStandardTests ? true
+, ...
+}:
 let
   pythonPkgs = pythonVersion.pkgs;
   resolveInputs = (import ./utils.nix).resolveInputs pythonPkgs;
@@ -21,20 +22,14 @@ let
     path: type:
       (srcIgnored path type) && !(builtins.any (pred: pred path type) srcExclude);
   filteredSrc =
-    if srcExclude != [ ] && attrs_ ? src then
+    if srcExclude != [ ] && args ? src then
       pkgs.lib.cleanSourceWith
         {
-          inherit (attrs_) src;
-          filter = customerFilter attrs_.src;
+          inherit (args) src;
+          filter = customerFilter args.src;
           name = "${name}-source";
-        } else pkgs.gitignoreSource attrs_.src;
-  src = if pkgs.lib.isStorePath attrs_.src then attrs_.src else filteredSrc;
-
-  commands = ''
-    check() {
-        eval "$installCheckPhase"
-    }
-  '';
+        } else pkgs.gitignoreSource args.src;
+  src = if pkgs.lib.isStorePath args.src then args.src else filteredSrc;
 
   extendFile = { filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
@@ -77,47 +72,14 @@ let
       }}/pylintrc
   '';
 
-  standardTests = {
-    checkPhase = if (attrs ? checkPhase) then attrs.checkPhase else
-    (
-      if doStandardTests then
-        ''
-          echo "Running pytest (with pylint, flake8, mypy, isort and black) 🧪"
-          pytest --pylint --black --mypy --flake8 --isort ./
-        ''
-      else ""
-    );
-  };
-
-  mypyHook = pkgs.makeSetupHook
-    {
-      name = "mypy-hook";
-      substitutions = {
-        "sitePackages" = pythonVersion.sitePackages;
-      };
-    }
-    ./mypy-hook.sh;
-  attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
-
+  attrs = builtins.removeAttrs args [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
 in
 pythonPkgs.buildPythonPackage (attrs // {
-  inherit src version setupCfg pylintrc format preBuild;
+  inherit src version setupCfg pylintrc format preBuild doStandardTests;
   pname = name;
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
   checkInputs = with pythonPkgs; [
-    black
-    flake8
-    isort
-    pylint
-
-    pytest
-    pytest-pylint
-    pytest-black
-    pytest-mypy
-    pytest-flake8
-    pytest-isort
-
     python-language-server
     pyls-mypy
     pyls-isort
@@ -125,14 +87,13 @@ pythonPkgs.buildPythonPackage (attrs // {
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = (resolveInputs attrs.buildInputs or (_: [ ])) ++ pkgs.lib.optional (format == "setuptools") wheelHook;
+  buildInputs = resolveInputs attrs.buildInputs or (_: [ ]);
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = (resolveInputs attrs.nativeBuildInputs or (_: [ ]))
-    ++ [ mypyHook ];
+  nativeBuildInputs = resolveInputs attrs.nativeBuildInputs or (_: [ ]);
 
-  passthru = { shellInputs = (resolveInputs attrs_.shellInputs or (_: [ ])); };
+  passthru = { shellInputs = (resolveInputs args.shellInputs or (_: [ ])); };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
@@ -140,6 +101,8 @@ pythonPkgs.buildPythonPackage (attrs // {
   propagatedBuildInputs = resolveInputs attrs.propagatedBuildInputs or (_: [ ]);
 
   doCheck = false;
+
+  dontUseSetuptoolsCheck = true;
 
   configurePhase = attrs.configurePhase or ''
     rm -f setup.cfg
@@ -149,12 +112,12 @@ pythonPkgs.buildPythonPackage (attrs // {
   '';
 
   targetSetup = base.mkTargetSetup {
-    name = attrs_.targetSetup.name or "python";
-    markerFiles = attrs_.targetSetup.markerFiles or [ ] ++ [ "setup.py" ];
+    name = args.targetSetup.name or "python";
+    markerFiles = args.targetSetup.markerFiles or [ ] ++ [ "setup.py" ];
     templateDir = pkgs.symlinkJoin {
       name = "python-component-template";
       paths = (
-        pkgs.lib.optional (attrs_ ? targetSetup.templateDir) attrs_.targetSetup.templateDir
+        pkgs.lib.optional (args ? targetSetup.templateDir) args.targetSetup.templateDir
       ) ++ [ ./component-template ];
     };
     variables = (rec {
@@ -162,13 +125,13 @@ pythonPkgs.buildPythonPackage (attrs // {
       pname = name;
       mainPackage = pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name);
       entryPoint = if setuptoolsLibrary then "{}" else "{\\\"console_scripts\\\": [\\\"${name}=${mainPackage}.main:main\\\"]}";
-    } // attrs_.targetSetup.variables or { });
+    } // args.targetSetup.variables or { });
     variableQueries = ({
-      desc = "✍️ Write a short description for your function";
+      desc = "✍️ Write a short description for your component:";
       author = "🤓 Enter author name:";
       email = "📧 Enter author email:";
       url = "🏄 Enter author website url:";
-    } // attrs_.targetSetup.variableQueries or { });
+    } // args.targetSetup.variableQueries or { });
     initCommands = "black .";
   };
 
@@ -188,7 +151,10 @@ pythonPkgs.buildPythonPackage (attrs // {
     if [ ! -f .pylintrc ]; then
        ln -s $pylintrc .pylintrc
     fi
-    ${commands}
+
+    check() {
+        eval "$installCheckPhase"
+    }
     ${attrs.shellHook or ""}
   '';
 
@@ -197,4 +163,4 @@ pythonPkgs.buildPythonPackage (attrs // {
     mkdir -p $out/nedryland
     touch $out/nedryland/add-to-mypy-path
   '';
-} // standardTests)
+})

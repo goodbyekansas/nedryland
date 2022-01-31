@@ -1,4 +1,4 @@
-base: lib:
+{ base, lib, defaultPythonVersion }:
 let
   combineDocs = attrs: api: ({
     inherit api;
@@ -52,7 +52,7 @@ in
 {
   __functor = self: self."${docsConfig.python.generator}";
 
-  sphinx = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
+  sphinx = attrs@{ name, src, pythonVersion ? defaultPythonVersion, ... }: combineDocs attrs (base.mkDerivation {
     inherit src;
     name = "${name}-api-reference";
     nedrylandType = "documentation";
@@ -92,7 +92,7 @@ in
     '';
   });
 
-  pdoc = attrs@{ name, src, pythonVersion, ... }: combineDocs attrs (base.mkDerivation {
+  pdoc = attrs@{ name, src, pythonVersion ? defaultPythonVersion, ... }: combineDocs attrs (base.mkDerivation {
     inherit src;
     name = "${name}-api-reference";
     nedrylandType = "documentation";

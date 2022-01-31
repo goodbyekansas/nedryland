@@ -26,6 +26,7 @@ let
       inherit (tests.hello.matrix) baseRust windowsRust crossRust;
     };
     docsTest = import ./test/docs.nix pkgs tests.documentation.matrix;
+    pythonWheel = import ./test/python-wheel.nix pkgs.lib.assertMsg tests.hello.matrix.pythonHello;
   };
 in
 (mappedTests // {

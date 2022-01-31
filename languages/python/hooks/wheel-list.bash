@@ -3,13 +3,10 @@
 fixupOutputHooks+=('setWheelLink')
 
 setWheelLink() {
-  shopt -s nullglob
   mkdir -p "${out:-}"/nedryland
 
-  cp dist/*.whl "$out"/nedryland
-
   # first, get all wheels for this derivation
-  wheels=("$out"/nedryland/*.whl)
+  wheels=("$wheel"/*.whl)
   if [ ! ${#wheels[@]} -eq 0 ]; then
     echo -n "${wheels[@]}" >"$out"/nedryland/wheels
   fi

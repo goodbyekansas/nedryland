@@ -9,11 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documentation about documentation.
 - `components` (as a set and not just separate) is sent into components.
-- add themes to base.
+- Add themes to base.
 - Support for specifying python dependencies both as a function and a list.
 - Nedryland components as python dependencies are resolved to package.
 - Nedryland components as rust dependencies are resolved to the cross target platform we are currently building for or package.
 - Generated documentation for protobuf.
+- `wheel` as an output on python components' package and as a target on the component.
+- `addWheelOutput` function to make a python derivation multi output with wheel.
+- Python outputs test coverage.
+- mkComponent for python.
+- Some hooks in `base.languages.python.hooks` which could be useful.
+- Python can now set a default python version in the project config.
+
+### Removed
+- mkPackage for python, it is now considered internal.
 
 ### Fixed
 - Rust respects `includeNative = false;` when building docs.
