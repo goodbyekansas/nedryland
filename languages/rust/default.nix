@@ -40,7 +40,7 @@ let
           )
           targetNames);
 
-      nativeBuildInputs = with pkgs;[ j2cli jq ];
+      nativeBuildInputs = with pkgs;[ j2cli jq ] ++ attrs.nativeBuildInputs or [ ];
 
       inherit targetNames;
 
