@@ -5,6 +5,6 @@ let
     python = pkgs.callPackage ./python { inherit base; };
     terraform = pkgs.callPackage ./terraform { inherit base versions; };
   };
-  allWithProto = (all // { protobuf = pkgs.callPackage ./protobuf { languages = all; }; inherit (pkgs) gitignoreSource; });
+  allWithProto = (all // { protobuf = pkgs.callPackage ./protobuf { inherit base; languages = all; }; inherit (pkgs) gitignoreSource; });
 in
 (builtins.mapAttrs (name: value: (value // { inherit name; })) allWithProto)
