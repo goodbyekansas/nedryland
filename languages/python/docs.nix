@@ -82,8 +82,8 @@ in
       make html
     '';
     installPhase = ''
-      mkdir -p $out/share/doc/api/${name}
-      cp -r _build/html/. $out/share/doc/api/${name}
+      mkdir -p $out/share/doc/${name}/api
+      cp -r _build/html/. $out/share/doc/${name}/api
     '';
   });
 

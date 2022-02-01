@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rust respects `includeNative = false;` when building docs.
 
 ### Changed
+- Rust component to have a consistent way to specify targets to build.
+- Rust & python component docs output folder from `./share/doc/api/NAME` to `./share/doc/NAME/api`.
 - The docs on a component is now expected to be a set of derivations and metadata.
 - All derivations in the docs set is symlinkjoined to one derivation.
 - All other attributes are serialized into json at $out/share/doc/metadata.json.
