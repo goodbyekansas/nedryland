@@ -4,14 +4,13 @@
 , lib
 , buildPackages
 , rustVersion
-, rust # use this for toRustTarget
+, toRustTarget
 }:
 
 attrs@{ name
 , srcExclude ? [ ]
 , extensions ? [ ]
-, targets ? [ ]
-, defaultTarget ? stdenv.hostPlatform.config
+, extraTargets ? [ ]
 , useNightly ? ""
 , extraChecks ? ""
 , buildFeatures ? [ ]
@@ -22,18 +21,29 @@ attrs@{ name
 , ...
 }:
 let
+
+  # host = the platform that the resulting binary will run on (i.e. the host platform of
+  # the produced artifact, not our host platform)
+  # build = the platform we are building on
+  hostTriple = toRustTarget stdenv.hostPlatform;
+  buildTriple = toRustTarget stdenv.buildPlatform;
+
+  extraTargets' = extraTargets ++ lib.optional (buildTriple != hostTriple) hostTriple;
+
   # this controls the version of rust to use
   rustBin = ((
     if useNightly != "" then
       (
         pkgs.rust-bin.nightly."${useNightly}".default.override {
-          inherit targets extensions;
+          inherit extensions;
+          targets = extraTargets';
         }
       )
     else
       (
         pkgs.rust-bin.stable."${rustVersion.stable}".default.override {
-          inherit targets extensions;
+          inherit extensions;
+          targets = extraTargets';
         }
       )
   ).overrideAttrs (_: {
@@ -131,9 +141,6 @@ let
     ${ccForHost} "''${newparams[@]}"
   '')}/bin/rust-linker-bug-workaround" else ccForHost;
 
-  hostTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.hostPlatform);
-  buildTriple = builtins.replaceStrings [ "wasm32-unknown-wasi" "-" ] [ "wasm32_wasi" "_" ] (rust.toRustTarget stdenv.buildPlatform);
-
   runners = [
     ./runner/wasi.nix
     ./runner/windows.nix
@@ -147,7 +154,7 @@ let
       in
       (acc // (function ((builtins.intersectAttrs args pkgs) // {
         inherit attrs;
-        hostPlatform = defaultTarget;
+        hostPlatform = stdenv.hostPlatform;
         buildPlatform = stdenv.buildPlatform;
       })))
     )
@@ -172,7 +179,7 @@ base.mkDerivation
         rustBin
         removeReferencesTo
       ] ++ attrs.nativeBuildInputs or [ ]
-      ++ (pkgs.lib.lists.optionals (defaultTarget == "wasm32-wasi") [ pkgs.wasmer ])
+      ++ (pkgs.lib.lists.optionals (stdenv.hostPlatform.isWasi) [ pkgs.wasmer ])
       ++ [ vendor ];
 
       passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
@@ -205,10 +212,6 @@ base.mkDerivation
         cargo test ${getFeatures testFeatures} --release
         cargo clippy ${getFeatures testFeatures}
         ${extraChecks}
-      '';
-
-      installPhase = attrs.installPhase or ''
-        mkdir -p $out
       '';
 
       preFixup = ''
@@ -260,26 +263,33 @@ base.mkDerivation
         ${shellHook}
         runHook postShell
       '';
-      CARGO_BUILD_TARGET = defaultTarget;
+
+      CARGO_BUILD_TARGET = hostTriple;
+
     } // runnerAttrs // (
       let
-        flagList = pkgs.lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
-        ++ pkgs.lib.optional warningsAsErrors "-D warnings"
-        ++ pkgs.lib.optional (stdenv.hostPlatform.isWasi) "-Clinker-flavor=gcc";
+        flagList = lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
+        ++ lib.optional warningsAsErrors "-D warnings"
+        ++ lib.optional (stdenv.hostPlatform.isWasi) "-Clinker-flavor=gcc";
       in
-      if flagList != [ ] then {
+      lib.optionalAttrs (flagList != [ ]) {
         RUSTFLAGS = builtins.concatStringsSep " " flagList;
-      } else { }
+      }
     ) // (
-      if hostTriple != buildTriple then {
-        # cross-things
-        "CARGO_TARGET_${lib.toUpper hostTriple}_LINKER" = "${linkerForHost}";
-        "CC_${lib.toUpper hostTriple}" = "${ccForHost}";
-        "CXX_${lib.toUpper hostTriple}" = "${cxxForHost}";
+      if hostTriple != buildTriple then
+        let
+          hostTripleEnvVar = lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] hostTriple);
+          buildTripleEnvVar = lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] buildTriple);
+        in
+        {
+          # cross-things
+          "CARGO_TARGET_${hostTripleEnvVar}_LINKER" = "${linkerForHost}";
+          "CC_${hostTripleEnvVar}" = "${ccForHost}";
+          "CXX_${hostTripleEnvVar}" = "${cxxForHost}";
 
-        "CARGO_TARGET_${lib.toUpper buildTriple}_LINKER" = "${linkerForBuild}";
-        "CC_${lib.toUpper buildTriple}" = "${ccForBuild}";
-        "CXX_${lib.toUpper buildTriple}" = "${cxxForBuild}";
-      } else { }
+          "CARGO_TARGET_${buildTripleEnvVar}_LINKER" = "${linkerForBuild}";
+          "CC_${buildTripleEnvVar}" = "${ccForBuild}";
+          "CXX_${buildTripleEnvVar}" = "${cxxForBuild}";
+        } else { }
     )
   )

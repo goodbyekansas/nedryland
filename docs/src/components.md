@@ -152,7 +152,10 @@ need for rust development out of the box:  rustc, cargo, rls, rust-analyzer, rus
 Components are usually named the same as their corresponding component types, i.e. there is a
 `base.languages.rust.mkClient` to create a client in Rust.
 
+Read more about Rust components [here](languages/rust/components.md).
+
 ## Python
 Python helpers live under `base.languages.python` and will give you a full Python development
 environment. Most of the helpers also accept an optional `pythonVersion` to select both between
 minor and major (2/3) versions of Python.
+

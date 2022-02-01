@@ -50,8 +50,8 @@ in
     buildInputs = [ pkgs.mdbook ];
     buildPhase = "mdbook build --dest-dir book";
     installPhase = ''
-      mkdir -p $out
-      cp -r book/. $out
+      mkdir -p $out/share/doc/nedryland/manual
+      cp -r book/. $out/share/doc/nedryland/manual
     '';
   };
 
