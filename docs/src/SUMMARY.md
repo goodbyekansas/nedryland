@@ -18,3 +18,5 @@
 
 - [Languages]()
   - [Rust](./languages/rust/components.md)
+  - [Python](./languages/python/components.md)
+
