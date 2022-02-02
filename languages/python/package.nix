@@ -11,6 +11,8 @@ pkgs: base: wheelHook: attrs_@{ name
                        }:
 let
   pythonPkgs = pythonVersion.pkgs;
+  resolveInputs = (import ./utils.nix).resolveInputs pythonPkgs;
+
   customerFilter = src:
     let
       # IMPORTANT: use a let binding like this to memoize info about the git directories.
@@ -96,6 +98,7 @@ let
     }
     ./mypy-hook.sh;
   attrs = builtins.removeAttrs attrs_ [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
+
 in
 pythonPkgs.buildPythonPackage (attrs // {
   inherit src version setupCfg pylintrc format preBuild;
@@ -118,23 +121,23 @@ pythonPkgs.buildPythonPackage (attrs // {
     python-language-server
     pyls-mypy
     pyls-isort
-  ] ++ attrs.checkInputs or (_: [ ]) pythonPkgs;
+  ] ++ (resolveInputs attrs.checkInputs or (_: [ ]));
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = attrs.buildInputs or (_: [ ]) pythonPkgs ++ pkgs.lib.optional (format == "setuptools") wheelHook;
+  buildInputs = (resolveInputs attrs.buildInputs or (_: [ ])) ++ pkgs.lib.optional (format == "setuptools") wheelHook;
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = attrs.nativeBuildInputs or (_: [ ]) pythonPkgs
+  nativeBuildInputs = (resolveInputs attrs.nativeBuildInputs or (_: [ ]))
     ++ [ mypyHook ];
 
-  passthru = { shellInputs = (attrs_.shellInputs or [ ]); };
+  passthru = { shellInputs = (resolveInputs attrs_.shellInputs or (_: [ ])); };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
   # Items listed in install_requires go here
-  propagatedBuildInputs = attrs.propagatedBuildInputs or (_: [ ]) pythonPkgs;
+  propagatedBuildInputs = resolveInputs attrs.propagatedBuildInputs or (_: [ ]);
 
   doCheck = false;
 

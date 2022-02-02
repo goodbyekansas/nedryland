@@ -159,3 +159,4 @@ Python helpers live under `base.languages.python` and will give you a full Pytho
 environment. Most of the helpers also accept an optional `pythonVersion` to select both between
 minor and major (2/3) versions of Python.
 
+Read more about Python components [here](languages/python/components.md).

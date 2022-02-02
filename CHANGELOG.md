@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation about documentation.
 - `components` (as a set and not just separate) is sent into components.
 - add themes to base.
+- Support for specifying python dependencies both as a function and a list.
+- Nedryland components as python dependencies are resolved to package.
 
 ### Fixed
 - Rust respects `includeNative = false;` when building docs.
