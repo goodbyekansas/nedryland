@@ -8,6 +8,7 @@
 }:
 
 attrs@{ name
+, componentTargetName
 , srcExclude ? [ ]
 , extensions ? [ ]
 , extraTargets ? [ ]
@@ -69,11 +70,33 @@ let
     }
   '';
 
+  resolveBuildInputs = typeName: builtins.map
+    (input:
+      if input ? isNedrylandComponent then
+        input."${componentTargetName}"
+          or input.package
+          or (abort "${name} could not auto-detect target for ${typeName} \"${input.name}\", please specify manually (tried \"${componentTargetName}\" and \"package\")")
+      else
+        input
+    );
+
+  resolveNativeBuildInputs = typeName: builtins.map
+    (input:
+      if input ? isNedrylandComponent then
+        input.package or (abort "${name} could not find \"package\" target for ${typeName} \"${input.name}\", please specify manually")
+      else
+        input
+    );
+
+  buildInputs = resolveBuildInputs "buildInput" attrs.buildInputs or [ ];
+  propagatedBuildInputs = resolveBuildInputs "propagatedBuildInput" attrs.propagatedBuildInputs or [ ];
+  shellInputs = resolveNativeBuildInputs "shellInput" attrs.shellInputs or [ ];
+  nativeBuildInputs = resolveNativeBuildInputs "nativeBuildInput" attrs.nativeBuildInputs or [ ];
+  checkInputs = resolveNativeBuildInputs "checkInput" attrs.checkInputs or [ ];
+
   vendor = import ./vendor.nix pkgs rustBin {
-    inherit name;
-    buildInputs = attrs.buildInputs or [ ];
+    inherit name buildInputs propagatedBuildInputs;
     extraCargoConfig = attrs.extraCargoConfig or "";
-    propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
   };
 
   getFeatures = features:
@@ -117,7 +140,7 @@ let
     }
   '';
 
-  safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" "srcExclude" "shellInputs" "docs" ];
+  safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" "srcExclude" "shellInputs" "docs" "componentTargetName" ];
 
   # cross compiling
   ccForBuild = "${buildPackages.stdenv.cc.targetPrefix}cc";
@@ -165,7 +188,7 @@ in
 base.mkDerivation
   (
     safeAttrs // {
-      inherit stdenv;
+      inherit stdenv buildInputs propagatedBuildInputs checkInputs;
       strictDeps = true;
       disallowedReferences = [ vendor ];
       srcFilter = path: type: !(type == "directory" && baseNameOf path == "target")
@@ -178,11 +201,12 @@ base.mkDerivation
         cacert
         rustBin
         removeReferencesTo
-      ] ++ attrs.nativeBuildInputs or [ ]
+      ]
+      ++ nativeBuildInputs
       ++ (pkgs.lib.lists.optionals (stdenv.hostPlatform.isWasi) [ pkgs.wasmer ])
       ++ [ vendor ];
 
-      passthru = { shellInputs = (attrs.shellInputs or [ ] ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
+      passthru = { shellInputs = (shellInputs ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
 
       depsBuildBuild = pkgs.lib.optionals stdenv.buildPlatform.isDarwin [
         # this is actually not always needed but life is
@@ -190,9 +214,6 @@ base.mkDerivation
         # add it
         buildPackages.darwin.apple_sdk.frameworks.Security
       ];
-
-      buildInputs = attrs.buildInputs or [ ];
-      propagatedBuildInputs = attrs.propagatedBuildInputs or [ ];
 
       configurePhase = attrs.configurePhase or ''
         runHook preConfigure

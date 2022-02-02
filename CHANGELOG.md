@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add themes to base.
 - Support for specifying python dependencies both as a function and a list.
 - Nedryland components as python dependencies are resolved to package.
+- Nedryland components as rust dependencies are resolved to the cross target platform we are currently building for or package.
 
 ### Fixed
 - Rust respects `includeNative = false;` when building docs.

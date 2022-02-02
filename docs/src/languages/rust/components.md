@@ -69,11 +69,18 @@ base.languages.rust.mkLibrary rec {
   name = "example-library";
   src = ./.;
   defaultTarget = "windows";
+
+  # If dependencyA contains a windows target it will
+  # automatically pick dependencyA.windows; if not
+  # it will default to dependencyA.package.
   buildInputs = [ dependencyA dependencyB ];
 
   crossTargets = {
     # targetSpec is the supported cross target provided by nedryland.
     wasi = attrsForTargetSpec: {
+      # Even if we re-use buildInputs for the windows target it
+      # will pick depencencyA.wasi if it exists(not windows).
+      # If not it will pick dependencyA.package.
       buildInputs = buildInputs ++ attrsForTargetSpec.buildInputs;
     };
   };
