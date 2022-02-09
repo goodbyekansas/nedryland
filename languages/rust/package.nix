@@ -142,47 +142,27 @@ let
 
   safeAttrs = builtins.removeAttrs attrs [ "extraChecks" "testFeatures" "buildFeatures" "srcExclude" "shellInputs" "docs" "componentTargetName" ];
 
-  # cross compiling
+  # cross compilation settings
   ccForBuild = "${buildPackages.stdenv.cc.targetPrefix}cc";
   cxxForBuild = "${buildPackages.stdenv.cc.targetPrefix}c++";
   linkerForBuild = ccForBuild;
 
   ccForHost = "${stdenv.cc.targetPrefix}cc";
   cxxForHost = "${stdenv.cc.targetPrefix}c++";
-  # after https://github.com/rust-lang/rust/commit/6615ee89be2290c96aa7d4ab24dc94e23a8c7080
-  # `--as-needed` is wrongfully added to wasm-ld even though it isn't a GNU linker
-  # workaround it by removing the argument before passing along
-  # this can safely be removed when that is fixed
-  # https://github.com/rust-lang/rust/pull/85920
-  linkerForHost =
-    if stdenv.hostPlatform.isWasi then "${(pkgs.writeScriptBin "rust-linker-bug-workaround" ''
-    #!${pkgs.bash}/bin/bash
-    for param in "$@"; do
-      [[ ! $param == '-Wl,--as-needed' ]] && newparams+=("$param")
-    done
-    set -- "''${newparams[@]}"
-    ${ccForHost} "''${newparams[@]}"
-  '')}/bin/rust-linker-bug-workaround" else ccForHost;
+  linkerForHost = ccForHost;
 
-  runners = [
-    ./runner/wasi.nix
-    ./runner/windows.nix
-  ];
-
-  runnerAttrs = builtins.foldl'
-    (acc: curr:
-      let
-        function = import curr;
-        args = builtins.functionArgs function;
-      in
-      (acc // (function ((builtins.intersectAttrs args pkgs) // {
-        inherit attrs;
-        hostPlatform = stdenv.hostPlatform;
-        buildPlatform = stdenv.buildPlatform;
-      })))
-    )
-    { }
-    runners;
+  runners = builtins.map
+    (runner: pkgs.callPackage runner.path { })
+    (builtins.filter (runner: runner.predicate) [
+      {
+        path = ./runner/wasi.nix;
+        predicate = stdenv.hostPlatform.isWasi;
+      }
+      {
+        path = ./runner/windows.nix;
+        predicate = (lib.inNixShell && stdenv.hostPlatform.isWindows);
+      }
+    ]);
 
 in
 base.mkDerivation
@@ -201,10 +181,10 @@ base.mkDerivation
         cacert
         rustBin
         removeReferencesTo
+        vendor
       ]
-      ++ nativeBuildInputs
-      ++ (pkgs.lib.lists.optionals (stdenv.hostPlatform.isWasi) [ pkgs.wasmer ])
-      ++ [ vendor ];
+      ++ runners
+      ++ nativeBuildInputs;
 
       passthru = { shellInputs = (shellInputs ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
 
@@ -287,7 +267,7 @@ base.mkDerivation
 
       CARGO_BUILD_TARGET = hostTriple;
 
-    } // runnerAttrs // (
+    } // (
       let
         flagList = lib.optional (attrs ? RUSTFLAGS) attrs.RUSTFLAGS
         ++ lib.optional warningsAsErrors "-D warnings"

@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rust gets all targets merged into one derivation with a front page of links to the
   different doc pages.
 - Markdown is no longer a language, the functions are instead in `base.documentation`.
+- Rust runners are now derivations with setup hooks instead of just attrsets. This makes
+  them a bit more logical to author while the user experience stays the same.
 
 ## [3.3.0] - 2022-01-21
 ### Fixed
