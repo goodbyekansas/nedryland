@@ -53,9 +53,12 @@ base.languages.rust.mkLibrary {
 
 The targets for this component can be build in the following ways:
 - `nix-build -A componentName` builds both for wasi and windows.
-- `nix-build -A componentName.package` builds the default target which is windows in this case.
 - `nix-build -A componentName.windows` builds windows.
 - `nix-build -A componentName.wasi` builds wasi.
+- `nix-build -A componentName.package` builds the package for the
+  target platform. Since `defaultTarget` is set to `windows` the
+  `package` attribute won't exist in this particular case.
+
 
 You can share dependencies between platforms or have completely different dependencies too. Cross targets will not automatically get the
 `buildInputs` from the default target. In this example the crossTarget takes the dependencies from the default target and combines it with
