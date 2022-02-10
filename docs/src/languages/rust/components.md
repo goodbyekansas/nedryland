@@ -80,11 +80,11 @@ base.languages.rust.mkLibrary rec {
 
   crossTargets = {
     # targetSpec is the supported cross target provided by nedryland.
-    wasi = attrsForTargetSpec: {
+    wasi = {
       # Even if we re-use buildInputs for the windows target it
-      # will pick depencencyA.wasi if it exists(not windows).
+      # will pick depencencyA.wasi if it exists (not windows).
       # If not it will pick dependencyA.package.
-      buildInputs = buildInputs ++ attrsForTargetSpec.buildInputs;
+      inherit buildInputs;
     };
   };
 }

@@ -168,7 +168,7 @@ in
 base.mkDerivation
   (
     safeAttrs // {
-      inherit stdenv buildInputs propagatedBuildInputs checkInputs;
+      inherit stdenv propagatedBuildInputs checkInputs;
       strictDeps = true;
       disallowedReferences = [ vendor ];
       srcFilter = path: type: !(type == "directory" && baseNameOf path == "target")
@@ -185,6 +185,9 @@ base.mkDerivation
       ]
       ++ runners
       ++ nativeBuildInputs;
+
+      buildInputs = buildInputs
+      ++ (lib.optional stdenv.hostPlatform.isWindows pkgs.pkgsCross.mingwW64.windows.pthreads);
 
       passthru = { shellInputs = (shellInputs ++ [ rustSrcNoSymlinks rustAnalyzer ]); };
 
