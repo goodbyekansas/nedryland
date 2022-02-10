@@ -9,21 +9,16 @@ let
   supportedCrossTargets = {
     windows = {
       stdenv = pkgs.pkgsCross.mingwW64.stdenv;
-      attrs = {
-        buildInputs = [ pkgs.pkgsCross.mingwW64.windows.pthreads ];
-      };
     };
 
     wasi = {
       stdenv = pkgs.pkgsCross.wasi32.clang12Stdenv;
-      attrs = { };
     };
 
     # package is always the default target.
     _default = {
       output = "package";
       stdenv = pkgs.stdenv;
-      attrs = { };
     };
   };
 
@@ -79,15 +74,14 @@ let
       '';
     };
 
-  toPackages = targetSpecs: pkgAttrs: pkgPostHook: pkgs.lib.mapAttrs'
+  toPackages = targetSpecs: pkgPostHook: pkgs.lib.mapAttrs'
     (target: targetSpec:
       rec {
         name = targetSpec.output or target;
         value = pkgPostHook
           (mkPackage.override
             { stdenv = targetSpec.stdenv; }
-            # note that the target spec attrs _override_ the sent in pkg attrs
-            (pkgAttrs // targetSpec.attrs // { componentTargetName = name; })
+            (targetSpec.attrs // { componentTargetName = name; })
           );
       }
     )
@@ -99,21 +93,24 @@ let
       "Cross compilation target \"${target}\" is not supported!";
     builtins.getAttr target supportedCrossTargets;
 
-  toTargetSpec = targetName: targetAttrs:
+  toTargetSpec = pkgAttrs: targetName: targetAttrs:
     let
-      targetAttrs' = if builtins.isAttrs targetAttrs then targetAttrs else { };
+      # make sure that any buildInputs that we get from pkgAttrs is on purpose
+      # i.e. if you define a cross target without buildInputs, you do not expect to get
+      # buildInputs from the outer scope (note that defaultTarget is different and handled
+      # below)
+      targetAttrs' = { buildInputs = [ ]; } // (if builtins.isAttrs targetAttrs then (targetAttrs) else { });
+      # If the user has created their own crossTarget just take as is.
+      targetSpec =
+        if targetAttrs.type or "" == "target-spec" then
+          targetAttrs
+        else
+          { attrs = targetAttrs'; } // (getTargetSpec targetName);
     in
-    # If the user has created their own crossTarget just take as is.
-    (if targetAttrs'.type or "" == "target-spec" then
-      targetAttrs' else
-      let
-        targetSpec = getTargetSpec targetName;
-        targetAttrsResult = if builtins.isFunction targetAttrs then (targetAttrs targetSpec.attrs) else targetAttrs';
-      in
-      (targetSpec // {
-        attrs = targetSpec.attrs // targetAttrsResult;
-      })
-    );
+    (targetSpec // {
+      # build up the target spec attrs, going from less to more specific to the actual target
+      attrs = pkgAttrs // targetSpec.attrs or { };
+    });
 
   mkComponentWith = componentFactory: packagePostHook:
     attrs@ { name, deployment ? { }, ... }:
@@ -122,14 +119,26 @@ let
       defaultTarget = attrs.defaultTarget or "_default";
       defaultTargetKey = if builtins.isString (defaultTarget) then defaultTarget else "package";
 
+      # if this is the default target, make pkgAttrs buildInputs equal to targetSpec
+      # buildInputs to look something like
+      # crossTargets = {
+      #   ...
+      #   _default = {
+      #     inherit buildInputs; # from outer scope
+      #   }
+      # }
+      defaultTargetAttrs = (if builtins.isAttrs defaultTarget then defaultTarget else { }) // {
+        buildInputs = defaultTarget.buildInputs or pkgAttrs.buildInputs or [ ];
+      };
+
       # Convert all members in the crossTargets set to targetSpecs and append
       # defaultTarget which will be either unset, a known cross target or an inline target
       # spec. If it is unset, we use the special known cross target '_default'.
       targetSpecs = builtins.mapAttrs
-        toTargetSpec
-        (attrs.crossTargets or { } // { "${defaultTargetKey}" = defaultTarget; });
+        (toTargetSpec pkgAttrs)
+        (attrs.crossTargets or { } // { "${defaultTargetKey}" = defaultTargetAttrs; });
 
-      targets = toPackages targetSpecs pkgAttrs packagePostHook;
+      targets = toPackages targetSpecs packagePostHook;
       apiDocs = toDocs targetSpecs pkgAttrs;
     in
     componentFactory ({
@@ -150,14 +159,15 @@ rec {
     in
     mkComponentWith (attrs: base.mkComponent (attrs // { inherit nedrylandType; })) (su: su) attrs';
 
-  mkCrossTarget = { stdenv, extraTargets ? [ ], output ? null, buildInputs ? [ ] }:
+  mkCrossTarget = attrs@{ stdenv, output ? null, buildInputs ? [ ], ... }:
+    let
+      attrs' = builtins.removeAttrs attrs [ "stdenv" "output" "buildInputs" ];
+    in
     {
       inherit stdenv;
       type = "target-spec";
 
-      attrs = {
-        inherit extraTargets;
-      } // pkgs.lib.optionalAttrs (buildInputs != [ ]) { inherit buildInputs; };
+      attrs = attrs' // pkgs.lib.optionalAttrs (buildInputs != [ ]) { inherit buildInputs; };
     } // pkgs.lib.optionalAttrs (output != null) { inherit output; };
 
   toApplication = package:
