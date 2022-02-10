@@ -1,0 +1,38 @@
+name: 📖 Deploy to Github Pages
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.4/install
+
+    - name: Create Nix configuration
+      run: |
+        mkdir -p ~/.config/nix
+        cp .github/workflows/setup/nix.conf ~/.config/nix/nix.conf
+
+    - name: Publish the book
+      run: |
+        nix-build -A docs
+        git worktree add gh-pages
+        git config user.name "Deploy from CI"
+        git config user.email "pipeline@goodbyekansas.com"
+        cd gh-pages
+        # Delete the ref to avoid keeping history.
+        git update-ref -d refs/heads/gh-pages
+        rm -rf *
+        cp -r --no-preserve=mode ../result/share/doc/nedryland/manual/. .
+        git add .
+        git commit -m "🚀 📚 Deploy $GITHUB_SHA to gh-pages"
+        git push --force
