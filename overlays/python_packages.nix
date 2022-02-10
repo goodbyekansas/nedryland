@@ -14,8 +14,6 @@ let
   fetchzip = super.fetchzip;
   fetchFromGitHub = super.fetchFromGitHub;
   tzdata = super.tzdata;
-
-  wheelHook = super.makeSetupHook { name = "copyWheelHook"; } ../languages/python/wheelHook.bash;
 in
 (builtins.foldl'
   (combined: pythonVersion:
@@ -65,9 +63,6 @@ in
               super.grpcio
               super.pyyaml
             ];
-
-            # create a wheel for this since it does not come from pypi
-            buildInputs = [ wheelHook ];
           };
 
           pyoutline = super.buildPythonPackage rec {
@@ -98,9 +93,6 @@ in
               super.six
               pycue
             ];
-
-            # create a wheel for this since it does not come from pypi
-            buildInputs = [ wheelHook ];
           };
 
           grpcio-testing = super.buildPythonPackage rec {
