@@ -2,6 +2,10 @@ _: super:
 let
   pythonVersions = [
     {
+      pkg = super.python39;
+      attr = "python39";
+    }
+    {
       pkg = super.python38;
       attr = "python38";
     }
@@ -366,14 +370,6 @@ in
               super.watchdog
             ];
           };
-
-          # these tests seems broken for python 3.8 on macos
-          # https://hydra.nixos.org/job/nixpkgs/nixpkgs-20.09-darwin/python38Packages.python-language-server.x86_64-darwin
-          python-language-server = super.python-language-server.overrideAttrs (_:
-            (if isDarwin then {
-              doCheck = false;
-              doInstallCheck = false;
-            } else { }));
         };
       };
 

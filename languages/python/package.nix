@@ -79,11 +79,7 @@ pythonPkgs.buildPythonPackage (attrs // {
   pname = name;
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
-  checkInputs = with pythonPkgs; [
-    python-language-server
-    pyls-mypy
-    pyls-isort
-  ] ++ (resolveInputs attrs.checkInputs or (_: [ ]));
+  checkInputs = resolveInputs attrs.checkInputs or (_: [ ]);
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
@@ -93,7 +89,7 @@ pythonPkgs.buildPythonPackage (attrs // {
   # as the items listed in setup_requires
   nativeBuildInputs = resolveInputs attrs.nativeBuildInputs or (_: [ ]);
 
-  passthru = { shellInputs = (resolveInputs args.shellInputs or (_: [ ])); };
+  passthru = { shellInputs = (resolveInputs args.shellInputs or (_: [ ])) ++ [ pkgs.python-language-server ]; };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
