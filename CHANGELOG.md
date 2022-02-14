@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2022-02-14
+
 ### Added
 - Documentation about documentation.
 - `components` (as a set and not just separate) is sent into components.
