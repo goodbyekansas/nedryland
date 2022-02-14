@@ -20,3 +20,6 @@
   - [Rust](./languages/rust/components.md)
   - [Python](./languages/python/components.md)
 
+---
+
+[Changelog](./CHANGELOG.md)
