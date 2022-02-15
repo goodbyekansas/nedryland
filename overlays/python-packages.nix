@@ -2,6 +2,10 @@ _: super:
 let
   pythonVersions = [
     {
+      pkg = super.python39;
+      attr = "python39";
+    }
+    {
       pkg = super.python38;
       attr = "python38";
     }
@@ -10,7 +14,6 @@ let
       attr = "python37";
     }
   ];
-  isDarwin = super.stdenv.isDarwin;
   fetchzip = super.fetchzip;
   fetchFromGitHub = super.fetchFromGitHub;
   tzdata = super.tzdata;
@@ -260,62 +263,6 @@ in
             doCheck = false;
           };
 
-          babel = super.buildPythonPackage rec {
-            pname = "Babel";
-            version = "2.9.1";
-            src = super.fetchPypi {
-              inherit pname version;
-              sha256 = "bc0c176f9f6a994582230df350aa6e05ba2ebe4b3ac317eab29d9be5d2768da0";
-            };
-            propagatedBuildInputs = [ super.pytz ];
-            doCheck = false;
-          };
-
-          # Sphinx and sphinx_rtd_theme is on a custom branch to work with logos on the internet
-          sphinx4 = super.buildPythonPackage rec {
-            pname = "Sphinx4";
-            version = "4.0.2";
-            src = fetchFromGitHub {
-              owner = "goodbyekansas";
-              repo = "Sphinx";
-              rev = "d16631791bb8288968834b6afcbcf9b805c17e74";
-              sha256 = "02jh5vb2v7ydrswp17k4fjwfz2dnil1g4g7v3mcq4di5k9357r9k";
-            };
-            propagatedBuildInputs = [
-              super.jinja2
-              super.pygments
-              super.docutils
-              super.snowballstemmer
-              super.sphinxcontrib-applehelp
-              super.sphinxcontrib-devhelp
-              super.sphinxcontrib-jsmath
-              super.sphinxcontrib-htmlhelp
-              super.sphinxcontrib-serializinghtml
-              super.sphinxcontrib-qthelp
-              babel
-              super.alabaster
-              super.imagesize
-              super.requests
-              super.setuptools
-              super.packaging
-            ];
-            doCheck = false;
-          };
-
-          sphinx4_rtd_theme = super.buildPythonPackage {
-            pname = "sphinx4_rtd_theme";
-            version = "0.5.2";
-            src = fetchFromGitHub {
-              owner = "goodbyekansas";
-              repo = "sphinx_rtd_theme";
-              rev = "c4baa88e42b49c7a0593d330cb51547e4dc8bd53";
-              sha256 = "0mvsnfh0lxd1s0ddnlwalmnrrybz6dx77vn4qq79ifz7n2yfd0gd";
-            };
-
-            CI = 1; # Don't use NPM to fetch assets. Assets are included in sdist.
-            propagatedBuildInputs = [ sphinx4 super.docutils ];
-          };
-
           keepachangelog = super.buildPythonPackage rec{
             pname = "keepachangelog";
             version = "2.0.0.dev1";
@@ -382,14 +329,6 @@ in
               super.watchdog
             ];
           };
-
-          # these tests seems broken for python 3.8 on macos
-          # https://hydra.nixos.org/job/nixpkgs/nixpkgs-20.09-darwin/python38Packages.python-language-server.x86_64-darwin
-          python-language-server = super.python-language-server.overrideAttrs (_:
-            (if isDarwin then {
-              doCheck = false;
-              doInstallCheck = false;
-            } else { }));
         };
       };
 

@@ -79,26 +79,25 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
   pname = name;
 
   # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
-  checkInputs = with pythonPkgs; [
-    python-language-server
-    pyls-mypy
-    pyls-isort
-  ] ++ (resolveInputs "checkInputs" attrs.checkInputs or (_: [ ]));
+  checkInputs = (resolveInputs "checkInputs" attrs.checkInputs or [ ]);
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = resolveInputs "buildInputs" attrs.buildInputs or (_: [ ]);
+  buildInputs = resolveInputs "buildInputs" attrs.buildInputs or [ ];
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or (_: [ ]);
+  nativeBuildInputs = resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or [ ];
 
-  passthru = { shellInputs = (resolveInputs "shellInputs" args.shellInputs or (_: [ ])); };
+  passthru = {
+    shellInputs = (resolveInputs "shellInputs" args.shellInputs or [ ])
+      ++ [ pythonPkgs.python-lsp-server pythonPkgs.pylsp-mypy pythonPkgs.pyls-isort ];
+  };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
   # Items listed in install_requires go here
-  propagatedBuildInputs = resolveInputs "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]);
+  propagatedBuildInputs = resolveInputs "propagatedBuildInputs" attrs.propagatedBuildInputs or [ ];
 
   doCheck = false;
 

@@ -7,6 +7,8 @@ let
     };
   }).version}";
 
+  inherit (import ./utils.nix base) resolveInputs;
+
   hooks = callPackage ./hooks { };
 
   mkPackage = callPackage ./package.nix { inherit base defaultPythonVersion; };

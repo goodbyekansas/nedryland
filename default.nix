@@ -20,7 +20,7 @@ let
           (import sources.rust)
 
           # extra pip packages
-          (import ./overlays/python_packages.nix)
+          (import ./overlays/python-packages.nix)
 
           # more recent Wasi lib C (default was 2019)
           (import ./overlays/wasm.nix versions)
@@ -97,7 +97,6 @@ in
           let
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
-            themes = appliedAttrs.themes;
             enableChecksOverride = enable: drv:
               if enable && !(drv.doCheck or false) then
                 drv.overrideAttrs
@@ -119,7 +118,6 @@ in
                 callFunction
                 parseConfig
                 versions
-                themes
                 enableChecksOverride;
 
               # enableChecks is the directive to enable checks.

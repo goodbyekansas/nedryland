@@ -1,4 +1,4 @@
-{ base, lib, defaultPythonVersion }:
+{ pkgs, base, lib, defaultPythonVersion }:
 let
   combineDocs = attrs: api: ({
     inherit api;
@@ -19,7 +19,7 @@ let
 
   sphinxTheme = {
     rtd = {
-      name = "sphinx4_rtd_theme";
+      name = "sphinx_rtd_theme";
       conf = "html_theme = \\\"sphinx_rtd_theme\\\"";
     };
   }."${docsConfig.python.sphinx-theme}" or null;
@@ -41,8 +41,8 @@ let
   logo =
     if docsConfig ? logo then
       (
-        if builtins.pathExists (/. + docsConfig.logo) then {
-          source = /. + docsConfig.logo;
+        if (builtins.isPath docsConfig.logo && builtins.pathExists (docsConfig.logo)) then {
+          source = docsConfig.logo;
           path = "./${builtins.baseNameOf docsConfig.logo}";
         } else { path = docsConfig.logo; }
       ) else { };
@@ -56,10 +56,11 @@ in
     inherit src;
     name = "${name}-api-reference";
     nedrylandType = "documentation";
-    buildInputs = [ pythonVersion.pkgs.sphinx4 ]
+    nativeBuildInputs = [ pkgs.sphinx ]
       ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
-      ++ (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or (_: [ ]))
-      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]));
+      ++ resolveInputs pythonVersion.pkgs name "nativeBuildInputs" attrs.nativeBuildInputs or [ ];
+    buildInputs = (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or [ ])
+      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or [ ]);
 
     srcFilter = path: type: (
       builtins.match ".*\.py" (baseNameOf path) != null
@@ -76,7 +77,7 @@ in
         -A "${author}" \
         -o doc-source \
         .
-      
+
       mkdir -p doc-source
       echo "" >> doc-source/conf.py # generated conf.py does not end in a newline
       ${if sphinxTheme != null then "echo ${sphinxTheme.conf} >> doc-source/conf.py" else "" }
@@ -96,10 +97,9 @@ in
     inherit src;
     name = "${name}-api-reference";
     nedrylandType = "documentation";
-    buildInputs = [ pythonVersion.pkgs.pdoc ]
-      ++ (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or (_: [ ]))
-      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]));
-    nativeBuildInputs = resolveInputs pythonVersion.pkgs name "nativeBuildInputs" attrs.nativeBuildInputs or (_: [ ]);
+    nativeBuildInputs = [ pythonVersion.pkgs.pdoc ] ++ resolveInputs pythonVersion.pkgs name "nativeBuildInputs" attrs.nativeBuildInputs or [ ];
+    buildInputs = (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or [ ])
+      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or [ ]);
     configurePhase = ''
       modules=$(python ${./print-module-names.py})
       ${if logo != { } then "cp -r ${./pdoc-template} ./template" else ""}
