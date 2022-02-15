@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Removed themes
+
+### Changed Versions
+- Nixpkgs updated to track the 21.11 release
+
 ## [5.0.3] - 2022-03-25
 
 ### Fixed

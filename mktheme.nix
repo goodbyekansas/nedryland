@@ -1,2 +1,0 @@
-_pkgs: attrs@{ ... }:
-attrs

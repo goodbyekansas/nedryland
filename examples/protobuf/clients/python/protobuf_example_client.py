@@ -4,13 +4,13 @@ from ext.ext_pb2 import DependingOnIt
 
 
 def main() -> None:
-    """ Entrypoint """
+    """Entrypoint"""
     sune = DependingOnIt(here=DependOnMe(yes="rune"))
     print(sune)
 
 
 def test_main() -> None:
-    """ We just run main to see that the code is somewhat correct """
+    """We just run main to see that the code is somewhat correct"""
     main()
 
 
