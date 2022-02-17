@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - base.resolveInputs to extract the correct targets from nedryland
   components when used as derivation inputs.
+- timecode python library.
 
 ## [4.0.0] - 2022-02-14
 
