@@ -148,6 +148,22 @@ in
             doCheck = false;
           };
 
+          timecode = super.buildPythonPackage rec {
+            pname = "timecode";
+            version = "1.3.1";
+
+            preBuild = ''
+              export HOME=$PWD
+            '';
+
+            src = super.fetchPypi {
+              inherit pname version;
+              sha256 = "1fh7chx9flqb4c5lfv953dxk1542slwc0237vayin7king2gvpc4";
+            };
+
+            doCheck = false;
+          };
+
           markdown-include = super.buildPythonPackage rec {
             pname = "markdown-include";
             version = "0.6.0";
