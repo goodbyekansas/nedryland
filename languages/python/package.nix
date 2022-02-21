@@ -12,7 +12,7 @@ args@{ name
 }:
 let
   pythonPkgs = pythonVersion.pkgs;
-  resolveInputs = (import ./utils.nix).resolveInputs pythonPkgs;
+  resolveInputs = (import ./utils.nix base).resolveInputs pythonPkgs name;
 
   customerFilter = src:
     let
@@ -74,7 +74,7 @@ let
 
   attrs = builtins.removeAttrs args [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
 in
-pythonPkgs.buildPythonPackage (attrs // {
+base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
   inherit src version setupCfg pylintrc format preBuild doStandardTests;
   pname = name;
 
@@ -83,22 +83,22 @@ pythonPkgs.buildPythonPackage (attrs // {
     python-language-server
     pyls-mypy
     pyls-isort
-  ] ++ (resolveInputs attrs.checkInputs or (_: [ ]));
+  ] ++ (resolveInputs "checkInputs" attrs.checkInputs or (_: [ ]));
 
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
-  buildInputs = resolveInputs attrs.buildInputs or (_: [ ]);
+  buildInputs = resolveInputs "buildInputs" attrs.buildInputs or (_: [ ]);
 
   # Build-time only dependencies. Typically executables as well
   # as the items listed in setup_requires
-  nativeBuildInputs = resolveInputs attrs.nativeBuildInputs or (_: [ ]);
+  nativeBuildInputs = resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or (_: [ ]);
 
-  passthru = { shellInputs = (resolveInputs args.shellInputs or (_: [ ])); };
+  passthru = { shellInputs = (resolveInputs "shellInputs" args.shellInputs or (_: [ ])); };
 
   # Aside from propagating dependencies, buildPythonPackage also injects
   # code into and wraps executables with the paths included in this list.
   # Items listed in install_requires go here
-  propagatedBuildInputs = resolveInputs attrs.propagatedBuildInputs or (_: [ ]);
+  propagatedBuildInputs = resolveInputs "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]);
 
   doCheck = false;
 
@@ -163,4 +163,4 @@ pythonPkgs.buildPythonPackage (attrs // {
     mkdir -p $out/nedryland
     touch $out/nedryland/add-to-mypy-path
   '';
-})
+}))

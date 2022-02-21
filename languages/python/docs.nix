@@ -47,7 +47,7 @@ let
         } else { path = docsConfig.logo; }
       ) else { };
 
-  inherit (import ./utils.nix) resolveInputs;
+  inherit (import ./utils.nix base) resolveInputs;
 in
 {
   __functor = self: self."${docsConfig.python.generator}";
@@ -58,8 +58,8 @@ in
     nedrylandType = "documentation";
     buildInputs = [ pythonVersion.pkgs.sphinx4 ]
       ++ lib.optional (sphinxTheme != null) pythonVersion.pkgs."${sphinxTheme.name}"
-      ++ (resolveInputs pythonVersion.pkgs attrs.buildInputs or (_: [ ]))
-      ++ (resolveInputs pythonVersion.pkgs attrs.propagatedBuildInputs or (_: [ ]));
+      ++ (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or (_: [ ]))
+      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]));
 
     srcFilter = path: type: (
       builtins.match ".*\.py" (baseNameOf path) != null
@@ -97,9 +97,9 @@ in
     name = "${name}-api-reference";
     nedrylandType = "documentation";
     buildInputs = [ pythonVersion.pkgs.pdoc ]
-      ++ (resolveInputs pythonVersion.pkgs attrs.buildInputs or (_: [ ]))
-      ++ (resolveInputs pythonVersion.pkgs attrs.propagatedBuildInputs or (_: [ ]));
-    nativeBuildInputs = resolveInputs pythonVersion.pkgs attrs.nativeBuildInputs or (_: [ ]);
+      ++ (resolveInputs pythonVersion.pkgs name "buildInputs" attrs.buildInputs or (_: [ ]))
+      ++ (resolveInputs pythonVersion.pkgs name "propagatedBuildInputs" attrs.propagatedBuildInputs or (_: [ ]));
+    nativeBuildInputs = resolveInputs pythonVersion.pkgs name "nativeBuildInputs" attrs.nativeBuildInputs or (_: [ ]);
     configurePhase = ''
       modules=$(python ${./print-module-names.py})
       ${if logo != { } then "cp -r ${./pdoc-template} ./template" else ""}

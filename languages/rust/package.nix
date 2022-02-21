@@ -70,29 +70,11 @@ let
     }
   '';
 
-  resolveBuildInputs = typeName: builtins.map
-    (input:
-      if input ? isNedrylandComponent then
-        input."${componentTargetName}"
-          or input.package
-          or (abort "${name} could not auto-detect target for ${typeName} \"${input.name}\", please specify manually (tried \"${componentTargetName}\" and \"package\")")
-      else
-        input
-    );
-
-  resolveNativeBuildInputs = typeName: builtins.map
-    (input:
-      if input ? isNedrylandComponent then
-        input.package or (abort "${name} could not find \"package\" target for ${typeName} \"${input.name}\", please specify manually")
-      else
-        input
-    );
-
-  buildInputs = resolveBuildInputs "buildInput" attrs.buildInputs or [ ];
-  propagatedBuildInputs = resolveBuildInputs "propagatedBuildInput" attrs.propagatedBuildInputs or [ ];
-  shellInputs = resolveNativeBuildInputs "shellInput" attrs.shellInputs or [ ];
-  nativeBuildInputs = resolveNativeBuildInputs "nativeBuildInput" attrs.nativeBuildInputs or [ ];
-  checkInputs = resolveNativeBuildInputs "checkInput" attrs.checkInputs or [ ];
+  buildInputs = base.resolveInputs name "buildInputs" [ componentTargetName "package" ] attrs.buildInputs or [ ];
+  propagatedBuildInputs = base.resolveInputs name "propagatedBuildInputs" [ componentTargetName "package" ] attrs.propagatedBuildInputs or [ ];
+  shellInputs = base.resolveInputs name "shellInputs" [ "package" ] attrs.shellInputs or [ ];
+  nativeBuildInputs = base.resolveInputs name "nativeBuildInputs" [ "package" ] attrs.nativeBuildInputs or [ ];
+  checkInputs = base.resolveInputs name "checkInputs" [ "package" ] attrs.checkInputs or [ ];
 
   vendor = import ./vendor.nix pkgs rustBin {
     inherit name buildInputs propagatedBuildInputs;

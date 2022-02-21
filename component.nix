@@ -1,24 +1,7 @@
 pkgs:
 rec {
-  enableChecksOnComponent =
-    builtins.mapAttrs
-      (_: v:
-        if pkgs.lib.isDerivation v && v ? overrideAttrs then
-          v.overrideAttrs
-            (oldAttrs: {
-              doCheck = true;
-
-              # Python packages don't have a checkPhase, only an installCheckPhase
-              doInstallCheck = true;
-            } // (if v.stdenv.hostPlatform != v.stdenv.buildPlatform && oldAttrs.doCrossCheck or false then {
-              preInstallPhases = [ "crossCheckPhase" ];
-              crossCheckPhase = oldAttrs.checkPhase or "";
-              nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
-            } else { }))
-        else v);
-
   mkComponent =
-    enableChecks: path: mkCombinedDeployment: parseConfig:
+    path: mkCombinedDeployment: parseConfig:
     let
       mkComponentInner = attrs'@{ name, subComponents ? { }, nedrylandType ? "component", ... }:
         let
@@ -52,7 +35,7 @@ rec {
                 };
             }));
 
-          component = if enableChecks then enableChecksOnComponent component' else component';
+          component = component';
           docsRequirement = (parseConfig {
             key = "docs";
             structure = { requirements = { "${component.nedrylandType}" = [ ]; }; };

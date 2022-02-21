@@ -105,8 +105,37 @@ in
                 callFunction
                 parseConfig
                 versions
-                themes
-                enableChecks;
+                themes;
+
+              # enableChecks is the directive to enable checks.
+              # checksEnabled is the state if enabled or not.
+              checksEnabled = enableChecks;
+              # Overwrite the directive with a function to enable checks.
+              enableChecks = drv:
+                if enableChecks && !(drv.doCheck or false) then
+                  drv.overrideAttrs
+                    (oldAttrs: {
+                      doCheck = true;
+
+                      # Python packages don't have a checkPhase, only an installCheckPhase
+                      doInstallCheck = true;
+                    } // pkgs.lib.optionalAttrs (drv.stdenv.hostPlatform != drv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
+                      preInstallPhases = [ "crossCheckPhase" ];
+                      crossCheckPhase = oldAttrs.checkPhase or "";
+                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
+                    }) else drv;
+
+              resolveInputs = name: typeName: targets: builtins.map
+                (input:
+                  if input ? isNedrylandComponent then
+                    input."${(pkgs.lib.findFirst
+                          (target: builtins.hasAttr target input)
+                          (abort "${name}.${typeName} did not contain any of the targets ${builtins.toString targets}. Please specify manually.")
+                          targets)}"
+                  else
+                    input
+                );
+
               mkDerivation = attrs@{ name, stdenv ? pkgs.stdenv, ... }:
                 let
                   customerFilter = src:
@@ -126,9 +155,14 @@ in
                           name = "${name}-source";
                         } else pkgs.gitignoreSource attrs.src;
                 in
-                stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" ]) // (pkgs.lib.optionalAttrs (attrs ? src) {
-                  src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
-                }));
+                minimalBase.enableChecks (stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" ]) //
+                  {
+                    isNedrylandDerivation = true;
+                    passthru = (attrs.passthru or { }) // { isNedrylandDerivation = true; };
+                  } //
+                  (pkgs.lib.optionalAttrs (attrs ? src) {
+                    src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
+                  })));
               inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
               mkComponent = mkComponent';
@@ -190,7 +224,7 @@ in
 
         # create the final, extended base and make it overridable
         minimalBase = pkgs.lib.makeOverridable createMinimalBase {
-          mkComponent = componentFns.mkComponent enableChecks ./.;
+          mkComponent = componentFns.mkComponent ./.;
         };
 
         # callFile and callFunction will auto-populate dependencies
@@ -201,7 +235,7 @@ in
             args = builtins.functionArgs function;
             newBase = extendBase (minimalBase.override {
               # burn the path into mkComponent
-              mkComponent = componentFns.mkComponent enableChecks path;
+              mkComponent = componentFns.mkComponent path;
             });
           in
           pkgs.lib.makeOverridable
