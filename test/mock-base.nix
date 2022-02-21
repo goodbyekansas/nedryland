@@ -8,4 +8,6 @@ rec {
   mkService = mkComponent;
   mkClient = mkComponent;
   mkLibrary = mkComponent;
+  resolveInputs = _: _: _: inputs:
+    inputs;
 }

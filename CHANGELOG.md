@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Target aliases on components now maintain that relationship when
+  checks are enabled.
+
+### Changed
+- `base.enableChecks` is not a function that enables checks on a
+  component and `base.checksEnabled` is now a flag that tells if
+  checks are enabled on the matrix.
+
+### Added
+- base.resolveInputs to extract the correct targets from nedryland
+  components when used as derivation inputs.
+
 ## [4.0.0] - 2022-02-14
 
 ### Added

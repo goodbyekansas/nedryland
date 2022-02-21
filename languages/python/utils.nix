@@ -1,8 +1,7 @@
+base:
 {
-  resolveInputs = pythonPkgs: inputs:
-    if builtins.isFunction inputs then
-      (builtins.map
-        (input: if input ? isNedrylandComponent then input.package else input)
-        (inputs pythonPkgs))
-    else (builtins.map (input: if input ? isNedrylandComponent then input.package else input) inputs);
+  resolveInputs = pythonPkgs: name: typeName: inputs:
+    base.resolveInputs name typeName [ "package" ] (if builtins.isFunction inputs then
+      (inputs pythonPkgs)
+    else inputs);
 }
