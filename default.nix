@@ -98,6 +98,20 @@ in
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
             themes = appliedAttrs.themes;
+            enableChecksOverride = enable: drv:
+              if enable && !(drv.doCheck or false) then
+                drv.overrideAttrs
+                  (oldAttrs: {
+                    doCheck = true;
+
+                    # Python packages don't have a checkPhase, only an installCheckPhase
+                    doInstallCheck = true;
+                  } // pkgs.lib.optionalAttrs (drv.stdenv.hostPlatform != drv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
+                    preInstallPhases = [ "crossCheckPhase" ];
+                    crossCheckPhase = oldAttrs.checkPhase or "";
+                    nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
+                  }) else drv;
+
             minimalBase = {
               inherit
                 sources
@@ -105,25 +119,14 @@ in
                 callFunction
                 parseConfig
                 versions
-                themes;
+                themes
+                enableChecksOverride;
 
               # enableChecks is the directive to enable checks.
               # checksEnabled is the state if enabled or not.
               checksEnabled = enableChecks;
               # Overwrite the directive with a function to enable checks.
-              enableChecks = drv:
-                if enableChecks && !(drv.doCheck or false) then
-                  drv.overrideAttrs
-                    (oldAttrs: {
-                      doCheck = true;
-
-                      # Python packages don't have a checkPhase, only an installCheckPhase
-                      doInstallCheck = true;
-                    } // pkgs.lib.optionalAttrs (drv.stdenv.hostPlatform != drv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
-                      preInstallPhases = [ "crossCheckPhase" ];
-                      crossCheckPhase = oldAttrs.checkPhase or "";
-                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
-                    }) else drv;
+              enableChecks = enableChecksOverride enableChecks;
 
               resolveInputs = name: typeName: targets: builtins.map
                 (input:
@@ -330,8 +333,8 @@ in
         shells = pkgs.callPackage ./shells.nix {
           inherit components;
           mapComponentsRecursive = minimalBase.mapComponentsRecursive;
-          enableChecksOnComponent = componentFns.enableChecksOnComponent;
           parseConfig = minimalBase.parseConfig;
+          enableChecks = minimalBase.enableChecksOverride true;
           extraShells = appliedAttrs.extraShells or { };
         };
       } // (pkgs.lib.optionalAttrs (appliedAttrs ? version) { inherit (appliedAttrs) version; })))

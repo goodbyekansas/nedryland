@@ -1,4 +1,10 @@
-{ pkgs, components, mapComponentsRecursive, parseConfig, enableChecksOnComponent, extraShells ? { } }:
+{ pkgs
+, components
+, mapComponentsRecursive
+, parseConfig
+, enableChecks
+, extraShells ? { }
+}:
 let
   config = parseConfig {
     key = "shells";
@@ -20,18 +26,18 @@ let
 in
 (mapComponentsRecursive
   (
-    _: component':
+    _: component:
       (
         let
-          # we want the check version of the component for
-          # the shell (but not for dependencies of it)
-          # that is the reason we are not using the check
-          # variant of the matrix
-          component = enableChecksOnComponent component';
           derivationShells =
             builtins.mapAttrs
-              (name: drv:
+              (name: drv':
                 let
+                  # we want the check version of the derivation for
+                  # the shell (but not for dependencies of it)
+                  # that is the reason we are not using the check
+                  # variant of the matrix
+                  drv = enableChecks drv';
                   targetName = "${component.name}.${name}";
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
