@@ -66,7 +66,7 @@ rec {
 
   mkLibrary = attrs: mkComponentWith base.mkLibrary (x: x) (attrs // { setuptoolsLibrary = true; });
 
-  mkClient = attrs: mkComponentWith base.mkClient attrs.pythonVersion.pkgs.toPythonApplication attrs;
+  mkClient = attrs: mkComponentWith base.mkClient (attrs.pythonVersion or defaultPythonVersion).pkgs.toPythonApplication attrs;
 
-  mkService = attrs: mkComponentWith base.mkService attrs.pythonVersion.pkgs.toPythonApplication attrs;
+  mkService = attrs: mkComponentWith base.mkService (attrs.pythonVersion or defaultPythonVersion).pkgs.toPythonApplication attrs;
 }
