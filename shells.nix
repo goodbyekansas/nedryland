@@ -97,7 +97,13 @@ in
             if (builtins.length (builtins.attrValues derivationShells)) == 1 then
               builtins.head (builtins.attrValues derivationShells)
             else
-              derivationShells."${config.defaultTarget}";
+              derivationShells."${config.defaultTarget}" or (pkgs.mkShell {
+                shellHook = ''
+                  echo -e "🐚 \e[32;4;31mCould not decide on a default shell\033[0m for component \"${component.name}\""
+                  echo -e "🎯 Available targets are: \033[1m${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}\033[0m"
+                  exit 1
+                '';
+              });
         in
         defaultShell.overrideAttrs (_: {
           passthru = derivationsAndAttrsets;

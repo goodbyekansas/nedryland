@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Error occuring when no default shell could be picked.
 - Use default python version in clients and services.
 
 ## [5.0.1] - 2022-02-22
