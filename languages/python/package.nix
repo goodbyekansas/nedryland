@@ -66,10 +66,10 @@ let
 
   pylintrc = ''
     ${extendFile {
-      filePath = "pylintrc";
+      filePath = ".pylintrc";
       baseFile = ./pylintrc;
       inherit name;
-      }}/pylintrc
+      }}/.pylintrc
   '';
 
   attrs = builtins.removeAttrs args [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
