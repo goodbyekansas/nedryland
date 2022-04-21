@@ -1,4 +1,4 @@
-{ writeTextFile, wasmtime, makeSetupHook }:
+{ gdb, writeTextFile, wasmtime, makeSetupHook }:
 makeSetupHook
 {
   name = "wasi-runner-hook";
@@ -10,7 +10,13 @@ makeSetupHook
         executable = true;
         text = ''
           temp_dir=$(mktemp -d)
-          ${wasmtime}/bin/wasmtime run --env=RUST_TEST_NOCAPTURE=1 --disable-cache --mapdir=::$temp_dir "$@"
+          command="${wasmtime}/bin/wasmtime run"
+          args="--env=RUST_TEST_NOCAPTURE=1 --disable-cache --mapdir=::$temp_dir"
+          if [ -n "$RUST_DEBUG" ]; then
+            args="-g $args"
+            command="${gdb}/bin/gdb --args $command"
+          fi
+          command $command $args "$@"
           exit_code=$?
           rm -rf $temp_dir
           exit $exit_code

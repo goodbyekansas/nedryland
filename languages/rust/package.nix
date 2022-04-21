@@ -120,8 +120,8 @@ let
   linkerForHost = ccForHost;
 
   runners = builtins.map
-    (runner: pkgs.callPackage runner.path { })
-    (builtins.filter (runner: runner.predicate) [
+    (runner: pkgs.callPackage runner.path (builtins.removeAttrs runner [ "path" "predicate" ]))
+    ((builtins.filter (runner: runner.predicate) [
       {
         path = ./runner/wasi.nix;
         predicate = stdenv.hostPlatform.isWasi;
@@ -130,7 +130,7 @@ let
         path = ./runner/windows.nix;
         predicate = (lib.inNixShell && stdenv.hostPlatform.isWindows);
       }
-    ]);
+    ]) ++ [{ path = ./runner/build-platform.nix; buildPlatform = toRustTarget stdenv.buildPlatform; }]);
 
 in
 base.mkDerivation
