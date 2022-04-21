@@ -4,7 +4,7 @@ EXIT_CODE=0
 
 while IFS= read -r -d $'' file; do
     if ! git check-ignore -q "$file" && [ "$(basename "$file")" != "sources.nix" ] && [ "$(dirname "$file")" != "nix" ]; then
-        @nixLinter@ "$file"
+        @nixLinter@ "$@" "$file"
         EXIT_CODE=$((EXIT_CODE + $?))
     fi
 done < <(find . -type f \! -path "./.git/*" -a -name '*.nix' -print0)
