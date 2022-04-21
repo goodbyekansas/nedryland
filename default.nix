@@ -119,6 +119,7 @@ in
                 parseConfig
                 versions
                 enableChecksOverride;
+              mkShellCommands = pkgs.callPackage ./shell-commands.nix { };
 
               # enableChecks is the directive to enable checks.
               # checksEnabled is the state if enabled or not.
@@ -160,7 +161,11 @@ in
                   {
                     isNedrylandDerivation = true;
                     passthru = (attrs.passthru or { }) // { isNedrylandDerivation = true; };
-                  } //
+                  }
+                  // (pkgs.lib.optionalAttrs (attrs ? shellCommands) {
+                  shellCommands = minimalBase.mkShellCommands name attrs.shellCommands;
+                })
+                  //
                   (pkgs.lib.optionalAttrs (attrs ? src) {
                     src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
                   })));

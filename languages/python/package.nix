@@ -134,6 +134,11 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
     initCommands = "black .";
   };
 
+  shellCommands = base.mkShellCommands name {
+    check = ''eval $installCheckPhase'';
+    format = "black . && isort .";
+  };
+
   shellHook = ''
     if [ -L setup.cfg ]; then
        unlink setup.cfg
@@ -150,10 +155,6 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
     if [ ! -f .pylintrc ]; then
        ln -s $pylintrc .pylintrc
     fi
-
-    check() {
-        eval "$installCheckPhase"
-    }
     ${attrs.shellHook or ""}
   '';
 

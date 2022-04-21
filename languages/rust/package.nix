@@ -56,20 +56,6 @@ let
 
   rustAnalyzer = pkgs.rust-bin.nightly."${rustVersion.analyzer}".rust-analyzer-preview;
 
-  commands = ''
-    check() {
-        eval "$checkPhase"
-    }
-
-    build() {
-        eval "$buildPhase"
-    }
-
-    run() {
-        cargo run "$@"
-    }
-  '';
-
   buildInputs = base.resolveInputs name "buildInputs" [ componentTargetName "package" ] attrs.buildInputs or [ ];
   propagatedBuildInputs = base.resolveInputs name "propagatedBuildInputs" [ componentTargetName "package" ] attrs.propagatedBuildInputs or [ ];
   shellInputs = base.resolveInputs name "shellInputs" [ "package" ] attrs.shellInputs or [ ];
@@ -151,6 +137,11 @@ base.mkDerivation
   (
     safeAttrs // {
       inherit stdenv propagatedBuildInputs checkInputs;
+      shellCommands = {
+        run = ''cargo run "$@"'';
+        format = ''cargo fmt'';
+        debug = ''RUST_DEBUG=1 "$@"'';
+      };
       strictDeps = true;
       disallowedReferences = [ vendor ];
       srcFilter = path: type: !(type == "directory" && baseNameOf path == "target")
@@ -245,7 +236,6 @@ base.mkDerivation
         runHook preShell
         export RUST_SRC_PATH=${rustSrcNoSymlinks}
         ${cargoAlias}
-        ${commands}
         ${shellHook}
         runHook postShell
       '';

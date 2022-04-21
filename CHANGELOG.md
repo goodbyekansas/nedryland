@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - ci scripts forwards arguments
+- `base.mkShellCommands` to create shell commands with a name and set of {command = script;}
+- `shellCommands` to `base.mkDerivation`, partially applied `base.mkShellCommands` with
+  name from the derivation
+- if `shellCommands` exists when creating a shell, they are put in `nativeBuildInputs`
+
 ### Removed
 - Removed themes
 ### Changed
