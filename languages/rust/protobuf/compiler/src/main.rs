@@ -126,7 +126,7 @@ fn main() {
         })
         .and_then(|_| {
             fs::read_dir(&origpath)?
-                .map(|f_res| {
+                .filter_map(|f_res| {
                     f_res
                         .and_then(|f| {
                             // prost generates a single new line for unneeded files
@@ -139,8 +139,7 @@ fn main() {
                             }
                         })
                         .transpose()
-                })
-                .flatten() // skip all files without filename
+                }) // skip all files without filename
                 .map(|rf| rf.map(|f| f.split('.').map(str::to_owned).collect::<Vec<String>>()))
                 .try_fold(Entry::default(), |entry, rlist| {
                     rlist.map(|list| create_module_tree(&origpath, entry, &list, 0))

@@ -4,6 +4,9 @@ let
   debug = false;
 in
 versions: self: super:
+let
+  rustMinimal = super.rust-bin.stable."${versions.rust.stable}".minimal;
+in
 {
   # create statically built versions of the llvm libraries (wasi does not support dynamic linking)
   llvmPackages_12 = super.llvmPackages_12 // {
@@ -20,7 +23,11 @@ versions: self: super:
 
   # This is for a bug in readdir in wasmtime, when the fix is in switch back to main
   # https://github.com/bytecodealliance/wasmtime/pull/2494
-  wasmtime = super.rustPlatform.buildRustPackage rec {
+  wasmtime = (super.makeRustPlatform {
+    # the individual components cargo and rustc does not contain std so using the full minimal
+    cargo = rustMinimal;
+    rustc = rustMinimal;
+  }).buildRustPackage rec {
     pname = "wasmtime";
     inherit (versions.wasmtime) version cargoSha256;
 
@@ -58,6 +65,11 @@ versions: self: super:
   }).overrideAttrs (oldAttrs: {
     name = "wasilibc";
     version = versions.wasilibc.version;
+    # postPatch borrowed from nixpkgs unstable to work with newer wasilibc in 21.11
+    postPatch = ''
+      substituteInPlace Makefile \
+        --replace "-Werror" ""
+    '';
     src = self.fetchFromGitHub {
       owner = "WebAssembly";
       repo = "wasi-libc";
