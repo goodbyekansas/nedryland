@@ -1,4 +1,4 @@
-{ writeTextFile, wasmer, makeSetupHook }:
+{ writeTextFile, wasmtime, makeSetupHook }:
 makeSetupHook
 {
   name = "wasi-runner-hook";
@@ -10,7 +10,7 @@ makeSetupHook
         executable = true;
         text = ''
           temp_dir=$(mktemp -d)
-          ${wasmer}/bin/wasmer run --env=RUST_TEST_NOCAPTURE=1 --mapdir=:$temp_dir "$@"
+          ${wasmtime}/bin/wasmtime run --env=RUST_TEST_NOCAPTURE=1 --disable-cache --mapdir=::$temp_dir "$@"
           exit_code=$?
           rm -rf $temp_dir
           exit $exit_code

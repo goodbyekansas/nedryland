@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed themes
+### Changed
+- Rust wasm runner to be wasmtime instead of wasmer
 
 ### Changed Versions
 - Nixpkgs updated to track the 21.11 release
+- Rust 1.60
+- wasilibc rev from 2022-04-21
 
 ## [5.0.3] - 2022-03-25
 
