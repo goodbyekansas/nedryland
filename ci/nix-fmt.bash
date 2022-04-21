@@ -2,8 +2,11 @@
 if [ "$1" == "--fix" ]; then
     @nixpkgsFmt@ "${2:-.}"
     exit $?
+elif [ $# -gt 0 ]; then
+    @nixpkgsFmt@ "$@"
+    exit $?
 fi
-files=$(@nixpkgsFmt@ . --check)
+files=$(@nixpkgsFmt@ --check .)
 
 if [ $? == 1 ]; then
     echo "$files"

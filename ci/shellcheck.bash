@@ -11,7 +11,7 @@ EXIT_CODE=0
 
 while IFS= read -r -d $'' file; do
     if ! git check-ignore -q "$file" && is_bash "$file"; then
-        @shellcheck@ -W0 -s bash "$file"
+        @shellcheck@ -W0 -s bash "$@" "$file"
         EXIT_CODE=$((EXIT_CODE + $?))
     fi
 done < <(find . -type f \! -path "./.git/*" -print0)
