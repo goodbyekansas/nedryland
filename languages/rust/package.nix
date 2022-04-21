@@ -173,6 +173,9 @@ base.mkDerivation
 
       configurePhase = attrs.configurePhase or ''
         runHook preConfigure
+        if [ -z "$IN_NIX_SHELL" ]; then
+          sed -i '/\[patch\.nix\]/,/^[.*]$/d' Cargo.toml
+        fi
         export CARGO_HOME=$NIX_BUILD_TOP
         export RUSTFLAGS="$RUSTFLAGS --remap-path-prefix $NIX_BUILD_TOP=build-root"
         runHook postConfigure
