@@ -46,7 +46,7 @@ in
                     # this will get merged with nativeBuildInputs
                     # from "drv" inside mkShell so no need to
                     # add to it here
-                    nativeBuildInputs = (drv.shellInputs or [ ]);
+                    nativeBuildInputs = drv.shellInputs or [ ] ++ (pkgs.lib.optional (drv ? shellCommands) drv.shellCommands);
 
                     # we will get double shellhooks if we do not
                     # remove this here
