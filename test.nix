@@ -8,7 +8,8 @@ let
     dependencies = import ./examples/dependencies/child/project.nix;
   };
 
-  pkgs = tests.hello.nixpkgs;
+  pkgs = (import ./default.nix { }).pkgs;
+  origPkgs = import ((import ./nix/sources.nix).nixpkgs) { };
 
   mappedTests = (builtins.mapAttrs
     (
@@ -27,7 +28,9 @@ let
     };
     docsTest = import ./test/docs.nix pkgs tests.documentation.matrix;
     pythonWheel = import ./test/python-wheel.nix pkgs.lib.assertMsg tests.hello.matrix.pythonHello;
-  };
+  } //
+  (import ./overlays/python-packages-common.nix pkgs pkgs.python38.pkgs) //
+  (import ./overlays/python-packages-37.nix pkgs origPkgs.python37.pkgs);
 in
 (mappedTests // {
   all = builtins.attrValues mappedTests;
