@@ -112,7 +112,7 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
 
   targetSetup = base.mkTargetSetup {
     name = args.targetSetup.name or "python";
-    markerFiles = args.targetSetup.markerFiles or [ ] ++ [ "setup.py" ];
+    markerFiles = args.targetSetup.markerFiles or [ ] ++ [ "setup.py" "setup.cfg" "pyproject.toml" ];
     templateDir = pkgs.symlinkJoin {
       name = "python-component-template";
       paths = (
