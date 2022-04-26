@@ -290,7 +290,11 @@ in
             (
               pkgs.lib.filterAttrs
                 (
-                  name: value: name != "allTargets" && pkgs.lib.isDerivation value
+                  name: value:
+                    (
+                      name != "allTargets" && pkgs.lib.isDerivation value
+                    )
+                    || builtins.isList value
                 )
             )
             resolvedNedrylandComponents

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Target setup no longer triggering on python projects containing setup.cfg or pyproject.toml.
+- Rust target not being exposed.
 
 ## [5.0.3] - 2022-03-25
 
