@@ -71,11 +71,16 @@ pkgs.writeTextFile {
         ${initCommands}
       }
       markers=(${builtins.concatStringsSep " " markerFiles})
+      markerFound=false
       for marker in ''${markers[@]};do
-        if [ ! -f "$marker" ]; then
-          (componentSetup) #Using a subshell to not shadow or leak variables back here
+        if [ -f "$marker" ]; then
+          markerFound=true
           break
         fi
       done
+
+      if [ "$markerFound" = false ]; then
+        (componentSetup) #Using a subshell to not shadow or leak variables back here
+      fi
     '';
 }
