@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - if `shellCommands` exists when creating a shell, they are put in `nativeBuildInputs`
 - Rust components can use path dependencies for nix dependencies, that patch section will automatically be removed when building outside the shell
 - Rust runners can now use `debug` to run cargo commands with gdb (e.g. `debug cargo test`)
+- Support for declaring inline extensions.
 
 ### Removed
 - Removed themes
+
 ### Changed
 - Rust wasm runner to be wasmtime instead of wasmer
 
