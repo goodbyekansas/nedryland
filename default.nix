@@ -191,14 +191,15 @@ in
                   extFn = import currentBaseExtension;
                   args = builtins.functionArgs extFn;
                 in
-                pkgs.lib.recursiveUpdate combinedBaseExtensions (
+                pkgs.lib.recursiveUpdate combinedBaseExtensions (if builtins.isAttrs currentBaseExtension then currentBaseExtension else
+                (
                   extFn (
                     builtins.intersectAttrs args components //
                     builtins.intersectAttrs args pkgs // {
                       base = (pkgs.lib.recursiveUpdate combinedBaseExtensions initialBase);
                     }
                   )
-                )
+                ))
             )
             { }
             baseExtensions
