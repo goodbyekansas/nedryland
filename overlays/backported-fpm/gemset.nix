@@ -67,10 +67,10 @@
     platforms = [ ];
     source = {
       remotes = [ "https://rubygems.org" ];
-      sha256 = "0vdcv93s33d9914a9nxrn2y2qv15xk7jx94007cmalp159l08cnl";
+      sha256 = "sha256-fpW6TagpigNz7xpoYqoiAH12HzyCdLZ1qnh5Zv7OoPE=";
       type = "gem";
     };
-    version = "1.8.1";
+    version = "1.11.0";
   };
   insist = {
     groups = [ "default" ];
