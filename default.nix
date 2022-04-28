@@ -292,19 +292,13 @@ in
               pkgs.lib.filterAttrs
                 (
                   name: value:
-                    (
-                      name != "allTargets" && pkgs.lib.isDerivation value
-                    )
-                    || builtins.isList value
+                    name != "allTargets" && (pkgs.lib.isDerivation value || builtins.isList value)
                 )
             )
             resolvedNedrylandComponents
         )) // {
-          all = builtins.foldl'
-            (acc: cur:
-              acc ++ cur.allTargets
-            )
-            [ ]
+          all = builtins.map
+            (c: builtins.attrValues (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) c))
             resolvedNedrylandComponents;
         });
 

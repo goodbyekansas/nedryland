@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Rust wasm runner to be wasmtime instead of wasmer
+- Made target resolution lazy resulting in speedup since unnecessary targets stay unresolved.
 
 ### Changed Versions
 - Nixpkgs updated to track the 21.11 release

@@ -50,7 +50,6 @@ rec {
           "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames attrs.docs or { })}.'';
         (component
           // {
-          allTargets = builtins.attrValues (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component);
           overrideAttrs = f: mkComponentInner (attrs' // (f component));
         });
     in
