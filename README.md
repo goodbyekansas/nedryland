@@ -1,6 +1,7 @@
 # Nedryland
 
 ![Checks](https://github.com/goodbyekansas/nedryland/workflows/Checks/badge.svg)
+![Checks](https://github.com/goodbyekansas/nedryland/workflows/%F0%9F%93%96%20Deploy%20to%20Github%20Pages/badge.svg)
 
 Nedryland is a collection of utilities and a build system for declaring, building and deploying
 microservice solutions.
