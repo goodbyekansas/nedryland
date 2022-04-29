@@ -42,7 +42,7 @@ let
 in
 {
   inherit pkgs;
-  version = "5.0.3";
+  version = "6.0.0";
 
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";

@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2022-04-29
+
 ### Added
 - ci scripts forwards arguments
 - `base.mkShellCommands` to create shell commands with a name and set of {command = script;}
