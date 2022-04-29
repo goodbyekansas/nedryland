@@ -35,4 +35,4 @@ jobs:
         cp -r --no-preserve=mode ../result/share/doc/nedryland/manual/. .
         git add .
         git commit -m "🚀 📚 Deploy $GITHUB_SHA to gh-pages"
-        git push --force
+        git push --set-upstream origin gh-pages --force
