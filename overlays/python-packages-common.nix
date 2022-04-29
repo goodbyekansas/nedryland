@@ -1,8 +1,5 @@
-pkgs:
-let
-  inherit (pkgs) fetchzip fetchFromGitHub tzdata;
-in
-super:
+pkgs: super:
+with pkgs;
 rec {
   quadprog = super.buildPythonPackage rec {
     pname = "quadprog";
