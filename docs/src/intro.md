@@ -1,6 +1,7 @@
 # Introduction
 
 ![JP](./assets/nedryland.png)
+Image from Jurassic Park © Universal
 
 ## What is this?
 
