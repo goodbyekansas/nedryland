@@ -47,6 +47,8 @@ in
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";
     src = builtins.path { inherit name; path = ./docs; };
+    changelog = ./CHANGELOG.md;
+    postUnpack = "cp $changelog CHANGELOG.md";
     buildInputs = [ pkgs.mdbook ];
     buildPhase = "mdbook build --dest-dir book";
     installPhase = ''
