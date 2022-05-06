@@ -1,4 +1,4 @@
-{ base, pkgs, defaultPythonVersion }:
+{ base, pkgs, lib, defaultPythonVersion }:
 args@{ name
 , version
 , src
@@ -23,13 +23,13 @@ let
       (srcIgnored path type) && !(builtins.any (pred: pred path type) srcExclude);
   filteredSrc =
     if srcExclude != [ ] && args ? src then
-      pkgs.lib.cleanSourceWith
+      lib.cleanSourceWith
         {
           inherit (args) src;
           filter = customerFilter args.src;
           name = "${name}-source";
         } else pkgs.gitignoreSource args.src;
-  src = if pkgs.lib.isStorePath args.src then args.src else filteredSrc;
+  src = if lib.isStorePath args.src then args.src else filteredSrc;
 
   extendFile = { filePath, baseFile, name }:
     pkgs.stdenv.mkDerivation {
@@ -110,19 +110,20 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
     ln -s $pylintrc .pylintrc
   '';
 
-  targetSetup = base.mkTargetSetup {
+  targetSetup = if (args ? targetSetup && lib.isDerivation args.targetSetup) then args.targetSetup else
+  (base.mkTargetSetup {
     name = args.targetSetup.name or "python";
     markerFiles = args.targetSetup.markerFiles or [ ] ++ [ "setup.py" "setup.cfg" "pyproject.toml" ];
     templateDir = pkgs.symlinkJoin {
       name = "python-component-template";
       paths = (
-        pkgs.lib.optional (args ? targetSetup.templateDir) args.targetSetup.templateDir
+        lib.optional (args ? targetSetup.templateDir) args.targetSetup.templateDir
       ) ++ [ ./component-template ];
     };
     variables = (rec {
       inherit version;
       pname = name;
-      mainPackage = pkgs.lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name);
+      mainPackage = lib.toLower (builtins.replaceStrings [ "-" " " ] [ "_" "_" ] name);
       entryPoint = if setuptoolsLibrary then "{}" else "{\\\"console_scripts\\\": [\\\"${name}=${mainPackage}.main:main\\\"]}";
     } // args.targetSetup.variables or { });
     variableQueries = ({
@@ -132,12 +133,12 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
       url = "🏄 Enter author website url:";
     } // args.targetSetup.variableQueries or { });
     initCommands = "black .";
-  };
+  });
 
-  shellCommands = base.mkShellCommands name {
+  shellCommands = base.mkShellCommands name ({
     check = ''eval $installCheckPhase'';
     format = "black . && isort .";
-  };
+  } // attrs.shellCommands or { });
 
   shellHook = ''
     if [ -L setup.cfg ]; then
