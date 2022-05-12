@@ -141,7 +141,7 @@ base.mkDerivation
         run = ''cargo run "$@"'';
         format = ''cargo fmt'';
         debug = ''RUST_DEBUG=1 "$@"'';
-      };
+      } // safeAttrs.shellCommands or { };
       strictDeps = true;
       disallowedReferences = [ vendor ];
       srcFilter = path: type: !(type == "directory" && baseNameOf path == "target")
