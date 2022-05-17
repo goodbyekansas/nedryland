@@ -112,7 +112,7 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
 
   targetSetup = if (args ? targetSetup && lib.isDerivation args.targetSetup) then args.targetSetup else
   (base.mkTargetSetup {
-    name = args.targetSetup.name or "python";
+    name = args.targetSetup.name or args.name;
     markerFiles = args.targetSetup.markerFiles or [ ] ++ [ "setup.py" "setup.cfg" "pyproject.toml" ];
     templateDir = pkgs.symlinkJoin {
       name = "python-component-template";

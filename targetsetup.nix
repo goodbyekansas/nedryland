@@ -33,6 +33,7 @@ pkgs.writeTextFile {
     ''
       source $stdenv/setup > /dev/null 
       componentSetup() {
+        ${vars}
         echo ""
         echo "👋 Hello! It looks like you are in a new ${name} component, lets do some setup!"
         if [ "${templateDir'}" != "" ] && [ "${builtins.toString showTemplate}" == "1" ]; then
@@ -53,7 +54,6 @@ pkgs.writeTextFile {
           return 0
         fi
 
-        ${vars}
         ${readVarStdin}
 
         for rel in $(find ${templateDir'} -type f,l | sed 's|${templateDir'}/||g'); do
