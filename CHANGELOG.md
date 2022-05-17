@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python components can take `targetSetup` as a derivation (preferably made with `base.mkTargetSetup`) as well as a set of overrides.
 - `shellCommands` for python components works like the others (can take a set with command_name = bash_code;).
 - `shellCommands` input for rust components are merged with default.
+- targetSetup expands variables in template files for the file tree preview.
 
 ## [6.0.0] - 2022-04-29
 
