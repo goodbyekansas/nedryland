@@ -33,7 +33,6 @@ pkgs.writeTextFile {
     ''
       source $stdenv/setup > /dev/null 
       componentSetup() {
-        ${vars}
         echo ""
         echo "👋 Hello! It looks like you are in a new ${name} component, lets do some setup!"
         if [ "${templateDir'}" != "" ] && [ "${builtins.toString showTemplate}" == "1" ]; then
@@ -57,7 +56,6 @@ pkgs.writeTextFile {
         ${readVarStdin}
 
         for rel in $(find ${templateDir'} -type f,l | sed 's|${templateDir'}/||g'); do
-          #rel=$(realpath --relative-to="${templateDir'}" "$file")
           file=${templateDir'}/$rel
           outname=$(echo $rel | sed -E 's!@(\w+)@!''${\1}!g' | ${pkgs.envsubst}/bin/envsubst)
           if [ -f $outname ]; then
@@ -70,10 +68,12 @@ pkgs.writeTextFile {
         done
         ${initCommands}
       }
+      ${vars}
       markers=(${builtins.concatStringsSep " " markerFiles})
       markerFound=false
       for marker in ''${markers[@]};do
-        if [ -f "$marker" ]; then
+        filename=$(echo $marker | sed -E 's!@(\w+)@!''${\1}!g' | ${pkgs.envsubst}/bin/envsubst)
+        if [ -e "$filename" ]; then
           markerFound=true
           break
         fi

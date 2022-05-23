@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `shellCommands` input for rust components are merged with default.
 - targetSetup expands variables in template files for the file tree preview.
 
+### Added
+- `targetSetup` can now use `@variableName@` in the `markerFiles` argument.
+- `markerFiles` in `targetSetup` can now also be folders (or sockets or any other kind of file).
+
 ## [6.0.0] - 2022-04-29
 
 ### Added
