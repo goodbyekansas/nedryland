@@ -13,17 +13,21 @@ let
       (command: script: writeScriptBin command ''
         #!${bash}/bin/bash
 
-        export 2>/dev/null >| $NIX_BUILD_TOP/shell-env
+        envDir=$(mktemp -d -t shell-command-env.XXXXXX)
+
+        export 2>/dev/null >| "$envDir"/shell-env
 
         # source setup to get functions like genericBuild for example
         # as users might expect this to exist
-        source $stdenv/setup
+        NIX_BUILD_TOP=$envDir source $stdenv/setup
 
         # reset the shell env
-        source $NIX_BUILD_TOP/shell-env
+        source "$envDir"/shell-env
 
         # need to set this to be able to have local inputs
         export NIX_ENFORCE_PURITY=0
+
+        rm -rf "$envDir"
 
         ${script}
       '')
