@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `shellCommands` for python components works like the others (can take a set with command_name = bash_code;).
 - `shellCommands` input for rust components are merged with default.
 - targetSetup expands variables in template files for the file tree preview.
+- `shellCommands` can now run even if `NIX_BUILD_TOP` is unset (which it is when using nix-direnv).
 
 ### Added
 - `targetSetup` can now use `@variableName@` in the `markerFiles` argument.
