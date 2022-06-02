@@ -10,6 +10,7 @@ let
       python = {
         generator = "sphinx";
         sphinx-theme = "";
+        sphinx-extensions = [ ];
       };
       author = "";
       authors = [ ];
@@ -80,6 +81,8 @@ in
 
       mkdir -p doc-source
       echo "" >> doc-source/conf.py # generated conf.py does not end in a newline
+      sed -i -r 's/(extensions = \[)/\1${builtins.concatStringsSep "," (builtins.map (s: ''"${s}"'') (docsConfig.python.sphinx-extensions ++ [ "sphinx.ext.napoleon" ]))},/g' doc-source/conf.py
+      echo "napoleon_include_init_with_doc = True" >> doc-source/conf.py
       ${if sphinxTheme != null then "echo ${sphinxTheme.conf} >> doc-source/conf.py" else "" }
       ${if logo != { } then "echo 'html_logo = \"${logo.source or logo.path}\"' >> doc-source/conf.py" else ""}
     '';
