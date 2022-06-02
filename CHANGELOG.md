@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Sphinx documentation generation now supports Google-style docstrings thanks to the Napoleon extension shipped with Sphinx.
+- Sphinx documentation can now pick up extra extensions from the config `[python] sphinx-extensions = [ "sphinx.ext.imgmath" ]`
 - `shellCommands` can take sets with "script", "description", "args" and "show" to generate the shell welcome message for the command.
 
 ### Fixed
