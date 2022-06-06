@@ -7,9 +7,9 @@
 
   # tonic version needs to be matched with
   # a tonic-build version
-  tonic = "0.6.1";
+  tonic = "0.7.2";
   tonicFeatures = [ "tls" "tls-roots" ];
-  tonicBuild = "0.6.0";
+  tonicBuild = "0.7.2";
 
   wasilibc = {
     version = "20220420";

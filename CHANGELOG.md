@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed Versions
+- prost-build from 0.9.0 to 0.10.4 for protobuf
+- tonic from 0.6.1 to 0.7.2
+
 ## [6.1.0] - 2022-06-16
 
 ### Fixed

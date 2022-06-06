@@ -5,6 +5,7 @@ authors = ["Goodbye Kansas Pipeline Team <pipeline@goodbyekansas.com>"]
 edition = "2021"
 
 [dependencies]
-prost-build = "0.9.0"
+prost-build = "0.10.4"
 structopt = "0.3"
-tonic-build = "0.6.0"
+tonic-build = "0.7"
+
