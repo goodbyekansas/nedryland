@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `targetSetup` can now use `@variableName@` in the `markerFiles` argument.
 - `markerFiles` in `targetSetup` can now also be folders (or sockets or any other kind of file).
+- Base extensions can now depend on `components` to get a set of all components.
 
 ## [6.0.0] - 2022-04-29
 
