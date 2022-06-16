@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.0] - 2022-06-16
+
 ### Fixed
 - Python components can take `targetSetup` as a derivation (preferably made with `base.mkTargetSetup`) as well as a set of overrides.
 - `shellCommands` for python components works like the others (can take a set with command_name = bash_code;).
