@@ -100,13 +100,15 @@ in
             mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
             enableChecksOverride = enable: drv:
-              if enable && !(drv.doCheck or false) then
+              if enable && !(drv.nedrylandChecksEnabled or false) && (drv.doCheck or true) then
                 drv.overrideAttrs
                   (oldAttrs: {
                     doCheck = true;
 
                     # Python packages don't have a checkPhase, only an installCheckPhase
                     doInstallCheck = true;
+
+                    nedrylandChecksEnabled = true;
                   } // pkgs.lib.optionalAttrs (drv.stdenv.hostPlatform != drv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
                     preInstallPhases = [ "crossCheckPhase" ];
                     crossCheckPhase = oldAttrs.checkPhase or "";
