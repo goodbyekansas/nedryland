@@ -11,11 +11,11 @@ base.mkDerivation (attrs // {
     cp -r book/. $out/share/doc/${name}/${type}
   '';
   shellCommands = {
-    run = ''mdbook serve --port ''${1:-3000} "$@" &'';
+    run = {
+      script = ''mdbook serve --port ''${1:-3000} "$@" &'';
+      description = ''
+        Preview the book and watches the book's src directory for changes, rebuilding the book and refreshing clients for each change.
+      '';
+    };
   };
-
-  shellHook = ''
-    echo -e "Use \033[1mrun\033[0m to look at the book in a webbrowser, which updates on file save"
-    ${attrs.shellHook or ""}
-  '';
 })
