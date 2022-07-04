@@ -12,9 +12,9 @@ base.mkDerivation (attrs // {
     cp -r site/. $out/share/doc/${name}/${type}
   '';
   shellCommands = {
-    run = ''mkdocs serve "$@" &'';
+    run = {
+      script = ''mkdocs serve "$@" &'';
+      description = "Look at the docs in a web browser, which updates on file save";
+    };
   };
-  shellHook = ''
-    echo -e "Use \033[1mrun\033[0m to look at the docs in a webbrowser, which updates on file save"
-  '';
 })

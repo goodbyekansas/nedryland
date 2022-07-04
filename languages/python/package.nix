@@ -136,8 +136,18 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
   });
 
   shellCommands = base.mkShellCommands name ({
-    check = ''eval $installCheckPhase'';
-    format = "black . && isort .";
+    check = {
+      script = ''eval $installCheckPhase'';
+      description = "Run lints and tests.";
+    };
+    format = {
+      script = "black . && isort .";
+      description = "Format the code.";
+    };
+    build = {
+      script = ''eval $buildPhase'';
+      show = false;
+    };
   } // attrs.shellCommands or { });
 
   shellHook = ''

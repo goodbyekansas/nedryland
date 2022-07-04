@@ -1,12 +1,14 @@
 { bash, lib, symlinkJoin, writeScriptBin }:
 name:
 { build ? ''eval "$buildPhase"''
-, check ? ''eval "$checkPhase"''
-, run ? "echo '🏃 \"run\" not supported'"
-, format ? "echo '📃 \"format\" not supported'"
+, check ? { script = ''eval "$checkPhase"''; description = "Run the checks/test."; }
+, run ? { script = "echo '🏃 \"run\" not supported'"; show = false; }
+, format ? { script = "echo '📃 \"format\" not supported'"; show = false; }
 , ...
 }@commands:
 let
+  # need to wrangle a little bit to get the descriptions for the shell message
+  allCommands = commands // { inherit build check run format; };
   inner = cmds: symlinkJoin {
     name = "${name}-shell-commands";
     paths = lib.mapAttrsToList
@@ -19,7 +21,7 @@ let
 
         # source setup to get functions like genericBuild for example
         # as users might expect this to exist
-        NIX_BUILD_TOP=$envDir source $stdenv/setup
+        NIX_BUILD_TOP=$envDir source $stdenv/setup > /dev/null
 
         # reset the shell env
         source "$envDir"/shell-env
@@ -29,10 +31,20 @@ let
 
         rm -rf "$envDir"
 
-        ${script}
+        ${if builtins.isAttrs script then script.script else script}
       '')
       cmds;
+    passthru = {
+      _descriptions = builtins.mapAttrs
+        (_: value:
+          {
+            description = (if builtins.isAttrs value then value.description or "" else "");
+            args = (if builtins.isAttrs value then value.args or "" else "");
+            show = (if builtins.isAttrs value then value.show or true else true);
+          }
+        )
+        allCommands;
+    };
   };
 in
-# need to wrangle a little bit to get the defaults
-lib.makeOverridable inner (commands // { inherit build check run format; })
+lib.makeOverridable inner allCommands
