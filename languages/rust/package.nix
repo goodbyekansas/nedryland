@@ -138,9 +138,20 @@ base.mkDerivation
     safeAttrs // {
       inherit stdenv propagatedBuildInputs checkInputs;
       shellCommands = {
-        run = ''cargo run "$@"'';
-        format = ''cargo fmt'';
-        debug = ''RUST_DEBUG=1 "$@"'';
+        run = {
+          script = ''cargo run "$@"'';
+          description = "Run the application.";
+          args = "args ...";
+        };
+        format = {
+          script = ''cargo fmt'';
+          description = "Format the code.";
+        };
+        debug = {
+          script = ''RUST_DEBUG=1 "$@"'';
+          description = "Run a command with RUST_DEBUG set.";
+          args = "command args ...";
+        };
       } // safeAttrs.shellCommands or { };
       strictDeps = true;
       disallowedReferences = [ vendor ];

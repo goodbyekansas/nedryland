@@ -72,6 +72,11 @@ in
                       echo 🐚 Running shell hook for \"${targetName}\"
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"
+                      esc=$(printf '\e[')
+                      echo "Available commands for this shell are:"
+                      ${builtins.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (name: desc:
+                        ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
+                        (pkgs.lib.filterAttrs (_: value: value.show) drv.shellCommands._descriptions))}
                     '';
                   });
                 in

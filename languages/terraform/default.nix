@@ -17,6 +17,7 @@
     }:
     let
       attrs = (builtins.removeAttrs attrs' [ "variables" "srcExclude" "subComponents" ]);
+      terraformPkg = pkgs."${versions.terraform}";
     in
     base.mkComponent rec {
       inherit name subComponents;
@@ -31,7 +32,7 @@
               && !(builtins.any (pred: pred path type) srcExclude)
           );
         };
-        buildInputs = [ pkgs."${versions.terraform}" ] ++ buildInputs;
+        buildInputs = [ terraformPkg ] ++ buildInputs;
 
         checkPhase = ''
           terraform init -backend=false
@@ -48,26 +49,33 @@
           runHook postInstall
         '';
         phases = [ "unpackPhase" "installPhase" "checkPhase" ];
-        shellHook = ''
-          terraform()
-          {
-            ${preTerraformHook}
-            subcommand="$1"
-            ${if disableApplyInShell then ''
-            if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
-              echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
-              return 1
-            else
-              command terraform "$@"
-              return $?
-            fi
-          '' else ''
-            command terraform "$@"
-            return $?
-          ''}
-            ${postTerraformHook}
-          }
 
+        shellCommands = {
+          build = {
+            script = "eval $buildPhase";
+            show = false;
+          };
+          terraform = {
+            script = ''
+              ${preTerraformHook}
+              subcommand="$1"
+              ${if disableApplyInShell then ''
+                if [ $# -gt 0 ] && [ "$subcommand" == "apply" ]; then
+                  echo "Local 'apply' has been disabled, which probably means that application of Terraform config is done centrally"
+                  exit 1
+                else
+                  ${terraformPkg}/bin/terraform "$@"
+                fi
+              '' else ''
+                ${terraformPkg}/bin/terraform "$@"
+              ''}
+              ${postTerraformHook}'';
+            show = false;
+          };
+        } // attrs.shellCommands or { };
+
+        shellHook = ''
+          ${if disableApplyInShell then ''echo "❕ Note that terraform apply is disabled in this shell."'' else ""}
           ${shellHook}
         '';
       });
