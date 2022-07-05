@@ -263,5 +263,9 @@ rec {
         name = "${name}-rust-protobuf";
         src = generatedCode;
         propagatedBuildInputs = builtins.map (pi: pi.rust.package) protoInputs;
+
+        # Disabling the check phase as we do not care about
+        # formatting or testing generated code.
+        checkPhase = "";
       };
 }
