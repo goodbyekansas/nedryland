@@ -30,7 +30,7 @@ in
     _: component:
       (
         let
-          derivationShells =
+          toShells = component:
             builtins.mapAttrs
               (name: drv':
                 let
@@ -90,6 +90,7 @@ in
               )
               (lib.filterAttrs (_: lib.isDerivation) component);
 
+          derivationShells = toShells component;
           # also include non-derivation attrsets in the passthru property of the top-level
           # shell to support nested components
           derivationsAndAttrsets = (
@@ -111,7 +112,17 @@ in
               });
         in
         defaultShell.overrideAttrs (_: {
-          passthru = derivationsAndAttrsets;
+          passthru = derivationsAndAttrsets // lib.optionalAttrs
+            (component ? docs)
+            ({
+              docs = mkShell {
+                shellHook = builtins.abort ''
+                  Invalid shell docs!
+                  🐚 The docs attribute is just the combination of the sub-targets.
+                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'';
+                passthru = toShells (component.docs // { inherit (component) path; });
+              };
+            });
         })
       )
   )
