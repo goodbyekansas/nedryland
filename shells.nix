@@ -1,4 +1,5 @@
-{ pkgs
+{ mkShell
+, lib
 , components
 , mapComponentsRecursive
 , parseConfig
@@ -20,7 +21,7 @@ let
         builtins.map getAllPackages (builtins.filter builtins.isAttrs (builtins.attrValues components))
     );
 
-  all = pkgs.mkShell {
+  all = mkShell {
     buildInputs = (getAllPackages components);
   };
 in
@@ -39,6 +40,7 @@ in
                   # variant of the matrix
                   drv = enableChecks drv';
                   targetName = "${component.name}.${name}";
+                  shellCommandsDesc = lib.filterAttrs (_: value: value.show) (drv.shellCommands or { })._descriptions or { };
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
                     name = "${targetName}-shell";
@@ -46,7 +48,7 @@ in
                     # this will get merged with nativeBuildInputs
                     # from "drv" inside mkShell so no need to
                     # add to it here
-                    nativeBuildInputs = drv.shellInputs or [ ] ++ (pkgs.lib.optional (drv ? shellCommands) drv.shellCommands);
+                    nativeBuildInputs = drv.shellInputs or [ ] ++ (lib.optional (drv ? shellCommands) drv.shellCommands);
 
                     # we will get double shellhooks if we do not
                     # remove this here
@@ -73,27 +75,27 @@ in
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"
                       esc=$(printf '\e[')
-                      echo "Available commands for this shell are:"
-                      ${builtins.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (name: desc:
+                      ${if shellCommandsDesc != { } then ''echo "Available commands for this shell are:"'' else ""}
+                      ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: desc:
                         ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
-                        (pkgs.lib.filterAttrs (_: value: value.show) drv.shellCommands._descriptions))}
+                        shellCommandsDesc)}
                     '';
                   });
                 in
-                pkgs.mkShell.override
+                mkShell.override
                   {
                     stdenv = drv.stdenv;
                   }
                   shellPkg
               )
-              (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component);
+              (lib.filterAttrs (_: lib.isDerivation) component);
 
           # also include non-derivation attrsets in the passthru property of the top-level
           # shell to support nested components
           derivationsAndAttrsets = (
-            pkgs.lib.filterAttrs
+            lib.filterAttrs
               (
-                _: v: builtins.isAttrs v && !pkgs.lib.isDerivation v
+                _: v: builtins.isAttrs v && !lib.isDerivation v
               )
               component
           ) // derivationShells;
@@ -102,12 +104,10 @@ in
             if (builtins.length (builtins.attrValues derivationShells)) == 1 then
               builtins.head (builtins.attrValues derivationShells)
             else
-              derivationShells."${config.defaultTarget}" or (pkgs.mkShell {
-                shellHook = ''
-                  echo -e "🐚 \e[32;4;31mCould not decide on a default shell\033[0m for component \"${component.name}\""
-                  echo -e "🎯 Available targets are: \033[1m${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}\033[0m"
-                  exit 1
-                '';
+              derivationShells."${config.defaultTarget}" or (mkShell {
+                shellHook = builtins.abort ''
+                  🐚 Could not decide on a default shell for component "${component.name}"
+                  🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'';
               });
         in
         defaultShell.overrideAttrs (_: {
