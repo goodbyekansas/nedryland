@@ -16,15 +16,15 @@ assert assertMsg (builtins.length crossRust.rust == 2) "Expected crossRust to ha
 # Docs
 # Have to change these tests later when we combine all docs to a single target.
 assert assertMsg (baseRust ? docs.api) "Expected baseRust to contain api docs in `docs.api`";
-assert assertMsg (lib.isDerivation baseRust.docs) "Expected baseRust.docs to be a derivation";
+assert assertMsg (baseRust.docs ? isNedrylandComponent) "Expected baseRust.docs to be a Nedryland component";
 assert assertMsg (lib.isDerivation baseRust.docs.api) "Expected baseRust.docs.api to be a derivation";
 
 assert assertMsg (windowsRust ? docs.api) "Expected windowsRust to contain api docs in `docs.api`";
-assert assertMsg (lib.isDerivation windowsRust.docs) "Expected windowsRust.docs to be a derivation";
+assert assertMsg (windowsRust.docs ? isNedrylandComponent) "Expected windowsRust.docs to be a Nedryland component";
 assert assertMsg (lib.isDerivation windowsRust.docs.api) "Expected windowsRust.docs.api to be a derivation";
 
 assert assertMsg (crossRust ? docs.api) "Expected crossRust to contain docs.";
-assert assertMsg (lib.isDerivation crossRust.docs) "Expected crossRust.docs to be a derivation";
+assert assertMsg (crossRust.docs ? isNedrylandComponent) "Expected crossRust.docs to be a Nedryland component";
 assert assertMsg (lib.isDerivation crossRust.docs.api) "Expected crossRust.docs.api to be a derivation";
 
 # buildInput propagation tests

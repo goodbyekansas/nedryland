@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- To get all the documentation you now need to call it on the .all target since docs is a component now.
+
 ### Added
 - Sphinx documentation generation now supports Google-style docstrings thanks to the Napoleon extension shipped with Sphinx.
 - Sphinx documentation can now pick up extra extensions from the config `[python] sphinx-extensions = [ "sphinx.ext.imgmath" ]`
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - shellCommands does not print any internal setup.
+- Shelling into documentation.
 
 ## [6.1.0] - 2022-06-16
 

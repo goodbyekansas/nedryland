@@ -1,39 +1,37 @@
 pkgs:
 rec {
   mkComponent =
-    path: mkCombinedDeployment: parseConfig:
+    path: mkCombinedDeployment: parseConfig: mkDocs:
     let
       mkComponentInner = attrs'@{ name, subComponents ? { }, nedrylandType ? "component", ... }:
         let
-          attrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
-          component' =
-            (attrs // {
-              inherit name path nedrylandType;
-              isNedrylandComponent = true;
-              __toString = self: "Nedryland component: ${self.name}";
-            } // (pkgs.lib.optionalAttrs (attrs ? deployment && attrs.deployment != { }) {
-              # the deploy target is simply the sum of everything
-              # in the deployment set
-              deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
-            }) // (pkgs.lib.optionalAttrs (attrs ? docs) {
-              # the docs target is a symlinkjoin of all sub-derivations
-              docs =
+          cleanedAttrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
+          attrs = (
+            builtins.mapAttrs
+              (name': value:
                 let
-                  resolvedDocDrvs = builtins.mapAttrs
-                    (key: func: (func.docfunction name key))
-                    (pkgs.lib.filterAttrs (_: v: builtins.isAttrs v && v ? docfunction) attrs.docs);
-                  attrsWithResolvedDocDrvs = attrs.docs // resolvedDocDrvs;
+                  value' =
+                    if name' == "docs" &&
+                      ! value ? _isNedrylandCombinedDocs &&
+                      builtins.isAttrs value
+                    then mkDocs value else value;
                 in
-                pkgs.symlinkJoin {
-                  name = "${name}-docs";
-                  paths = builtins.attrValues resolvedDocDrvs ++ (builtins.filter pkgs.lib.isDerivation (builtins.attrValues attrs.docs));
-                  passthru = attrsWithResolvedDocDrvs;
-                  postBuild = ''
-                    mkdir -p $out/share/doc/${name}/
-                    echo '${builtins.toJSON attrsWithResolvedDocDrvs}' > $out/share/doc/${name}/metadata.json
-                  '';
-                };
-            }));
+                if value' ? _isNedrylandCombinedDocs then
+                  value'.resolve (value'.name or name)
+                else
+                  value'
+              )
+              cleanedAttrs
+          );
+          component' = (attrs // {
+            inherit name path nedrylandType;
+            isNedrylandComponent = true;
+            __toString = self: "Nedryland component: ${self.name}";
+          } // (pkgs.lib.optionalAttrs (attrs ? deployment && attrs.deployment != { }) {
+            # the deploy target is simply the sum of everything
+            # in the deployment set
+            deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
+          }));
 
           component = component';
           docsRequirement = (parseConfig {

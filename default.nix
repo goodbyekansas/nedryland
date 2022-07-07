@@ -95,9 +95,12 @@ in
         componentFns = import ./component.nix pkgs;
 
         # create the non-extended base
-        createMinimalBase = { mkComponent }:
+        createMinimalBase = { mkComponent, mkDocs }:
           let
-            mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
+            mkComponentBase = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
+            mkComponent' = (mkComponentBase mkDocs');
+            mkDocs' = mkDocs mkComponent';
+
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
             enableChecksOverride = enable: drv:
               if enable && !(drv.doCheck or false) then
@@ -177,6 +180,7 @@ in
               mkClient = targets: mkComponent' (targets // { nedrylandType = "client"; });
               mkService = targets: mkComponent' (targets // { nedrylandType = "service"; });
               mkLibrary = targets: mkComponent' (targets // { nedrylandType = "library"; });
+              mkDocs = mkDocs';
               extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;
@@ -234,6 +238,7 @@ in
         # create the final, extended base and make it overridable
         minimalBase = pkgs.lib.makeOverridable createMinimalBase {
           mkComponent = componentFns.mkComponent ./.;
+          mkDocs = import ./docs.nix pkgs;
         };
 
         # callFile and callFunction will auto-populate dependencies

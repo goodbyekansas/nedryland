@@ -15,7 +15,7 @@ in
 
 builtins.mapAttrs
   (_: f: attrs: {
-    docfunction = (name: type: (f ({ inherit name type; } // attrs)));
+    docFunction = name: type: (f ({ inherit name type; } // attrs));
   })
 rec {
   mkProjectDocs =

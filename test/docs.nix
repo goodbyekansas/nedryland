@@ -1,5 +1,5 @@
 pkgs: docMatrix:
-pkgs.runCommand "test-doc-out-path" { outPath = docMatrix.awesomeClient.docs; jason = pkgs.jq; } ''
+pkgs.runCommand "test-doc-out-path" { outPath = docMatrix.awesomeClient.docs.all; jason = pkgs.jq; } ''
   set -e
   touch $out
   assertPathExists() {
