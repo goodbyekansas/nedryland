@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.0] - 2022-07-11
+
 ### Added
 - Sphinx documentation generation now supports Google-style docstrings thanks to the Napoleon extension shipped with Sphinx.
 - Sphinx documentation can now pick up extra extensions from the config `[python] sphinx-extensions = [ "sphinx.ext.imgmath" ]`
