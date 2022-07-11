@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `shellCommands` can take sets with "script", "description", "args" and "show" to generate the shell welcome message for the command.
 
 ### Fixed
+- `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
 - shellCommands does not print any internal setup.
 - Shells for `docs` derivations now works again, and the `doc` target itself warns that it is not a useful shell.
 

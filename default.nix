@@ -163,10 +163,8 @@ in
                   {
                     isNedrylandDerivation = true;
                     passthru = (attrs.passthru or { }) // { isNedrylandDerivation = true; };
+                    shellCommands = minimalBase.mkShellCommands name attrs.shellCommands or { };
                   }
-                  // (pkgs.lib.optionalAttrs (attrs ? shellCommands) {
-                  shellCommands = minimalBase.mkShellCommands name attrs.shellCommands;
-                })
                   //
                   (pkgs.lib.optionalAttrs (attrs ? src) {
                     src = if pkgs.lib.isStorePath attrs.src then attrs.src else filteredSrc;
