@@ -16,7 +16,7 @@
     , ...
     }:
     let
-      attrs = (builtins.removeAttrs attrs' [ "variables" "srcExclude" "subComponents" ]);
+      attrs = (builtins.removeAttrs attrs' [ "variables" "srcExclude" "subComponents" "shellCommands" ]);
       terraformPkg = pkgs."${versions.terraform}";
     in
     base.mkComponent rec {
@@ -72,7 +72,7 @@
               ${postTerraformHook}'';
             show = false;
           };
-        } // attrs.shellCommands or { };
+        } // attrs'.shellCommands or { };
 
         shellHook = ''
           ${if disableApplyInShell then ''echo "❕ Note that terraform apply is disabled in this shell."'' else ""}
