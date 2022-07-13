@@ -1,19 +1,10 @@
 #! /usr/bin/env bash
 
-is_bash() {
-    [[ $1 == *.sh ]] && return 0
-    [[ $1 == */bash-completion/* ]] && return 0
-    [[ $(file -b --mime-type "$1") == text/x-shellscript ]] && return 0
-    return 1
-}
-
 EXIT_CODE=0
 
-while IFS= read -r -d $'' file; do
-    if ! git check-ignore -q "$file" && is_bash "$file"; then
-        @shellcheck@ -W0 -s bash "$@" "$file"
-        EXIT_CODE=$((EXIT_CODE + $?))
-    fi
-done < <(find . -type f \! -path "./.git/*" -print0)
+while IFS= read -r script; do
+    @shellcheck@ "$script"
+    EXIT_CODE=$((EXIT_CODE + $?))
+done < <(@shfmt@ -f .)
 
 exit $EXIT_CODE

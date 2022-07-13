@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
 - Terraform components can define shellCommands.
 
+### Changed
+- shellcheck from the ci attribute will now find more shell scripts and is faster.
+
 ### Changed Versions
 - prost-build from 0.9.0 to 0.10.4 for protobuf
 - tonic from 0.6.1 to 0.7.2
