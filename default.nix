@@ -63,6 +63,7 @@ in
       diff = "${pkgs.diffutils}/bin/diff";
       mktemp = "${pkgs.mktemp}/bin/mktemp";
       shellcheck = "${pkgs.shellcheck}/bin/shellcheck";
+      shfmt = "${pkgs.shfmt}/bin/shfmt";
       nixLinter = "${pkgs.nix-linter}/bin/nix-linter";
       # Pointless to do this on a remote machine.
       preferLocalBuild = true;
