@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
 - Terraform components can define shellCommands.
+- Generated setup.py files in python components excludes the generated tests folder.
 
 ### Changed
 - shellcheck from the ci attribute will now find more shell scripts and is faster.
