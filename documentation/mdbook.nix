@@ -17,5 +17,5 @@ base.mkDerivation (attrs // {
         Preview the book and watches the book's src directory for changes, rebuilding the book and refreshing clients for each change.
       '';
     };
-  };
+  } // attrs.shellCommands or { };
 })

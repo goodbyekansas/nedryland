@@ -27,18 +27,26 @@ rec {
 
   mkDocs = import ./mkdocs.nix pkgs base;
 
-  mkSinglePage = { name, src, type ? "user" }: base.mkDerivation {
+  mkSinglePage = args@{ name, src, type ? "user", ... }: base.mkDerivation {
     inherit name src;
     nativeBuildInputs = [ pkgs.python3.pkgs.markdown ];
     phases = [ "buildPhase" "installPhase" ];
 
     buildPhase = ''
+      runHook preBuild
       python -m markdown --output_format=html --file=$name.html $src
+      runHook postBuild
     '';
 
     installPhase = ''
+      runHook preInstall
       mkdir -p $out/share/doc/$name/${type}
       cp $name.html $out/share/doc/$name/${type}/index.html
+      runHook postInstall
     '';
+
+    shellCommands = {
+      run = "eval $buildPhase && xdg-open $name.html";
+    } // args.shellCommands or { };
   };
 }

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sphinx documentation generation now supports Google-style docstrings thanks to the Napoleon extension shipped with Sphinx.
 - Sphinx documentation can now pick up extra extensions from the config `[python] sphinx-extensions = [ "sphinx.ext.imgmath" ]`
 - `shellCommands` can take sets with "script", "description", "args" and "show" to generate the shell welcome message for the command.
+- `documentation.mkSinglePage` now runs `preBuild`, `postBuild`, `preInstall` and `postInstall` hooks.
 
 ### Changed Versions
 - prost-build from 0.9.0 to 0.10.4 for protobuf
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - shellCommands does not print any internal setup.
 - Shells for `docs` derivations now works again, and the `doc` target itself warns that it is not a useful shell.
+- documentation derivations now merges `shellCommands` correctly.
 
 ## [6.1.0] - 2022-06-16
 
