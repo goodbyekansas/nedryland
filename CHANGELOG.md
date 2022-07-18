@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `documentation.mkSinglePage` now runs `preBuild`, `postBuild`, `preInstall` and `postInstall` hooks.
+
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
 - Terraform components can define shellCommands.

@@ -16,5 +16,5 @@ base.mkDerivation (attrs // {
       script = ''mkdocs serve "$@" &'';
       description = "Look at the docs in a web browser, which updates on file save";
     };
-  };
+  } // attrs.shellCommands or { };
 })
