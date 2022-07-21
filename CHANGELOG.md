@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - shellCommands does not print any internal setup.
 - Shells for `docs` derivations now works again, and the `doc` target itself warns that it is not a useful shell.
+- Python components' `nativeBuildInputs` and `checkInputs` now resolve lists properly again.
 
 ## [6.1.0] - 2022-06-16
 
