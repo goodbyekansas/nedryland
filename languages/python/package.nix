@@ -78,16 +78,9 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
   inherit src version setupCfg pylintrc format preBuild doStandardTests;
   pname = name;
 
-  # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true. Items listed in tests_require go here.
-  checkInputs = (resolveInputs "checkInputs" attrs.checkInputs or [ ]);
-
   # Build and/or run-time dependencies that need to be be compiled
   # for the host machine. Typically non-Python libraries which are being linked.
   buildInputs = resolveInputs "buildInputs" attrs.buildInputs or [ ];
-
-  # Build-time only dependencies. Typically executables as well
-  # as the items listed in setup_requires
-  nativeBuildInputs = resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or [ ];
 
   passthru = {
     shellInputs = (resolveInputs "shellInputs" args.shellInputs or [ ])

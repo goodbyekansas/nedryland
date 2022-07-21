@@ -7,8 +7,6 @@ let
     };
   }).version}";
 
-  inherit (import ./utils.nix base) resolveInputs;
-
   hooks = callPackage ./hooks { };
 
   mkPackage = callPackage ./package.nix { inherit base defaultPythonVersion; };
@@ -32,11 +30,22 @@ let
     let
       # Only build wheel if we have a format that builds a wheel. Duh.
       buildWheel = builtins.elem (attrs.format or "setuptools") [ "setuptools" "flit" "pyproject" ];
+      pyPkgs = (attrs.pythonVersion or defaultPythonVersion).pkgs;
+      resolveInputs = (import ./utils.nix base).resolveInputs pyPkgs attrs.name;
       package =
         let
           pkg = postPackageFunc (mkPackage (attrs // {
-            checkInputs = (py: attrs.checkInputs or (_: [ ]) py ++ [ (hooks.check py) ]);
-            nativeBuildInputs = (py: attrs.nativeBuildInputs or (_: [ ]) py ++ [ (hooks.mypy py.python) ]);
+            # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true.
+            # Items listed in tests_require go here.
+            checkInputs = (
+              resolveInputs "checkInputs" attrs.checkInputs or [ ]
+            ) ++ [ (hooks.check pyPkgs) ];
+
+            # Build-time only dependencies. Typically executables as well
+            # as the items listed in setup_requires
+            nativeBuildInputs = (
+              resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or [ ]
+            ) ++ [ (hooks.mypy pyPkgs.python) ];
           }));
         in
         if buildWheel then addWheelOutput pkg else pkg;
