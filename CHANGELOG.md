@@ -24,7 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - prost-build from 0.9.0 to 0.10.4 for protobuf
 - tonic from 0.6.1 to 0.7.2
 
-# [6.2.0] - 2022-07-11
+## [6.3.0] - 2022-09-19
+
+### Fixed
+- Python dependencies not being discovered when running pip install. Since dependencies
+  are fetched with Nix, we instead tell pip to not "verify" them when doing the
+  installation. This was a problem for example for PySide2 and Shiboken.
+
+## [6.2.0] - 2022-07-11
 
 ### Added
 - Sphinx documentation generation now supports Google-style docstrings thanks to the Napoleon extension shipped with Sphinx.

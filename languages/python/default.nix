@@ -46,6 +46,11 @@ let
             nativeBuildInputs = (
               resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or [ ]
             ) ++ [ (hooks.mypy pyPkgs.python) ];
+
+            # Don't install dependencies with pip, let nix handle that
+            preInstall = ''
+              pipInstallFlags+=('--no-deps')
+            '';
           }));
         in
         if buildWheel then addWheelOutput pkg else pkg;
