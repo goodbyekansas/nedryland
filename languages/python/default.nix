@@ -37,6 +37,10 @@ let
           pkg = postPackageFunc (mkPackage (attrs // {
             checkInputs = (py: attrs.checkInputs or (_: [ ]) py ++ [ (hooks.check py) ]);
             nativeBuildInputs = (py: attrs.nativeBuildInputs or (_: [ ]) py ++ [ (hooks.mypy py.python) ]);
+            # Don't install dependencies with pip, let nix handle that
+            preInstall = ''
+              pipInstallFlags+=('--no-deps')
+            '';
           }));
         in
         if buildWheel then addWheelOutput pkg else pkg;
