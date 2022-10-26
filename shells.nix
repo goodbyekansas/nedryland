@@ -74,11 +74,8 @@ in
                       echo 🐚 Running shell hook for \"${targetName}\"
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"
-                      esc=$(printf '\e[')
                       ${if shellCommandsDesc != { } then ''echo "Available commands for this shell are:"'' else ""}
-                      ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: desc:
-                        ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
-                        shellCommandsDesc)}
+                      ${drv.shellCommands.helpText}
                     '';
                   });
                 in

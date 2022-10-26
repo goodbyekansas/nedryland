@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `documentation.mkSinglePage` now runs `preBuild`, `postBuild`, `preInstall` and `postInstall` hooks.
+- `helpText` function to shell commands which can be used to print out the help in for
+  example a `shellHook`.
 
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
