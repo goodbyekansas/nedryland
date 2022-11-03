@@ -73,6 +73,7 @@ base.mkDerivation {
       --subst-var-by version ${version} \
       --subst-var-by external "$cargoDependencies"
 
+    echo 'pub use prost;' >> ./src/lib.rs
     ${if includeServices then "echo 'pub use tonic;' >> ./src/lib.rs" else "" }
   '';
 
