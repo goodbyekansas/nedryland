@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `documentation.mkSinglePage` now runs `preBuild`, `postBuild`, `preInstall` and `postInstall` hooks.
 - `helpText` function to shell commands which can be used to print out the help in for
   example a `shellHook`.
+- Re-export `prost` for Rust Protobuf generated code. This makes it easier to avoid
+  version conflicts caused by the inter-dependency between prost and tonic.
 
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
