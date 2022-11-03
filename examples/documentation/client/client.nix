@@ -1,8 +1,7 @@
-{ base, python38 }:
+{ base }:
 base.languages.python.mkClient rec{
   name = "awesome-client";
   version = "1.0.0";
-  pythonVersion = python38;
   src = ./.;
   srcExclude = [
     (path: type: (type == "directory" && baseNameOf path == "manual"))

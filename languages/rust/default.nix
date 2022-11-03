@@ -254,7 +254,7 @@ rec {
             tonicVersion
             tonicFeatures
             tonicBuildVersion;
-          pyToml = pkgs.python38Packages.toml;
+          pyToml = pkgs.python3Packages.toml;
         };
     in
     mkLibrary

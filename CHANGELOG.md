@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shellcheck from the ci attribute will now find more shell scripts and is faster.
 
 ### Changed Versions
+- nixpkgs from 21.11 to 22.05
 - prost-build from 0.9.0 to 0.10.4 for protobuf
 - tonic from 0.6.1 to 0.7.2
 

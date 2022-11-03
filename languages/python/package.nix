@@ -161,10 +161,4 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
     fi
     ${attrs.shellHook or ""}
   '';
-
-  postFixup = ''
-    ${attrs.postFixup or ""}
-    mkdir -p $out/nedryland
-    touch $out/nedryland/add-to-mypy-path
-  '';
 }))
