@@ -1,15 +1,6 @@
 { makeSetupHook }: {
   wheelList = makeSetupHook { name = "wheel-list-hook"; } ./wheel-list.bash;
 
-  mypy = pythonVersion: makeSetupHook
-    {
-      name = "mypy-hook";
-      substitutions = {
-        "sitePackages" = pythonVersion.sitePackages;
-      };
-    }
-    ./mypy-path.sh;
-
   check = pythonPkgs: makeSetupHook
     {
       name = "check-hook";

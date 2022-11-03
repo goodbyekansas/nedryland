@@ -76,11 +76,11 @@ rec {
 
   grpcio-testing = super.buildPythonPackage rec {
     pname = "grpcio-testing";
-    version = "1.26.0";
+    version = super.grpcio.version;
 
     src = super.fetchPypi {
       inherit pname version;
-      sha256 = "0svwdw824z8d49l8100qibkjgl84bpdg3jyccfidzx351nj2wal8";
+      sha256 = "825c0c7bd01dfafe1cefd5c0aeb53aba871f40a556b00563912cd9c8837b243d";
     };
 
     preBuild = ''
@@ -143,26 +143,6 @@ rec {
     doCheck = false;
   };
 
-  markdown-include = super.buildPythonPackage rec {
-    pname = "markdown-include";
-    version = "0.6.0";
-
-    preBuild = ''
-      export HOME=$PWD
-    '';
-
-    src = super.fetchPypi {
-      inherit pname version;
-      sha256 = "18p4qfhazvskcg6xsdv1np8m1gc1llyabp311xzhqy7p6q76hpbg";
-    };
-
-    doCheck = false;
-
-    propagatedBuildInputs = [
-      super.markdown
-    ];
-  };
-
   # Borrowed from nixpkgs 20.09 for ftrack which has an upper version limit
   arrow-0-15 = super.buildPythonPackage rec {
     pname = "arrow";
@@ -189,6 +169,26 @@ rec {
     disabledTests = [
       "test_parse_tz_name_zzz"
     ];
+  };
+
+  # borrowed from nixos-21.05 since ftrack has < 3
+  pyparsing_2 = super.buildPythonPackage rec {
+    pname = "pyparsing";
+    version = "2.4.7";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "pyparsing";
+      repo = pname;
+      rev = "pyparsing_${version}";
+      sha256 = "14pfy80q2flgzjcx8jkracvnxxnr59kjzp3kdm5nh232gk1v6g6h";
+    };
+
+    # https://github.com/pyparsing/pyparsing/blob/847af590154743bae61a32c3dc1a6c2a19009f42/tox.ini#L6
+    checkInputs = [ super.coverage ];
+    checkPhase = ''
+      coverage run --branch simple_unit_tests.py
+      coverage run --branch unitTests.py
+    '';
   };
 
   ftrack-python-api = super.buildPythonPackage rec {
@@ -224,7 +224,7 @@ rec {
         pythonImportsCheck = [ "websocket" ];
       }
       )
-      super.pyparsing
+      pyparsing_2
       super.future
       super.requests
       arrow-0-15
@@ -235,13 +235,69 @@ rec {
 
   spacy-english = super.buildPythonPackage rec {
     name = "spacy-english";
-    version = "3.1.0";
+    version = super.spacy.version;
     src = fetchzip {
       url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-${version}/en_core_web_sm-${version}.tar.gz";
-      sha256 = "sha256-a7dEDNLAXv867aL9eRw3Peojg0zPzC+qUVYKunllEEc=";
+      sha256 = "sha256-mNIQPbivv4/DzU6tU9iN+rRQg+nCA3Taj8sjxarMxUk=";
     };
     propagatedBuildInputs = [ super.spacy ];
   };
+
+  # Wanddb is not passing tests in 22.05
+  wandb = super.wandb.overrideAttrs (_:
+    {
+      disabledTestPaths = [
+        # Tests that try to get chatty over sockets or spin up servers, not possible in the nix build environment.
+        "tests/integrations/test_keras.py"
+        "tests/integrations/test_torch.py"
+        "tests/test_cli.py"
+        "tests/test_data_types.py"
+        "tests/test_file_stream.py"
+        "tests/test_file_upload.py"
+        "tests/test_footer.py"
+        "tests/test_internal_api.py"
+        "tests/test_label_full.py"
+        "tests/test_login.py"
+        "tests/test_meta.py"
+        "tests/test_metric_full.py"
+        "tests/test_metric_internal.py"
+        "tests/test_mode_disabled.py"
+        "tests/test_model_workflows.py"
+        "tests/test_mp_full.py"
+        "tests/test_public_api.py"
+        "tests/test_redir.py"
+        "tests/test_runtime.py"
+        "tests/test_sender.py"
+        "tests/test_start_method.py"
+        "tests/test_tb_watcher.py"
+        "tests/test_telemetry_full.py"
+        "tests/test_util.py"
+        "tests/wandb_agent_test.py"
+        "tests/wandb_artifacts_test.py"
+        "tests/wandb_integration_test.py"
+        "tests/wandb_run_test.py"
+        "tests/wandb_settings_test.py"
+        "tests/wandb_sweep_test.py"
+        "tests/wandb_tensorflow_test.py"
+        "tests/wandb_verify_test.py"
+        "tests/test_tpu.py"
+        "tests/test_plots.py"
+        "tests/test_profiler.py"
+
+        # Requires metaflow, which is not yet packaged.
+        "tests/integrations/test_metaflow.py"
+
+        # Fails and borks the pytest runner as well.
+        "tests/wandb_test.py"
+
+        # Tries to access /homeless-shelter
+        "tests/test_tables.py"
+
+        # This is also bad
+        "functional_tests/kfp/wandb_probe.py "
+      ];
+    }
+  );
 
   pdoc = super.buildPythonPackage rec {
     pname = "pdoc";
@@ -286,23 +342,12 @@ rec {
 
   cloudevents = super.buildPythonPackage rec {
     pname = "cloudevents";
-    version = "1.2.0";
+    version = "1.6.2";
 
     src = super.fetchPypi {
       inherit pname version;
-      sha256 = "sha256-zd8VxfKagMJUsVIRcPrjZ8WCiwJVwu+E46pMXwLkTA8=";
+      sha256 = "sha256-ueDDT0qGQiPveqBRMupViyt+HxBv0+QtFpEAa53KrU0=";
     };
-
-    # Cloudevents does not package its packaing file
-    # https://github.com/cloudevents/sdk-python/issues/133
-    pypiPackaging = pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/cloudevents/sdk-python/390f5944c041d02979ecc403fb17fd49f4465b7a/pypi_packaging.py";
-      hash = "sha256-6GunKVAR+614mytmYDQwX5/w+A/5kbhmgC/inopn/6k=";
-    };
-
-    postUnpack = ''
-      cp $pypiPackaging cloudevents-1.2.0/pypi_packaging.py
-    '';
 
     propagatedBuildInputs = [
       super.deprecation
@@ -317,14 +362,12 @@ rec {
 
   functions-framework = super.buildPythonPackage rec {
     pname = "functions-framework";
-    version = "3.0.0";
+    version = "3.2.0";
 
     src = super.fetchPypi {
       inherit pname version;
-      sha256 = "sha256-QiqnLFTF4mB2404HTq3z5xNZWiWzh+xRBoqnuZUqUEc=";
+      sha256 = "sha256-3aUSBMh1NDQRZTB6CXsS5wYNK5UwyZ2yZMKsVUnFkgU=";
     };
-
-    patches = [ ./python-patches/functions-framework-setup.py ];
 
     preBuild = ''
       export HOME=$PWD

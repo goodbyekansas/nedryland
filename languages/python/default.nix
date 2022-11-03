@@ -45,7 +45,7 @@ let
             # as the items listed in setup_requires
             nativeBuildInputs = (
               resolveInputs "nativeBuildInputs" attrs.nativeBuildInputs or [ ]
-            ) ++ [ (hooks.mypy pyPkgs.python) ];
+            );
 
             # Don't install dependencies with pip, let nix handle that
             preInstall = ''

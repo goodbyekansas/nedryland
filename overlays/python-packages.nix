@@ -20,11 +20,7 @@ in
     (combined // {
       # pkgs.<python-version>.pkgs
       "${pythonVersion.attr}" = pythonVersion.pkg.override {
-        packageOverrides = _: super:
-          (import ./python-packages-common.nix pkgs super) //
-            (pkgs.lib.optionalAttrs (pythonVersion.attr == "python37")
-              (import ./python-packages-37.nix pkgs super)
-            );
+        packageOverrides = _: import ./python-packages-common.nix pkgs;
       };
 
       # pkgs.<python-version>Packages
