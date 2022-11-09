@@ -67,16 +67,18 @@ rec {
   inherit mkDocs addWheelOutput hooks;
 
   fromProtobuf = { name, version, protoSources, protoInputs, pythonVersion ? defaultPythonVersion }:
-    let
-      generatedCode = callPackage ./protobuf.nix { inherit base name version protoSources protoInputs; };
-    in
-    mkLibrary {
-      inherit version pythonVersion;
-      name = "${name}-python-protobuf";
-      src = generatedCode;
-      propagatedBuildInputs = (pypkgs: [ pypkgs.grpcio ] ++ builtins.map (pi: pi.python.package) protoInputs);
-      doStandardTests = false; # We don't want to run our strict tests on generated code and stubs
-    };
+    (mkLibrary
+      {
+        inherit version pythonVersion;
+        name = "${name}-python-protobuf";
+        src = callPackage ./protobuf.nix { inherit base name version protoSources protoInputs; };
+        propagatedBuildInputs = (pypkgs: [ pypkgs.grpcio ] ++ builtins.map (pi: pi.python.package) protoInputs);
+        doStandardTests = false; # We don't want to run our strict tests on generated code and stubs
+      } // {
+      __functor = self: { author, email }: self.overrideAttrs (_: {
+        src = callPackage ./protobuf.nix { inherit base name version protoSources protoInputs author email; };
+      });
+    });
 
   mkComponent = mkComponentWith base.mkComponent (x: x);
 

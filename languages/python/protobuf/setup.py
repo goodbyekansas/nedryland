@@ -6,8 +6,8 @@ pkgs_data = {name: ["**/*.pyi", "**/py.typed", "py.typed", "*.pyi"] for name in 
 setup(
     name="@packageName@",
     version="@version@",
-    author="GBK Pipeline Team",
-    author_email="pipeline@goodbyekansas.com",
+    author="Dennis Nedry",
+    author_email="dennis.nedry@jpark.com",
     description="Python type definitions for @packageName@",
     packages=pkgs,
     package_data=pkgs_data,
