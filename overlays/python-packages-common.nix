@@ -191,6 +191,24 @@ rec {
     '';
   };
 
+  types-six = python3.pkgs.buildPythonPackage rec {
+    pname = "types-six";
+    version = "1.16.0";
+    format = "setuptools";
+
+    src = python3.pkgs.fetchPypi {
+      inherit pname version;
+      sha256 = "sha256-mtQh042u0rxQGnUGXA9u4qA0zEhOS8S8suLDVgpGGeQ=";
+    };
+
+    # Module doesn't have tests
+    doCheck = false;
+
+    pythonImportsCheck = [
+      "six-stubs"
+    ];
+  };
+
   ftrack-python-api = super.buildPythonPackage rec {
     pname = "ftrack-python-api";
     version = "2.3.3";

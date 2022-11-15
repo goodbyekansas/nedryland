@@ -32,15 +32,22 @@ let
       buildWheel = builtins.elem (attrs.format or "setuptools") [ "setuptools" "flit" "pyproject" ];
       pyPkgs = (attrs.pythonVersion or defaultPythonVersion).pkgs;
       resolveInputs = (import ./utils.nix base).resolveInputs pyPkgs attrs.name;
+
+      # Aside from propagating dependencies, buildPythonPackage also injects
+      # code into and wraps executables with the paths included in this list.
+      # Items listed in install_requires go here
+      propagatedBuildInputs = resolveInputs "propagatedBuildInputs" attrs.propagatedBuildInputs or [ ];
+
       package =
         let
           pkg = postPackageFunc (mkPackage (attrs // {
+            inherit propagatedBuildInputs;
             # Dependencies needed for running the checkPhase. These are added to nativeBuildInputs when doCheck = true.
             # Items listed in tests_require go here.
             checkInputs = (
               resolveInputs "checkInputs" attrs.checkInputs or [ ]
             )
-            ++ [ (hooks.check pyPkgs) ]
+            ++ [ (hooks.check attrs.src pyPkgs) ]
             ++ (builtins.map (input: pyPkgs."types-${input.pname or input.name}" or null) (builtins.filter lib.isDerivation propagatedBuildInputs))
             ++ (lib.optional (attrs.format or "setuptools" == "setuptools") pyPkgs.types-setuptools);
 
