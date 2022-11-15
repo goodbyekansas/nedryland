@@ -39,7 +39,10 @@ let
             # Items listed in tests_require go here.
             checkInputs = (
               resolveInputs "checkInputs" attrs.checkInputs or [ ]
-            ) ++ [ (hooks.check pyPkgs) ];
+            )
+            ++ [ (hooks.check pyPkgs) ]
+            ++ (builtins.map (input: pyPkgs."types-${input.pname or input.name}" or null) (builtins.filter lib.isDerivation propagatedBuildInputs))
+            ++ (lib.optional (attrs.format or "setuptools" == "setuptools") pyPkgs.types-setuptools);
 
             # Build-time only dependencies. Typically executables as well
             # as the items listed in setup_requires
