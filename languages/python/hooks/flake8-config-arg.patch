@@ -1,0 +1,106 @@
+From a6bcbdb3ee9411aadbe31addba9da31e7995b234 Mon Sep 17 00:00:00 2001
+From: Simon Rainerson <simon.rainerson@goodbyekansas.com>
+Date: Wed, 16 Nov 2022 15:43:20 +0100
+Subject: [PATCH] Add --flake8-config argument
+
+---
+ pytest_flake8.py | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/pytest_flake8.py b/pytest_flake8.py
+index 5774714..fa63d67 100644
+--- a/pytest_flake8.py
++++ b/pytest_flake8.py
+@@ -21,6 +21,9 @@ def pytest_addoption(parser):
+     group.addoption(
+         '--flake8', action='store_true',
+         help="perform some flake8 sanity checks on .py files")
++    group.addoption(
++        '--flake8-config', default=None,
++        help="Flake8 config to use.")
+     parser.addini(
+         "flake8-ignore", type="linelist",
+         help="each line specifies a glob pattern and whitespace "
+@@ -52,6 +55,7 @@ def pytest_configure(config):
+         config._flake8showshource = config.getini("flake8-show-source")
+         config._flake8statistics = config.getini("flake8-statistics")
+         config._flake8exts = config.getini("flake8-extensions")
++        config._flake8config = config.option.flake8_config
+         config.addinivalue_line('markers', "flake8: Tests which run flake8.")
+         if hasattr(config, 'cache'):
+             config._flake8mtimes = config.cache.get(HISTKEY, {})
+@@ -70,6 +74,7 @@ def pytest_collect_file(path, parent):
+                 item.maxcomplexity = config._flake8maxcomplexity
+                 item.showshource = config._flake8showshource
+                 item.statistics = config._flake8statistics
++                item.config_file = config._flake8config
+                 return item
+             else:
+                 return Flake8Item(
+@@ -79,7 +84,8 @@ def pytest_collect_file(path, parent):
+                     maxlength=config._flake8maxlen,
+                     maxcomplexity=config._flake8maxcomplexity,
+                     showshource=config._flake8showshource,
+-                    statistics=config._flake8statistics)
++                    statistics=config._flake8statistics,
++                    config_file=config._flake8config)
+ 
+ 
+ def pytest_unconfigure(config):
+@@ -95,7 +101,8 @@ class Flake8Error(Exception):
+ class Flake8Item(pytest.Item, pytest.File):
+ 
+     def __init__(self, fspath, parent, flake8ignore=None, maxlength=None,
+-                 maxcomplexity=None, showshource=None, statistics=None):
++                 maxcomplexity=None, showshource=None, statistics=None,
++                 config_file=None):
+         super(Flake8Item, self).__init__(fspath, parent)
+         self._nodeid += "::FLAKE8"
+         self.add_marker("flake8")
+@@ -104,6 +111,7 @@ class Flake8Item(pytest.Item, pytest.File):
+         self.maxcomplexity = maxcomplexity
+         self.showshource = showshource
+         self.statistics = statistics
++        self.config_file = config_file
+ 
+     def setup(self):
+         if hasattr(self.config, "_flake8mtimes"):
+@@ -125,7 +133,8 @@ class Flake8Item(pytest.Item, pytest.File):
+                 self.maxlength,
+                 self.maxcomplexity,
+                 self.showshource,
+-                self.statistics
++                self.statistics,
++                self.config_file
+             )
+             to.flush()
+             te.flush()
+@@ -187,7 +196,7 @@ class Ignorer:
+ 
+ 
+ def check_file(path, flake8ignore, maxlength, maxcomplexity,
+-               showshource, statistics):
++               showshource, statistics, config_file):
+     """Run flake8 over a single file, and return the number of failures."""
+     args = []
+     if maxlength:
+@@ -198,13 +207,15 @@ def check_file(path, flake8ignore, maxlength, maxcomplexity,
+         args += ['--show-source']
+     if statistics:
+         args += ['--statistics']
++    if config_file:
++        args += ['--config', config_file]
+     app = application.Application()
+     if not hasattr(app, 'parse_preliminary_options_and_args'):  # flake8 >= 3.8
+         prelim_opts, remaining_args = app.parse_preliminary_options(args)
+         config_finder = config.ConfigFileFinder(
+             app.program,
+             prelim_opts.append_config,
+-            config_file=prelim_opts.config,
++            config_file=config_file or prelim_opts.config,
+             ignore_config_files=prelim_opts.isolated,
+         )
+         app.find_plugins(config_finder)
+-- 
+2.38.1
+

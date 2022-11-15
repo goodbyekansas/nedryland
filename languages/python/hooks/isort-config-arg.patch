@@ -1,0 +1,56 @@
+From 74b518337905de68574caf89c1be6722be4599fd Mon Sep 17 00:00:00 2001
+From: Simon Rainerson <simon.rainerson@goodbyekansas.com>
+Date: Thu, 17 Nov 2022 11:42:10 +0100
+Subject: [PATCH] Pass config to isort with --isort-config
+
+---
+ pytest_isort/__init__.py | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/pytest_isort/__init__.py b/pytest_isort/__init__.py
+index 0ac595a..2b984c6 100644
+--- a/pytest_isort/__init__.py
++++ b/pytest_isort/__init__.py
+@@ -43,6 +43,10 @@ def pytest_addoption(parser):
+         action='store_true',
+         help='perform import ordering checks on .py files',
+     )
++    group.addoption(
++        '--isort-config',
++        help='Config file to use.',
++    )
+ 
+     parser.addini(
+         'isort_ignore',
+@@ -59,6 +63,7 @@ def pytest_sessionstart(session):
+     if config.option.isort:
+         config._isort_mtimes = config.cache.get(MTIMES_HISTKEY, {})
+         config._isort_ignore = FileIgnorer(config.getini('isort_ignore'))
++        config._isort_config = config.option.isort_config
+ 
+ 
+ def _make_path_kwargs(p):
+@@ -191,6 +196,7 @@ class IsortItem(pytest.Item):
+         nodeid = parent.nodeid + "::ISORT"
++        self.config_file = getattr(parent.config, "_isort_config", None)
+         super().__init__(*args, nodeid=nodeid, parent=parent, **kwargs)
+         self.add_marker('isort')
+ 
+     def setup(self):
+         # Fetch mtime of file to compare with cache and for writing to cache
+@@ -204,11 +210,13 @@ class IsortItem(pytest.Item):
+     def runtest(self):
+         # Execute actual isort check.
+         try:
++            kwargs = {"settings_file": self.config_file, "src_paths": [os.getcwd()]} if self.config_file else {}
+             ok, stdout, stderr = py.io.StdCaptureFD.call(
+                 isort_check_file,
+                 self.fspath,
+                 show_diff=True,
+                 disregard_skip=False,
++                **kwargs
+             )
+         except FileSkipSetting:
+             # File was skipped due to isort native config
+-- 
+2.38.1

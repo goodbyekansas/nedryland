@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   example a `shellHook`.
 - Re-export `prost` for Rust Protobuf generated code. This makes it easier to avoid
   version conflicts caused by the inter-dependency between prost and tonic.
+- Python components exposes `pythonVersion`.
 
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
@@ -24,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - shellcheck from the ci attribute will now find more shell scripts and is faster.
 - Changed order of shell dependencies so shellInputs can't change the behavior of checks in the shell.
+- Python: Config settings for checks are generated outside of the component's working directory,
+  which means setup.cfg.include is now just setup.cfg. Tools using the configs are wrapped to use the
+  generated configs instead.
 
 ### Changed Versions
 - nixpkgs from 21.11 to 22.05

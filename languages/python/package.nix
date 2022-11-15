@@ -31,51 +31,10 @@ let
         } else pkgs.gitignoreSource args.src;
   src = if lib.isStorePath args.src then args.src else filteredSrc;
 
-  extendFile = { filePath, baseFile, name }:
-    pkgs.stdenv.mkDerivation {
-      inherit filePath src;
-      name = "pyconfig-${builtins.baseNameOf filePath}";
-      builder = builtins.toFile "builder.sh" ''
-        source $stdenv/setup
-        mkdir -p $out/$(dirname $filePath)
-
-        if [ ! -f $src/$filePath ] || [ -L $src/$filePath ]; then
-            echo "Using default \"$filePath\" because there is no \"$filePath\" in the source, or it is generated"
-            cp ${baseFile} $out/$filePath
-            chmod +w $out/$filePath
-
-            if [ -f $src/$filePath.include ]; then
-               echo "Including \"$filePath.include\" in \"$filePath\""
-               echo "" >> $out/$filePath
-               echo "# from ${name}'s $filePath.include" >> $out/$filePath
-               cat $src/$filePath.include >> $out/$filePath
-            fi
-            chmod -w $out/$filePath
-        else
-            echo "Using ${name}'s $filePath since it exists in the source and is not generated"
-            cp $src/$filePath $out/$filePath
-        fi
-      '';
-    };
-
-  setupCfg = ''${extendFile {
-      filePath = "setup.cfg";
-      baseFile = ./setup.cfg;
-      inherit name;
-      }}/setup.cfg'';
-
-  pylintrc = ''
-    ${extendFile {
-      filePath = ".pylintrc";
-      baseFile = ./pylintrc;
-      inherit name;
-      }}/.pylintrc
-  '';
-
   attrs = builtins.removeAttrs args [ "srcExclude" "shellInputs" "targetSetup" "docs" ];
 in
 base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
-  inherit src version setupCfg pylintrc format preBuild doStandardTests;
+  inherit src version format preBuild doStandardTests pythonVersion;
   pname = name;
 
   # Build and/or run-time dependencies that need to be be compiled
@@ -87,21 +46,9 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
       ++ [ pythonPkgs.python-lsp-server pythonPkgs.pylsp-mypy pythonPkgs.pyls-isort ];
   };
 
-  # Aside from propagating dependencies, buildPythonPackage also injects
-  # code into and wraps executables with the paths included in this list.
-  # Items listed in install_requires go here
-  propagatedBuildInputs = resolveInputs "propagatedBuildInputs" attrs.propagatedBuildInputs or [ ];
-
   doCheck = false;
 
   dontUseSetuptoolsCheck = true;
-
-  configurePhase = attrs.configurePhase or ''
-    rm -f setup.cfg
-    rm -f .pylintrc
-    ln -s $setupCfg setup.cfg
-    ln -s $pylintrc .pylintrc
-  '';
 
   targetSetup = if (args ? targetSetup && lib.isDerivation args.targetSetup) then args.targetSetup else
   (base.mkTargetSetup {
@@ -141,24 +88,13 @@ base.enableChecks (pythonPkgs.buildPythonPackage (attrs // {
       script = ''eval $buildPhase'';
       show = false;
     };
+    show-generated-config = {
+      script = "$1 --print-generated-config";
+      args = "<linter>";
+      description = ''
+        Show the config Nedryland has generated for a linter, one of:
+        black, coverage, flake8, isort, mypy, pylint, pytest'';
+    };
   } // attrs.shellCommands or { });
 
-  shellHook = ''
-    if [ -L setup.cfg ]; then
-       unlink setup.cfg
-    fi
-
-    if [ ! -f setup.cfg ]; then
-       ln -s $setupCfg setup.cfg
-    fi
-
-    if [ -L .pylintrc ]; then
-       unlink .pylintrc
-    fi
-
-    if [ ! -f .pylintrc ]; then
-       ln -s $pylintrc .pylintrc
-    fi
-    ${attrs.shellHook or ""}
-  '';
 }))
