@@ -1,4 +1,4 @@
-{ bash, lib, symlinkJoin, writeScriptBin }:
+{ lib, symlinkJoin, writeShellScriptBin }:
 name:
 { build ? { script = ''eval "$buildPhase"''; description = "Run the build."; }
 , check ? { script = ''eval "$checkPhase"''; description = "Run the checks/test."; }
@@ -19,9 +19,7 @@ let
   inner = cmds: symlinkJoin {
     name = "${name}-shell-commands";
     paths = lib.mapAttrsToList
-      (command: script: writeScriptBin command ''
-        #!${bash}/bin/bash
-
+      (command: script: writeShellScriptBin command ''
         envDir=$(mktemp -d -t shell-command-env.XXXXXX)
 
         export 2>/dev/null >| "$envDir"/shell-env

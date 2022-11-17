@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python: Config settings for checks are generated outside of the component's working directory,
   which means setup.cfg.include is now just setup.cfg. Tools using the configs are wrapped to use the
   generated configs instead.
+- shellCommands now check their syntax.
 
 ### Changed Versions
 - nixpkgs from 21.11 to 22.05
