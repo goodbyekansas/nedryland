@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Re-export `prost` for Rust Protobuf generated code. This makes it easier to avoid
   version conflicts caused by the inter-dependency between prost and tonic.
 - Python components exposes `pythonVersion`.
+- All derivation shells gets default shellCommands.
 
 ### Fixed
 - `mkDerivation` now uses the default shellCommands in `base.mkShellCommands` if none are supplied.
