@@ -335,8 +335,7 @@ in
 
         shells = pkgs.callPackage ./shells.nix {
           inherit components;
-          mapComponentsRecursive = minimalBase.mapComponentsRecursive;
-          parseConfig = minimalBase.parseConfig;
+          inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig;
           enableChecks = minimalBase.enableChecksOverride true;
           extraShells = appliedAttrs.extraShells or { };
         };

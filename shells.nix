@@ -5,6 +5,7 @@
 , parseConfig
 , enableChecks
 , extraShells ? { }
+, mkShellCommands
 }:
 let
   config = parseConfig {
@@ -38,6 +39,7 @@ in
                   # the shell (but not for dependencies of it)
                   # that is the reason we are not using the check
                   # variant of the matrix
+                  shellCommands = drv.shellCommands or (mkShellCommands drv.name { });
                   drv =
                     let
                       checkedDrv = (enableChecks drv');
@@ -47,9 +49,12 @@ in
                       # 2. checkInputs
                       # 3. shellInputs
                       # 4. shellCommands
-                    checkedDrv // { nativeBuildInputs = checkedDrv.nativeBuildInputs or [ ] ++ drv.shellInputs or [ ] ++ (lib.optional (drv ? shellCommands) drv.shellCommands); };
+                    checkedDrv // {
+                      nativeBuildInputs = checkedDrv.nativeBuildInputs or [ ]
+                      ++ drv.shellInputs or [ ]
+                      ++ [ shellCommands ];
+                    };
                   targetName = "${component.name}.${name}";
-                  shellCommandsDesc = lib.filterAttrs (_: value: value.show) (drv.shellCommands or { })._descriptions or { };
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
                     name = "${targetName}-shell";
@@ -78,8 +83,8 @@ in
                       echo 🐚 Running shell hook for \"${targetName}\"
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on \"${targetName}\"
-                      ${if shellCommandsDesc != { } then ''echo "Available commands for this shell are:"'' else ""}
-                      ${drv.shellCommands.helpText}
+                      echo "Available commands for this shell are:"
+                      ${shellCommands.helpText}
                     '';
                   });
                 in
