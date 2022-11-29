@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `documentation.mkMdbook` run uses ephemeral port, allowing multiple shells to serve mdbooks simultaneously.
 - shells uses src if possible for "$componentDir" and fallbacks to nix file location.
 
+### Fixed
+- When printing welcome text in shells, respect shellCommands' "show" attribute.
+
 ## [7.0.0] - 2022-11-24
 
 ### Added

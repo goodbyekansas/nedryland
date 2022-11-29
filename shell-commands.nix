@@ -36,7 +36,7 @@ let
 
         rm -rf "$envDir"
 
-        ${if builtins.isAttrs script then script.script else script}
+        ${if builtins.isAttrs script then script.script or "" else script}
       '')
       cmds;
     passthru = {
@@ -45,10 +45,9 @@ let
           {
             description = (if builtins.isAttrs value then value.description or "" else "");
             args = (if builtins.isAttrs value then value.args or "" else "");
-            show = (if builtins.isAttrs value then value.show or true else true);
           }
         )
-        allCommands;
+        (lib.filterAttrs (_: value: if builtins.isAttrs value then value.show or true else true) allCommands);
     };
   };
 in
