@@ -33,7 +33,7 @@ in
         let
           toShells = component:
             builtins.mapAttrs
-              (name: drv':
+              (_: drv':
                 let
                   # we want the check version of the derivation for
                   # the shell (but not for dependencies of it)
@@ -54,10 +54,10 @@ in
                       ++ drv.shellInputs or [ ]
                       ++ [ shellCommands ];
                     };
-                  targetName = "${component.name}.${name}";
+                  targetName = lib.escapeShellArg ''target "${drv.name}" in component "${component.name}"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
-                    name = "${targetName}-shell";
+                    name = "${component.name}-${drv.name}-shell";
 
                     # we will get double shellhooks if we do not
                     # remove this here
@@ -84,9 +84,9 @@ in
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
                       ${if drv ? targetSetup then "${drv.targetSetup}/bin/target-setup" else ""}
-                      echo 🐚 Running shell hook for \"${targetName}\"
+                      echo 🐚 Running shell hook for ${targetName}
                       ${drv.shellHook or ""}
-                      echo 🥂 You are now in a shell for working on \"${targetName}\"
+                      echo 🥂 You are now in a shell for working on ${targetName}
                       echo "Available commands for this shell are:"
                       ${shellCommands.helpText}
                     '';
@@ -130,7 +130,7 @@ in
                   Invalid shell docs!
                   🐚 The docs attribute is just the combination of the sub-targets.
                   🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'';
-                passthru = toShells (component.docs // { inherit (component) path; });
+                passthru = toShells (component.docs // { inherit (component) name path; });
               };
             });
         })
