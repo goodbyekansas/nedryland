@@ -65,7 +65,11 @@ in
 
                     # set componentDir here to be able to access
                     # it inside the shell as $componentDir if we wish
-                    componentDir = builtins.toString component.path;
+                    componentDir =
+                      let
+                        possibleSources = lib.optionals (drv ? src) [ (drv.src.origSrc or null) drv.src ];
+                      in
+                      builtins.toString (lib.findFirst (p: p != null && !lib.isStorePath p) component.path possibleSources);
 
                     # the standard shell hook will:
                     # 1. change directory to the component dir

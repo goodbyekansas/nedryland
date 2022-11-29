@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `documentation.mkMdbook` run is now a shell function which creates an exit trap to shut down the server,
   also added open command to open the mdbook in a browser and a stop command to shut down the server.
 - `documentation.mkMdbook` run uses ephemeral port, allowing multiple shells to serve mdbooks simultaneously.
+- shells uses src if possible for "$componentDir" and fallbacks to nix file location.
 
 ## [7.0.0] - 2022-11-24
 
