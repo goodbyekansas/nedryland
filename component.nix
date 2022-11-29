@@ -61,7 +61,7 @@ rec {
         let
           g =
             name: value:
-            if ! builtins.isAttrs value || pkgs.lib.isDerivation value then value
+            if (!builtins.isAttrs value) || pkgs.lib.isDerivation value then value
             else
               recurse (path ++ [ name ]) (
                 if value.isNedrylandComponent or false then f (path ++ [ name ]) value
