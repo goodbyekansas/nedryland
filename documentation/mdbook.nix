@@ -27,7 +27,7 @@ base.mkDerivation (attrs // {
 
     run() {
       trap on_exit SIGQUIT EXIT SIGHUP
-      command run 0 ./mdbook.pid
+      command run 0
     }
 
     if checkRun; then
@@ -53,10 +53,11 @@ base.mkDerivation (attrs // {
       script = ''
         if checkRun; then
           kill -SIGTERM $(head -n 1 ./mdbook.pid)
-          rm ./mdbook.pid
         else
           echo "Found no mdbook started in this shell."
         fi
+
+        rm -f ./mdbook.pid
       '';
       description = "Stop mdbook started in this shell.";
     };
