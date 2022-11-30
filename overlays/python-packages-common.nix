@@ -317,17 +317,6 @@ rec {
     }
   );
 
-  pdoc = super.buildPythonPackage rec {
-    pname = "pdoc";
-    version = "7.1.1";
-    src = fetchzip {
-      url = "https://github.com/mitmproxy/pdoc/archive/refs/tags/v7.1.1.tar.gz";
-      sha256 = "1rxxkg94qflcnh05gp5fs025jd7vriqb20y9qs7xr542rhbajhxw";
-    };
-    propagatedBuildInputs = [ super.jinja2 super.pygments super.markupsafe super.astunparse ];
-    doCheck = false;
-  };
-
   keepachangelog = super.buildPythonPackage rec{
     pname = "keepachangelog";
     version = "2.0.0.dev1";

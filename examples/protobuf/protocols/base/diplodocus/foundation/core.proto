@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package diplodocus.foundation;
-
-message DependOnMe {
-  string yes = 1;
-}

@@ -1,15 +1,12 @@
 { base }:
-base.languages.python.mkClient rec{
+base.mkClient rec{
   name = "awesome-client";
   version = "1.0.0";
-  src = ./.;
-  srcExclude = [
-    (path: type: (type == "directory" && baseNameOf path == "manual"))
-    (path: type: (type == "regular" && baseNameOf path == "about.md"))
-  ];
+  src = null;
+
   docs = {
     manual = base.documentation.mkDocs {
-      name = "manuel-gearbox";
+      name = "client-docs";
       src = ./manual;
       type = "manuel";
     };

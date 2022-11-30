@@ -137,26 +137,4 @@ base.mkComponent {
   }
 }
 ```
-Python and Rust outputs an automatic doc target called `api` that is generated
-documentation from the source code. If you do not want that you can set the `api` member
-of the docs set to `null`.
 
-# Language Helpers
-Nedryland also contains helpers for some programming languages that can be used when implementing
-one of the supported (through what is included in Nedryland or through extensions) component types.
-These helpers live under `base.languages`.
-
-## Rust
-Rust helpers live under `base.languages.rust` and will give you access to everything you
-need for rust development out of the box:  rustc, cargo, rls, rust-analyzer, rust-src etc.
-Components are usually named the same as their corresponding component types, i.e. there is a
-`base.languages.rust.mkClient` to create a client in Rust.
-
-Read more about Rust components [here](languages/rust/components.md).
-
-## Python
-Python helpers live under `base.languages.python` and will give you a full Python development
-environment. Most of the helpers also accept an optional `pythonVersion` to select both between
-minor and major (2/3) versions of Python.
-
-Read more about Python components [here](languages/python/components.md).

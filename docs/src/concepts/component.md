@@ -16,4 +16,5 @@ also be extended by other projects as described [here](../declare-project.md#ext
 
 ## Documentation
 
-Components can also have associated documentation declared in the `docs` attribute. See [here](../components.md#documentation).
+Components can also have associated documentation declared in the `docs` attribute. See
+[here](../components.md#documentation).

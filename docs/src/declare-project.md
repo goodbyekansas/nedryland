@@ -16,17 +16,17 @@ let nedryland = import (
   builtins.fetchGit {
     name = "nedryland";
     url = "git@github.com:goodbyekansas/nedryland.git";
-    ref = "refs/tags/0.8.0";
+    ref = "refs/tags/8.0.0";
   } { });
 ```
 
 Then, we need to declare the project. To do that, we use the function `mkProject`.
 
 ```nix
-project = nedryland.mkProject {
+nedryland.mkProject {
   name = "your-name";
   configFile = ./your-name.toml;
-};
+}
 ```
 
 The function accepts a name for the project and a default config file to use for [project
@@ -152,39 +152,46 @@ Then, in your component declaration, you can use `config` any way you want.
 
 ## Extensions
 
-Nedryland can be extended by passing in extensions when creating the project. This is done by
-passing a set created by calling `base.extend.mkExtension` in a list as the `baseExtenstions`
-argument to `mkProject`.
+Nedryland can be extended by passing in extensions when creating the project.
+This is done by passing a set in a list as the `baseExtenstions` argument to
+`mkProject`.
 
 This might look something like
 
 ```nix
-project = nedryland.mkProject {
+# project.nix
+nedryland.mkProject {
   name = "my-project";
   configFile = ./my-project.toml;
   baseExtensions = [
-    (import ./nedryland-extensions/stuff.nix)
+    ./nedryland-extensions/stuff.nix
   ];
 }
 ```
 
-and inside `./nedryland-extensions/stuff.nix` you declare the extension using
-`base.extend.mkExtension` like this
+and inside `./nedryland-extensions/stuff.nix` you declare the extension by providing a set
+that will be merged with `base` from Nedryland.
 
 ```nix
+# nedryland-extensions/stuff.nix
 { base, pkgs }: # all extensions are functions called with base and pkgs
-base.extend.mkExtension {
-  componentTypes = base.extend.mkComponentType {
-    name = "myAwesomeComponentType1";
-    createFunction = someFunction;
-  } // base.extend.mkComponentType {
-    name = "myAwesomeComponentType2";
-    createFunction = someOtherFunction;
+{
+  mkMyAwesomeComponentType1 = args: {
+    # ...
   };
+
+  mkMyAwesomeComponentType2 = args: {
+    # ...
+  };
+
+  utilityFunction = arg1: arg2:
+    true;
 
   # ...
 }
 ```
+
+Base will now contain these functions and can be called with for example `base.utilityFunction`.
 
 ### Using the new Component Type
 
@@ -203,8 +210,7 @@ you would use `base.mkCompType`.
 ### Using extensions from another repo
 
 You can also configure Nedryland to use base extensions from other repositories by importing that
-repository. When importing another nedryland project, you can use the helper `importProject` in
-Nedryland. This will give you access to the [matrix](./concepts/matrix.md) of that project and it can
+repository. This will give you access to the [matrix](./concepts/matrix.md) of that project and it can
 also be sent in as `projectDependencies` when declaring your project in Nedryland. Doing so will
 give you access to all base extensions from that project.
 
@@ -213,11 +219,7 @@ Example
 ```nix
 # ...
 
-otherProject = nedryland.importProject {
-  name = "otherProject";
-  url = "https://github.com/fabrikam/other-project.git";
-  ref = "refs/tags/1.4.5";
-};
+otherProject = import path/to/other/project/ { };
 
 project = nedryland.mkProject {
   name = "my-project";

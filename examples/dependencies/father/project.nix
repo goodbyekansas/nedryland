@@ -4,6 +4,6 @@
   components = {}: { };
 
   baseExtensions = [
-    ./extensions/darth.nix
+    ./extensions/mkfather.nix
   ];
 }

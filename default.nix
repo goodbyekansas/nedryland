@@ -1,48 +1,45 @@
-{ unFreePkgs ? [ ] }:
+{ unFreePkgs ? [ ], nixpkgs ? null }:
 let
   sources = import ./nix/sources.nix;
 
-  versions = import ./versions.nix;
-
-  pkgs = with
-    {
-      overlay = _: _pkgs:
-        {
-          niv = import sources.niv { };
-        };
-    };
-    import sources.nixpkgs
+  pkgs =
+    if nixpkgs != null then
+      nixpkgs
+    else
+      with
       {
-        overlays = [
-          overlay
-
-          # rust
-          (import sources.rust)
-
-          # extra pip packages
-          (import ./overlays/python-packages.nix)
-
-          # more recent Wasi lib C (default was 2019)
-          (import ./overlays/wasm.nix versions)
-
-          # darwin "fix" for mingw
-          (import ./overlays/darwin-fix-mcfgthreads.nix)
-
-          # extra pkgs from future versions of nixpkgs
-          (import ./overlays/backported-packages.nix)
-
-          # pocl, a CPU-only OpenCL implementation
-          (import ./overlays/pocl.nix)
-
-          # gitignore source
-          (self: _: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
-        ];
-        config = { allowUnfreePredicate = (pkg: builtins.elem (builtins.parseDrvName pkg.name).name unFreePkgs); };
+        overlay = _: _pkgs:
+          {
+            niv = import sources.niv { };
+          };
       };
+      import sources.nixpkgs
+        {
+          overlays = [
+            overlay
+
+            # extra pip packages
+            (import ./overlays/python-packages.nix)
+
+            # darwin "fix" for mingw
+            (import ./overlays/darwin-fix-mcfgthreads.nix)
+
+            # extra pkgs from future versions of nixpkgs
+            (import ./overlays/backported-packages.nix)
+
+            # pocl, a CPU-only OpenCL implementation
+            (import ./overlays/pocl.nix)
+
+            # gitignore source
+            (self: _: { inherit (import sources."gitignore.nix" { lib = self.lib; }) gitignoreSource gitignoreFilter; })
+          ];
+          config = { allowUnfreePredicate = (pkg: builtins.elem (builtins.parseDrvName pkg.name).name unFreePkgs); };
+        };
+  version = "8.0.0";
+  versionAtLeast = pkgs.lib.versionAtLeast version;
 in
 {
-  inherit pkgs;
-  version = "7.0.0";
+  inherit pkgs version versionAtLeast;
 
   docs = pkgs.stdenv.mkDerivation rec {
     name = "nedryland-docs";
@@ -99,27 +96,46 @@ in
         minimalBase =
           let
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
-            enableChecksOverride = enable: drv:
-              if enable && !(drv.doCheck or false) then
-                drv.overrideAttrs
-                  (oldAttrs: {
-                    doCheck = true;
+            enableChecksOverride = enable: originalDrv:
+              if
+              # Should checks be enabled or not?
+                enable
+                # Have we already enabled checks?
+                && !(originalDrv.doCheck or false)
+                # Have the user explicitily requested the checks to be off? (base.mkDerivation only)
+                && ! (originalDrv.originalDoCheck or null == false)
+              then
+                originalDrv.overrideAttrs
+                  (oldAttrs:
+                    let
+                      checkAttrs =
+                        {
+                          passthru = oldAttrs.passthru or { } // { inherit originalDrv; };
+                          doCheck = true;
 
-                    # Python packages don't have a checkPhase, only an installCheckPhase
-                    doInstallCheck = true;
-                  } // pkgs.lib.optionalAttrs (drv.stdenv.hostPlatform != drv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
-                    preInstallPhases = [ "crossCheckPhase" ];
-                    crossCheckPhase = oldAttrs.checkPhase or "";
-                    nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.checkInputs or [ ];
-                  }) else drv;
+                          # Python packages don't have a checkPhase, only an installCheckPhase
+                          doInstallCheck = true;
+
+                          # LintPhase for checks that does not require to run the built program
+                          lintPhase = oldAttrs.lintPhase or ''echo "No lintPhase defined, doing nothing"'';
+                          preInstallPhases = oldAttrs.preInstallPhases or [ ] ++ [ "lintPhase" ];
+                          nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.lintInputs or [ ];
+                        };
+                    in
+                    checkAttrs // pkgs.lib.optionalAttrs (originalDrv.stdenv.hostPlatform != originalDrv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
+                      crossCheckPhase = oldAttrs.crossCheckPhase or oldAttrs.checkPhase or ''echo "No checkPhase or crossCheckPhase defined (but doCrossCheck is true), doing nothing"'';
+                      preInstallPhases = checkAttrs.preInstallPhases ++ [ "crossCheckPhase" ];
+                      nativeBuildInputs = checkAttrs.nativeBuildInputs ++ oldAttrs.checkInputs or [ ];
+                    }) else if originalDrv.doCheck or true then originalDrv.originalDrv or originalDrv else originalDrv;
 
             minimalBase = {
               inherit
+                version
+                versionAtLeast
                 sources
                 callFile
                 callFunction
                 parseConfig
-                versions
                 enableChecksOverride;
               mkShellCommands = pkgs.callPackage ./shell-commands.nix { };
 
@@ -134,7 +150,7 @@ in
                   if input ? isNedrylandComponent then
                     input."${(pkgs.lib.findFirst
                           (target: builtins.hasAttr target input)
-                          (abort "${name}.${typeName} did not contain any of the targets ${builtins.toString targets}. Please specify manually.")
+                      (abort "${name}.${typeName} did not contain any of the targets ${builtins.toString targets}. Please specify a valid target.")
                           targets)}"
                   else
                     input
@@ -161,6 +177,7 @@ in
                 in
                 minimalBase.enableChecks (stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" ]) //
                   {
+                    originalDoCheck = attrs.doCheck or null;
                     isNedrylandDerivation = true;
                     passthru = (attrs.passthru or { }) // { isNedrylandDerivation = true; };
                     shellCommands = minimalBase.mkShellCommands name attrs.shellCommands or { };
@@ -171,9 +188,7 @@ in
                   })));
               inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
-              extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
-              languages = import ./languages pkgs minimalBase versions;
               documentation = import ./documentation pkgs minimalBase;
               setComponentPath = path:
                 let
@@ -194,16 +209,15 @@ in
             (
               combinedBaseExtensions: currentBaseExtension:
                 let
-                  extFn = import currentBaseExtension;
+                  extFn = if builtins.isPath currentBaseExtension then import currentBaseExtension else currentBaseExtension;
                   args = builtins.functionArgs extFn;
                 in
                 pkgs.lib.recursiveUpdate combinedBaseExtensions (if builtins.isAttrs currentBaseExtension then currentBaseExtension else
                 (
                   extFn (
-                    builtins.intersectAttrs args (components // { inherit components; }) //
-                    builtins.intersectAttrs args pkgs // {
-                      base = (pkgs.lib.recursiveUpdate combinedBaseExtensions initialBase);
-                    }
+                    builtins.intersectAttrs args (components // { inherit components; })
+                    // builtins.intersectAttrs args pkgs
+                    // builtins.intersectAttrs args (let base = (pkgs.lib.recursiveUpdate combinedBaseExtensions initialBase); in base // { inherit base; })
                   )
                 ))
             )
@@ -259,7 +273,7 @@ in
                 (
                   (builtins.intersectAttrs args pkgs)
                   // (builtins.intersectAttrs args (resolvedComponents // { components = resolvedComponents; }))
-                  // (builtins.intersectAttrs args { base = newBase; })
+                  // (builtins.intersectAttrs args (newBase // { base = newBase; }))
                   // overrides
                 )
             );
@@ -299,7 +313,7 @@ in
               pkgs.lib.filterAttrs
                 (
                   name: value:
-                    name != "allTargets" && (pkgs.lib.isDerivation value || builtins.isList value)
+                    name != "allTargets" && name != "_default" && (pkgs.lib.isDerivation value || builtins.isList value)
                 )
             )
             resolvedNedrylandComponents

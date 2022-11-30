@@ -1,0 +1,9 @@
+# nix results
+/result*
+
+# editor related
+.project
+.pydevproject
+.vscode/
+
+.direnv/

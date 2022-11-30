@@ -16,7 +16,7 @@ pkgs.runCommand "test-doc-out-path" { outPath = docMatrix.awesomeClient.docs; ja
     fi
   }
 
-  assertPathExists "$outPath/share/doc/manuel-gearbox/manuel" "Expected name and type override to work"
+  assertPathExists "$outPath/share/doc/client-docs/manuel" "Expected name and type override to work"
   assertPathExists "$outPath/share/doc/awesome-client/about" "Expected default name to be component name and default type to be set key"
 
   local sharks=$($jason/bin/jq -r .sharks "$outPath/share/doc/awesome-client/metadata.json")
