@@ -96,9 +96,8 @@ in
         componentFns = import ./component.nix pkgs;
 
         # create the non-extended base
-        createMinimalBase = { mkComponent }:
+        minimalBase =
           let
-            mkComponent' = mkComponent minimalBase.deployment.mkCombinedDeployment parseConfig;
             parseConfig = import ./config.nix pkgs configContent configRoot (pkgs.lib.toUpper name);
             enableChecksOverride = enable: drv:
               if enable && !(drv.doCheck or false) then
@@ -172,17 +171,23 @@ in
                   })));
               inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
               mkTargetSetup = import ./targetsetup.nix pkgs parseConfig;
-              mkComponent = mkComponent';
-              mkClient = targets: mkComponent' (targets // { nedrylandType = "client"; });
-              mkService = targets: mkComponent' (targets // { nedrylandType = "service"; });
-              mkLibrary = targets: mkComponent' (targets // { nedrylandType = "library"; });
               extend = import ./extend.nix pkgs.lib.toUpper;
               deployment = import ./deployment.nix pkgs minimalBase;
               languages = import ./languages pkgs minimalBase versions;
               documentation = import ./documentation pkgs minimalBase;
+              setComponentPath = path:
+                let
+                  overriddenMkComponent = componentFns.mkComponent path minimalBase.deployment.mkCombinedDeployment parseConfig;
+                in
+                minimalBase // {
+                  mkComponent = overriddenMkComponent;
+                  mkClient = targets: overriddenMkComponent (targets // { nedrylandType = "client"; });
+                  mkService = targets: overriddenMkComponent (targets // { nedrylandType = "service"; });
+                  mkLibrary = targets: overriddenMkComponent (targets // { nedrylandType = "library"; });
+                };
             };
           in
-          minimalBase;
+          minimalBase.setComponentPath ./.;
 
         evalBaseExtensionsWith = baseExtensions: initialBase: components:
           (builtins.foldl'
@@ -209,31 +214,34 @@ in
         # extend base with base extensions from this and dependent projects
         extendBase = minimalBase:
           let
-            evalDependenciesBaseExtensions = dependencies: initialBase:
-              builtins.foldl' pkgs.lib.recursiveUpdate initialBase (builtins.map
-                (pd:
-                  evalBaseExtensionsWith
-                    pd.baseExtensions
-                    (evalDependenciesBaseExtensions pd.dependencies initialBase)
-                    pd.components
-                )
-                dependencies);
+            originalSetComponentPath = minimalBase.setComponentPath;
+            inner = minimalBase:
+              let
+                evalDependenciesBaseExtensions = dependencies: initialBase:
+                  builtins.foldl' pkgs.lib.recursiveUpdate initialBase (builtins.map
+                    (pd:
+                      evalBaseExtensionsWith
+                        pd.baseExtensions
+                        (evalDependenciesBaseExtensions pd.dependencies initialBase)
+                        pd.components
+                    )
+                    dependencies);
 
-            # evaluate all base extensions from dependent projects recursively
-            dependenciesBase = evalDependenciesBaseExtensions (appliedAttrs.dependencies or [ ]) minimalBase;
-
+                # evaluate all base extensions from dependent projects recursively
+                dependenciesBase = evalDependenciesBaseExtensions (appliedAttrs.dependencies or [ ]) minimalBase;
+              in
+              # evaluate base extensions for current project
+              pkgs.lib.recursiveUpdate dependenciesBase (evalBaseExtensionsWith
+                (appliedAttrs.baseExtensions or [ ])
+                dependenciesBase
+                resolvedComponents);
           in
-          # evaluate base extensions for current project
-          pkgs.lib.recursiveUpdate dependenciesBase (evalBaseExtensionsWith
-            (appliedAttrs.baseExtensions or [ ])
-            dependenciesBase
-            resolvedComponents);
+          (inner minimalBase) // {
+            setComponentPath = path: inner (originalSetComponentPath path);
+          };
 
 
-        # create the final, extended base and make it overridable
-        minimalBase = pkgs.lib.makeOverridable createMinimalBase {
-          mkComponent = componentFns.mkComponent ./.;
-        };
+        extendedBase = extendBase minimalBase;
 
         # callFile and callFunction will auto-populate dependencies
         # on nixpkgs, base members and project components
@@ -241,10 +249,8 @@ in
         callFunction = function: path:
           let
             args = builtins.functionArgs function;
-            newBase = extendBase (minimalBase.override {
-              # burn the path into mkComponent
-              mkComponent = componentFns.mkComponent path;
-            });
+            # Burn the path into newBase
+            newBase = extendedBase.setComponentPath path;
           in
           pkgs.lib.makeOverridable
             (
@@ -321,7 +327,7 @@ in
       in
       (rec {
         inherit (appliedAttrs) name;
-
+        base = extendedBase;
         lib = appliedAttrs.lib or { };
         baseExtensions = appliedAttrs.baseExtensions or [ ];
         dependencies = appliedAttrs.dependencies or [ ];
