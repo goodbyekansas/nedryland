@@ -10,6 +10,3 @@ logo = "https://placeholder.com/wp-content/uploads/2018/10/placeholder.com-logo4
 [docs.requirements]
 client = [ "manual", "about" ]
 service = [ "installInstructions" ]
-
-[docs.python]
-sphinx-theme = "rtd"

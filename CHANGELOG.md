@@ -12,9 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   also added open command to open the mdbook in a browser and a stop command to shut down the server.
 - `documentation.mkMdbook` run uses ephemeral port, allowing multiple shells to serve mdbooks simultaneously.
 - shells uses src if possible for "$componentDir" and fallbacks to nix file location.
-
+- `base` is now available on the set returned from `mkProject`.
+- Nix flake support.
+- lintPhase and lintInputs to be able to separate lints from other tests with `enableChecks`.
+- `base.mkDerivation` will now detect `doChecks` correctly.
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
+- Shells got all nativeBuildInputs elements twice.
+
+### Changed
+- `mkTargetSetup` now requires a `typeName` describing the type of target it sets up.
+- shellCommands adds `set -euo pipefail` before executing the script.
+
+### Removed
+- `base.languages`. This now lives in the [Nedryglot](https://github.com/goodbyekansas/nedryglot) extension.
+- examples/protobuf. For the same reason.
+- `base.mkExtension`. Instead just return a set from the extension to be merged with base.
 
 ## [7.0.0] - 2022-11-24
 

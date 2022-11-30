@@ -35,7 +35,7 @@ let
         export NIX_ENFORCE_PURITY=0
 
         rm -rf "$envDir"
-
+        set -euo pipefail
         ${if builtins.isAttrs script then script.script or "" else script}
       '')
       cmds;

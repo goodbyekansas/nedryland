@@ -17,7 +17,7 @@ let
     [ ]
     ++ (
       if components.isNedrylandComponent or false then
-        [ components."${config.defaultTarget}" ]
+        [ components._defaultShell or components._default or components."${config.defaultTarget}" ]
       else
         builtins.map getAllPackages (builtins.filter builtins.isAttrs (builtins.attrValues components))
     );
@@ -39,29 +39,23 @@ in
                   # the shell (but not for dependencies of it)
                   # that is the reason we are not using the check
                   # variant of the matrix
-                  shellCommands = drv.shellCommands or (mkShellCommands drv.name { });
                   drv =
-                    let
-                      checkedDrv = (enableChecks drv');
-                    in
                     # Priority of nativeBuildInputs is: 
-                      # 1. nativeBuildInputs
-                      # 2. checkInputs
-                      # 3. shellInputs
-                      # 4. shellCommands
-                    checkedDrv // {
-                      nativeBuildInputs = checkedDrv.nativeBuildInputs or [ ]
-                      ++ drv.shellInputs or [ ]
+                    #  1. nativeBuildInputs
+                    #  2. checkInputs
+                    #  3. shellInputs
+                    #  4. shellCommands
+                    (enableChecks drv').overrideAttrs (oldAttrs: rec{
+                      shellCommands = oldAttrs.shellCommands or (mkShellCommands oldAttrs.name { });
+                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
+                      ++ oldAttrs.passthru.shellInputs or [ ]
+                      ++ oldAttrs.shellInputs or [ ]
                       ++ [ shellCommands ];
-                    };
+                    });
                   targetName = lib.escapeShellArg ''target "${drv.name}" in component "${component.name}"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
                     name = "${component.name}-${drv.name}-shell";
-
-                    # we will get double shellhooks if we do not
-                    # remove this here
-                    inputsFrom = [ (builtins.removeAttrs drv [ "shellHook" ]) ];
 
                     # set componentDir here to be able to access
                     # it inside the shell as $componentDir if we wish
@@ -88,7 +82,7 @@ in
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on ${targetName}
                       echo "Available commands for this shell are:"
-                      ${shellCommands.helpText}
+                      ${drv.shellCommands.helpText}
                     '';
                   });
                 in
@@ -115,7 +109,7 @@ in
             if (builtins.length (builtins.attrValues derivationShells)) == 1 then
               builtins.head (builtins.attrValues derivationShells)
             else
-              derivationShells."${config.defaultTarget}" or (mkShell {
+              derivationShells._defaultShell or derivationShells._default or derivationShells."${config.defaultTarget}" or (mkShell {
                 shellHook = builtins.abort ''
                   🐚 Could not decide on a default shell for component "${component.name}"
                   🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'';

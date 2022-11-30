@@ -1,9 +1,0 @@
-[registries]
-nix = { index = "https://fake-nix-registry/not-really-an-index" }
-
-[source.nix]
-registry = "https://fake-nix-registry/not-really-an-index"
-replace-with = "vendored-internal"
-
-[source.vendored-internal]
-directory = "@vendorDir@"

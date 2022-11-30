@@ -1,4 +1,0 @@
-[shells]
-# defaultTarget lets us choose which shells to invoke when we only specify top level
-# Note that this is the default default and just here for demonstrational purposes
-defaultTarget = "package"

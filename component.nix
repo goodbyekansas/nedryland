@@ -3,9 +3,8 @@ rec {
   mkComponent =
     path: mkCombinedDeployment: parseConfig:
     let
-      mkComponentInner = attrs'@{ name, subComponents ? { }, nedrylandType ? "component", ... }:
+      mkComponentInner = attrs@{ name, nedrylandType ? "component", ... }:
         let
-          attrs = builtins.removeAttrs attrs' [ "subComponents" ] // subComponents;
           component' =
             (attrs // {
               inherit name path nedrylandType;
@@ -50,7 +49,7 @@ rec {
           "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames attrs.docs or { })}.'';
         (component
           // {
-          overrideAttrs = f: mkComponentInner (attrs' // (f component));
+          overrideAttrs = f: mkComponentInner (attrs // (f component));
         });
     in
     mkComponentInner;
