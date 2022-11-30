@@ -1,5 +1,6 @@
 pkgs: parseConfig:
 { name
+, typeName
 , markerFiles ? [ ]
 , variableQueries ? { }
 , templateDir ? null
@@ -31,10 +32,11 @@ pkgs.writeTextFile {
   destination = "/bin/target-setup";
   text =
     ''
+      #! ${pkgs.bash}/bin/bash
       source $stdenv/setup > /dev/null 
       componentSetup() {
         echo ""
-        echo "👋 Hello! It looks like you are in a new ${name} component, lets do some setup!"
+        echo "👋 Hello! It looks like you are in a new ${typeName} component, lets do some setup!"
         if [ "${templateDir'}" != "" ] && [ "${builtins.toString showTemplate}" == "1" ]; then
           echo "Files that should be here are:"
           ${pkgs.tree}/bin/tree "${templateDir'}" -a --noreport --dirsfirst \
@@ -44,10 +46,10 @@ pkgs.writeTextFile {
           | ${pkgs.envsubst}/bin/envsubst
         fi
         echo ""
-        echo -e "\e[1mDo you want to generate the missing files? [y/n]\e[0m"
+        echo -e "\e[1mDo you want to generate the missing files? [y/N]\e[0m"
 
         read -n 1 -s answer
-
+        answer="''${answer,,}"
         if [ "$answer" != "y" ]; then
           echo "💪 That's cool, good luck!"
           return 0
