@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nix flake support.
 - lintPhase and lintInputs to be able to separate lints from other tests with `enableChecks`.
 - `base.mkDerivation` will now detect `doChecks` correctly.
+- `shellCommands.<command>.description` supports ANSI escape codes when printing the shell message.
+
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
 - Shells got all nativeBuildInputs elements twice.

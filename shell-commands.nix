@@ -10,7 +10,7 @@ let
   shellCommandHelpText = descriptions: ''
     esc=$(printf '\e[')
     ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: desc:
-      ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
+      ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo -e "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
     descriptions)}
   '';
 
