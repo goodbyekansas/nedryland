@@ -354,6 +354,7 @@ in
         matrix = components // targets;
 
         shells = pkgs.callPackage ./shells.nix {
+          inherit (pkgs) git;
           inherit components;
           inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig;
           enableChecks = minimalBase.enableChecksOverride true;
