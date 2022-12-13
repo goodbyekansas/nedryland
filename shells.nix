@@ -1,5 +1,6 @@
 { mkShell
 , lib
+, git
 , components
 , mapComponentsRecursive
 , parseConfig
@@ -75,6 +76,11 @@ in
                         componentDir=$(dirname "$componentDir")
                       fi
 
+                      if [[ "$componentDir" == /nix/store/* ]]; then
+                        git_root=$(${git}/bin/git rev-parse --show-toplevel)
+                        target_relative="$(echo "$componentDir" | cut -d/ -f 5-)"
+                        componentDir="$git_root/$target_relative"
+                      fi
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
                       ${if drv ? targetSetup then "${drv.targetSetup}/bin/target-setup" else ""}

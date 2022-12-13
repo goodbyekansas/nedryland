@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shells uses src if possible for "$componentDir" and fallbacks to nix file location.
 - `base` is now available on the set returned from `mkProject`.
 - Nix flake support.
+- `nix develop` cd to correct location (assuming git project).
 - lintPhase and lintInputs to be able to separate lints from other tests with `enableChecks`.
 - `base.mkDerivation` will now detect `doChecks` correctly.
 - `shellCommands.<command>.description` supports ANSI escape codes when printing the shell message.
