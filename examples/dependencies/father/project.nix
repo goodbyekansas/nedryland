@@ -1,4 +1,5 @@
-(import ../../../default.nix { }).mkProject {
+{ nedryland, pkgs }:
+(nedryland { inherit pkgs; }).mkProject {
   name = "dep-example-father";
 
   components = {}: { };
