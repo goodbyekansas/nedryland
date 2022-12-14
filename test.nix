@@ -1,12 +1,18 @@
+{ pkgs }:
 let
+  nedryland = import ./default.nix;
   # add any examples you want tested here
   tests = {
-    hello = import ./examples/hello/project.nix;
-    documentation = import ./examples/documentation/project.nix;
-    dependencies = import ./examples/dependencies/child/project.nix;
+    hello = import ./examples/hello/project.nix {
+      inherit pkgs nedryland;
+    };
+    documentation = import ./examples/documentation/project.nix {
+      inherit pkgs nedryland;
+    };
+    dependencies = import ./examples/dependencies/child/project.nix {
+      inherit pkgs nedryland;
+    };
   };
-
-  pkgs = (import ./default.nix { }).pkgs;
 
   mappedTests = (builtins.mapAttrs
     (
@@ -15,11 +21,10 @@ let
       ).matrix.all
     )
     tests) // {
-    combinedDeployment = import ./test/deployment.nix tests.hello.matrix.combinedDeployment.deploy pkgs.lib.assertMsg;
-    sameWhenFiltered = import ./test/filter-source.nix pkgs.lib.assertMsg tests.hello.matrix.sameThing1 tests.hello.matrix.sameThing2;
-    docsTest = import ./test/docs.nix pkgs tests.documentation.matrix;
-  } //
-  (import ./overlays/python-packages-common.nix pkgs pkgs.python3.pkgs);
+    combinedDeployment = builtins.trace "🎪 Running combined deployment test." import ./test/deployment.nix tests.hello.matrix.combinedDeployment.deploy pkgs.lib.assertMsg;
+    sameWhenFiltered = builtins.trace "🎡 Running filter source tests." import ./test/filter-source.nix pkgs.lib.assertMsg tests.hello.matrix.sameThing1 tests.hello.matrix.sameThing2;
+    docsTest = builtins.trace "🦖 Running docs tests." import ./test/docs.nix pkgs tests.documentation.matrix;
+  };
 in
 (mappedTests // {
   all = builtins.attrValues mappedTests;

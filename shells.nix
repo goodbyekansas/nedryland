@@ -46,13 +46,18 @@ in
                     #  2. checkInputs
                     #  3. shellInputs
                     #  4. shellCommands
-                    (enableChecks drv').overrideAttrs (oldAttrs: rec{
-                      shellCommands = oldAttrs.shellCommands or (mkShellCommands oldAttrs.name { });
-                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
-                      ++ oldAttrs.passthru.shellInputs or [ ]
-                      ++ oldAttrs.shellInputs or [ ]
-                      ++ [ shellCommands ];
-                    });
+                    (enableChecks drv').overrideAttrs (oldAttrs:
+                      let
+                        shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or oldAttrs.shellCommands or { };
+                        shellCommands = if lib.isDerivation shellCommandAttrsOrDrv then shellCommandAttrsOrDrv else mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
+                      in
+                      {
+                        inherit shellCommands;
+                        nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
+                        ++ oldAttrs.passthru.shellInputs or [ ]
+                        ++ oldAttrs.shellInputs or [ ]
+                        ++ [ shellCommands ];
+                      });
                   targetName = lib.escapeShellArg ''target "${drv.name}" in component "${component.name}"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
@@ -76,6 +81,7 @@ in
                         componentDir=$(dirname "$componentDir")
                       fi
 
+                      # This is for `nix develop` and flakes.
                       if [[ "$componentDir" == /nix/store/* ]]; then
                         git_root=$(${git}/bin/git rev-parse --show-toplevel)
                         target_relative="$(echo "$componentDir" | cut -d/ -f 5-)"
@@ -88,7 +94,7 @@ in
                       ${drv.shellHook or ""}
                       echo 🥂 You are now in a shell for working on ${targetName}
                       echo "Available commands for this shell are:"
-                      ${drv.shellCommands.helpText}
+                      shellHelp
                     '';
                   });
                 in
@@ -100,7 +106,8 @@ in
               )
               (lib.filterAttrs (_: lib.isDerivation) component);
 
-          derivationShells = toShells component;
+          derivationShells = toShells
+            component;
           # also include non-derivation attrsets in the passthru property of the top-level
           # shell to support nested components
           derivationsAndAttrsets = (

@@ -1,1 +1,1 @@
-(import ./project.nix).matrix
+(import ./deps.nix).matrix

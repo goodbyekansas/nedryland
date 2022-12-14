@@ -1,1 +1,1 @@
-(import ./project.nix).shells
+(import ./deps.nix).shells

@@ -1,6 +1,7 @@
-(import ../../../default.nix { }).mkProject rec{
+{ nedryland, pkgs }:
+(nedryland { inherit pkgs; }).mkProject rec {
   name = "deps-example-child";
-  dependencies = [ (import ../father/project.nix) ];
+  dependencies = [ (import ../father/project.nix { inherit nedryland pkgs; }) ];
   components = { callFile }: {
     luke = callFile ./luke/luke.nix { };
   };

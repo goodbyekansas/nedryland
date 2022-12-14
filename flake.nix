@@ -1,20 +1,37 @@
 {
   description = "Nedryland is a collection of utilities and a build system for declaring, building and deploying microservice solutions.";
   inputs.nixpkgs.url = github:NixOS/nixpkgs/nixos-22.05;
-  inputs.gitignore = {
-    url = "github:hercules-ci/gitignore.nix";
-    # Use the same nixpkgs
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
   inputs.flake-utils.url = github:numtide/flake-utils;
 
-  outputs = { nixpkgs, flake-utils, gitignore, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs = { nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = nixpkgs.legacyPackages."${system}";
+          internalNedryland = (import ./default.nix { inherit pkgs; });
+        in
+        {
+          lib = import ./.;
+          packages = {
+            inherit (internalNedryland) docs ci;
+          };
+        }
+      ) // (
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ gitignore.overlay ]; };
+        system = "x86_64-linux";  # TODO eachDefaultSystem does not work correctly for check
+        pkgs = nixpkgs.legacyPackages."${system}";
       in
       {
-        lib = import ./. { nixpkgs = pkgs; };
+        checks."${system}".default = builtins.derivation {
+          inherit system;
+          name = "all-tests";
+          builder = "${pkgs.bash}/bin/bash";
+          args = [ "-c" ''${pkgs.coreutils}/bin/touch $out'' ];
+          tests = builtins.filter (x: x != { })
+            (import ./test.nix {
+              inherit pkgs;
+            }).all;
+        };
       }
     );
 }

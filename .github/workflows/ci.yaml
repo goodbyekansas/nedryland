@@ -18,7 +18,7 @@ jobs:
       with:
         install_url: https://releases.nixos.org/nix/nix-2.11.1/install
     - name: Format Nedryland 👓 🦖💨
-      run:  nix-build -A ci && result/bin/nixfmt
+      run:  nix build .#ci && result/bin/nixfmt
 
   shell-check:
     runs-on: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
       with:
         install_url: https://releases.nixos.org/nix/nix-2.11.1/install
     - name: Check the shell scripts 🐢 🐌 💶
-      run:  nix-build -A ci && result/bin/shellcheck
+      run:  nix build .#ci && result/bin/shellcheck
 
   lint:
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
       with:
         install_url: https://releases.nixos.org/nix/nix-2.11.1/install
     - name: Lint .nix files 🦕 📝 👀
-      run:  nix-build -A ci && result/bin/nix-lint
+      run:  nix build .#ci && result/bin/nix-lint
 
   test:
     runs-on: ubuntu-latest
@@ -69,4 +69,4 @@ jobs:
         cp .github/workflows/setup/nix.conf ~/.config/nix/nix.conf
 
     - name: Run all tests
-      run: nix build -L -f test.nix all --max-jobs 0 --keep-going
+      run: nix flake check -L --max-jobs 0 --keep-going

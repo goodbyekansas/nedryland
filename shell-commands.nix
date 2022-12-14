@@ -11,14 +11,19 @@ let
     esc=$(printf '\e[')
     ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (name: desc:
       ''echo "  ''${esc}32m${name}''${esc}0m ''${esc}33m${desc.args}''${esc}0m" ${if desc.description != "" then '';echo -e "    ${builtins.replaceStrings ["\n"] ["\n    "] desc.description}"'' else ""}'')
-    descriptions)}
+      (descriptions // {
+        shellHelp = {
+          description = "Print this help text";
+          args = "";
+        };
+      }))}
   '';
 
   # need to wrangle a little bit to get the descriptions for the shell message
   allCommands = commands // { inherit build check run format; };
   inner = cmds: symlinkJoin {
     name = "${name}-shell-commands";
-    paths = lib.mapAttrsToList
+    paths = (lib.mapAttrsToList
       (command: script: writeShellScriptBin command ''
         envDir=$(mktemp -d -t shell-command-env.XXXXXX)
 
@@ -38,19 +43,19 @@ let
         set -euo pipefail
         ${if builtins.isAttrs script then script.script or "" else script}
       '')
-      cmds;
-    passthru = {
-      _descriptions = builtins.mapAttrs
+      cmds) ++ [
+      (writeShellScriptBin "shellHelp" ''
+        ${shellCommandHelpText (builtins.mapAttrs
         (_: value:
           {
             description = (if builtins.isAttrs value then value.description or "" else "");
             args = (if builtins.isAttrs value then value.args or "" else "");
           }
         )
-        (lib.filterAttrs (_: value: if builtins.isAttrs value then value.show or true else true) allCommands);
-    };
+          (lib.filterAttrs (_: value: if builtins.isAttrs value then value.show or true else true) allCommands))
+         }
+      '')
+    ];
   };
 in
-(lib.makeOverridable inner allCommands).overrideAttrs (attrs: {
-  passthru.helpText = shellCommandHelpText attrs.passthru._descriptions;
-})
+lib.makeOverridable inner allCommands

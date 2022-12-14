@@ -26,11 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `mkTargetSetup` now requires a `typeName` describing the type of target it sets up.
 - shellCommands adds `set -euo pipefail` before executing the script.
+- All shells now have a command `shellHelp` which is also used to print the help on
+  startup of the shell instead of the hard-coded nix string used previously.
 
 ### Removed
 - `base.languages`. This now lives in the [Nedryglot](https://github.com/goodbyekansas/nedryglot) extension.
 - examples/protobuf. For the same reason.
 - `base.mkExtension`. Instead just return a set from the extension to be merged with base.
+- Control of `nixpkgs`. Nedryland now has a mandatory argument for it so that users of
+  Nedryland controls the version of nixpkgs.
 
 ## [7.0.0] - 2022-11-24
 
