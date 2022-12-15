@@ -18,9 +18,18 @@ let
     [ ]
     ++ (
       if components.isNedrylandComponent or false then
-        [ components._defaultShell or components._default or components."${config.defaultTarget}" ]
+        [
+          components._defaultShell or
+            components._default or
+              components."${config.defaultTarget}" or
+                null
+        ]
       else
-        builtins.map getAllPackages (builtins.filter builtins.isAttrs (builtins.attrValues components))
+        builtins.map
+          getAllPackages
+          (builtins.filter
+            builtins.isAttrs
+            (builtins.attrValues components))
     );
 
   all = mkShell {
@@ -48,8 +57,13 @@ in
                     #  4. shellCommands
                     (enableChecks drv').overrideAttrs (oldAttrs:
                       let
-                        shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or oldAttrs.shellCommands or { };
-                        shellCommands = if lib.isDerivation shellCommandAttrsOrDrv then shellCommandAttrsOrDrv else mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
+                        shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
+                          oldAttrs.shellCommands or { };
+                        shellCommands =
+                          if lib.isDerivation shellCommandAttrsOrDrv then
+                            shellCommandAttrsOrDrv
+                          else
+                            mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
                       in
                       {
                         inherit shellCommands;
@@ -67,9 +81,14 @@ in
                     # it inside the shell as $componentDir if we wish
                     componentDir =
                       let
-                        possibleSources = lib.optionals (drv ? src) [ (drv.src.origSrc or null) drv.src ];
+                        possibleSources = lib.optionals
+                          (drv ? src)
+                          [ (drv.src.origSrc or null) drv.src ];
                       in
-                      builtins.toString (lib.findFirst (p: p != null && !lib.isStorePath p) component.path possibleSources);
+                      builtins.toString (lib.findFirst
+                        (p: p != null && !lib.isStorePath p)
+                        component.path
+                        possibleSources);
 
                     # the standard shell hook will:
                     # 1. change directory to the component dir
@@ -122,11 +141,14 @@ in
             if (builtins.length (builtins.attrValues derivationShells)) == 1 then
               builtins.head (builtins.attrValues derivationShells)
             else
-              derivationShells._defaultShell or derivationShells._default or derivationShells."${config.defaultTarget}" or (mkShell {
-                shellHook = builtins.abort ''
-                  🐚 Could not decide on a default shell for component "${component.name}"
-                  🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'';
-              });
+              derivationShells._defaultShell or
+                derivationShells._default or
+                  derivationShells."${config.defaultTarget}" or
+                    (mkShell {
+                      shellHook = builtins.abort ''
+                        🐚 Could not decide on a default shell for component "${component.name}"
+                        🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'';
+                    });
         in
         defaultShell.overrideAttrs (_: {
           passthru = derivationsAndAttrsets // lib.optionalAttrs
