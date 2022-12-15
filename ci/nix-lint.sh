@@ -1,12 +1,21 @@
-#! /usr/bin/env bash
+#! @bash@
+# shellcheck shell=bash
 
-EXIT_CODE=0
+set -uo pipefail
 
-while IFS= read -r -d $'' file; do
-    if ! git check-ignore -q "$file" && [ "$(basename "$file")" != "sources.nix" ] && [ "$(dirname "$file")" != "nix" ]; then
-        @nixLinter@ "$@" "$file"
-        EXIT_CODE=$((EXIT_CODE + $?))
+if [ $# -eq 0 ]; then
+    if [ -z "${NEDRYLAND_CHECK_FILES:-}" ]; then
+        @nixLinter@ -r .
+        exit $?
+    else
+        exitCode=0
+        while mapfile -t -n 50 nix_files && ((${#nix_files[@]})); do
+            if ! @nixLinter@ "${nix_files[@]}"; then
+                exitCode=1;
+            fi
+        done <<< "$(grep ".nix$" < "$NEDRYLAND_CHECK_FILES")"
+        exit $exitCode;
     fi
-done < <(find . -type f \! -path "./.git/*" -a -name '*.nix' -print0)
-
-exit $EXIT_CODE
+else
+    @nixLinter@ "$@"
+fi

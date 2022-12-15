@@ -18,7 +18,7 @@ let
     (
       _: project: (
         project.override { enableChecks = true; }
-      ).matrix.all
+      ).all
     )
     tests) // {
     combinedDeployment = builtins.trace "🎪 Running combined deployment test." import ./test/deployment.nix tests.hello.matrix.combinedDeployment.deploy pkgs.lib.assertMsg;

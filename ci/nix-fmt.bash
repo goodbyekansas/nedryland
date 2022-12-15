@@ -1,23 +1,52 @@
-#! /usr/bin/env bash
-if [ "$1" == "--fix" ]; then
-    @nixpkgsFmt@ "${2:-.}"
-    exit $?
-elif [ $# -gt 0 ]; then
-    @nixpkgsFmt@ "$@"
-    exit $?
-fi
-files=$(@nixpkgsFmt@ --check .)
+#! @bash@
+# shellcheck shell=bash
 
-if [ $? == 1 ]; then
-    echo "$files"
-    dir=$(@mktemp@ --directory "/tmp/nix-fmt-XXXXXX")
-    while IFS= read -r file; do
-        echo ""
-        echo "⚠️ Formatting errors in $file:"
-        cp "$file" "$dir/copy"
-        @nixpkgsFmt@ "$dir/copy" | tail -n +2
-        @diff@ -u --color=always "$file" "$dir/copy" | tail -n +3
-    done <<< "$files"
-    rm -rf "$dir"
-    exit 1
+set -uo pipefail
+color="auto"
+
+[ -n "${NEDRYLAND_CHECK_COLOR:-}" ] && color="always"
+
+check="--check"
+if [[ $* =~ (^|[[:space:]])+--fix([[:space:]]|$)+ ]]; then
+    check=""
+fi
+
+if [ $# -eq 0 ] || [ -z "$check" ]; then
+    exitCode=0
+    files=()
+
+    if [ -z "${NEDRYLAND_CHECK_FILES:-}" ]; then
+        # nixpkgsfmt treats "" as a file with an empty name, resulting in error
+        # shellcheck disable=SC2086
+        fmtOutput=$(@nixpkgsFmt@ $check . 2>/dev/null)
+        exitCode=$?
+        mapfile -t files <<< "$fmtOutput"
+    else
+        while mapfile -t -n 50 nixFiles && ((${#nixFiles[@]})); do
+            # nixpkgsfmt treats "" as a file with an empty name, resulting in error
+            # shellcheck disable=SC2086
+            fmtOutput=$(@nixpkgsFmt@ $check "${nixFiles[@]}" 2>/dev/null)
+            res=$?
+            mapfile -t error_files <<< "$fmtOutput"
+            if [ 0 -ne $res ]; then
+                exitCode=$res
+                files+=("${error_files[@]}")
+            fi
+        done <<< "$(grep ".nix$" < "$NEDRYLAND_CHECK_FILES")"
+    fi
+
+    if [ $exitCode -ne 0 ]; then
+        dir=$(@mktemp@ --directory "/tmp/nix-fmt-XXXXXX")
+        for file in "${files[@]}"; do
+            cp "$file" "$dir/copy"
+            echo ""
+            echo "⚠️ Formatting errors in $file:"
+            @nixpkgsFmt@ "$dir/copy" 2>&1 | tail -n +3
+            @diff@ -u --color=$color "$file" "$dir/copy" | tail -n +3
+        done
+        rm -rf "$dir"
+        exit $exitCode
+    fi
+else
+    @nixpkgsFmt@ "$@"
 fi
