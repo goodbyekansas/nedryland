@@ -13,7 +13,25 @@
         {
           lib = import ./.;
           packages = {
-            inherit (internalNedryland) docs ci;
+            inherit (internalNedryland) docs checks;
+          };
+          apps = {
+            nixfmt = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/nixfmt";
+            };
+            shellcheck = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/shellcheck";
+            };
+            nix-lint = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/nix-lint";
+            };
+            all-checks = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/check";
+            };
           };
         }
       ) // (

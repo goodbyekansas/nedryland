@@ -33,7 +33,7 @@ let
         '';
       };
 
-      ci = pkgs'.runCommand "ci-scripts"
+      checks = pkgs'.runCommand "check"
         {
           nixpkgsFmt = "${pkgs'.nixpkgs-fmt}/bin/nixpkgs-fmt";
           diff = "${pkgs'.diffutils}/bin/diff";
@@ -41,6 +41,8 @@ let
           shellcheck = "${pkgs'.shellcheck}/bin/shellcheck";
           shfmt = "${pkgs'.shfmt}/bin/shfmt";
           nixLinter = "${pkgs'.nix-linter}/bin/nix-linter";
+          bash = "${pkgs'.bash}/bin/bash";
+          sed = "${pkgs'.gnused}/bin/sed";
           # Pointless to do this on a remote machine.
           preferLocalBuild = true;
           allowSubstitutes = false;
@@ -50,13 +52,20 @@ let
           mkdir -p "$(dirname "$n")"
           substituteAll ${./ci/nix-fmt.bash} $n
           chmod +x "$n"
+
           n=$out/bin/shellcheck
           mkdir -p "$(dirname "$n")"
           substituteAll ${./ci/shellcheck.bash} $n
           chmod +x "$n"
+
           n=$out/bin/nix-lint
           mkdir -p "$(dirname "$n")"
           substituteAll ${./ci/nix-lint.sh} $n
+          chmod +x "$n"
+
+          n=$out/bin/check
+          mkdir -p "$(dirname "$n")"
+          substituteAll ${./ci/check.bash} $n
           chmod +x "$n"
         '';
 
@@ -287,21 +296,22 @@ let
 
             # create a set of all available targets on all components
             # for use as one axis in the matrix
-            allTargets = ((pkgs'.lib.zipAttrs (
-              builtins.map
-                (
-                  pkgs'.lib.filterAttrs
+            allTargets =
+              builtins.mapAttrs
+                pkgs'.linkFarmFromDrvs
+                (pkgs'.lib.zipAttrs (
+                  builtins.map
                     (
-                      name: value:
-                        name != "allTargets" && name != "_default" && (pkgs'.lib.isDerivation value || builtins.isList value)
+                      pkgs'.lib.filterAttrs
+                        (
+                          name: value:
+                            name != "allTargets" && name != "_default" &&
+                            (pkgs'.lib.isDerivation value || builtins.isList value)
+                        )
                     )
-                )
-                resolvedNedrylandComponents
-            )) // {
-              all = builtins.map
-                (c: builtins.attrValues (pkgs'.lib.filterAttrs (_: pkgs'.lib.isDerivation) c))
-                resolvedNedrylandComponents;
-            });
+                    resolvedNedrylandComponents
+                ));
+
 
             # any extra attributes are assumed to be targets in the matrix
             extraTargets = builtins.mapAttrs
@@ -328,9 +338,16 @@ let
             baseExtensions = appliedAttrs.baseExtensions or [ ];
             dependencies = appliedAttrs.dependencies or [ ];
 
-            components = resolvedComponents;
-            targets = allTargets // extraTargets;
-            matrix = components // targets;
+            # x-axis
+            components = resolvedComponents // extraTargets;
+            # y-axis
+            targets = allTargets;
+
+            # matrix
+            matrix = components // { inherit targets; };
+
+            # the whole matrix as a link farm
+            all = pkgs'.linkFarmFromDrvs "allTargets" (pkgs'.lib.flatten (builtins.attrValues allTargets));
 
             shells = pkgs'.callPackage ./shells.nix {
               inherit (pkgs') git;

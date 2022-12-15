@@ -14,6 +14,8 @@
 
 - [The Development Environment](./devenv.md)
 
+- [Nedryland's Linters](./checks.md)
+
 - [Setting Up Deployment](./deployment.md)
 
 ---

@@ -30,7 +30,7 @@ To build all targets for `hammond`, we would access `hammond`:
 | hammond                |    🧨   |  🧨  |    🧨   |    🧨   |
 | malcolm                |         |      |         |         |
 
-and to build the target `package` for all components we would simply access `package`:
+and to build the target `package` for all components we would simply access `targets.package`:
 
 
 | ⬇️ component \ target ➡️ | package | docs | target1 | target2 |

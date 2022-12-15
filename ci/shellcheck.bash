@@ -1,10 +1,28 @@
-#! /usr/bin/env bash
+#! @bash@
+# shellcheck shell=bash
 
-EXIT_CODE=0
+set -uo pipefail
+color="auto"
+[ -n "${NEDRYLAND_CHECK_COLOR:-}" ] && color="always"
 
-while IFS= read -r script; do
-    @shellcheck@ "$script"
-    EXIT_CODE=$((EXIT_CODE + $?))
-done < <(@shfmt@ -f .)
+lintFiles() {
+    exitCode=0
+    # shellcheck disable=SC2086
+    while mapfile -t -n 50 shellFiles && ((${#shellFiles[@]})); do
+        if ! @shellcheck@ --color=$color "${shellFiles[@]}"; then
+            exitCode=1;
+        fi
+    done <<< "$(@shfmt@ -f ${1:-.})"
+    return $exitCode
+}
 
-exit $EXIT_CODE
+if [ $# -eq 0 ]; then
+    if [ -z "${NEDRYLAND_CHECK_FILES:-}" ]; then
+        lintFiles
+    else
+        lintFiles "$(cat "$NEDRYLAND_CHECK_FILES")"
+    fi
+    exit $exitCode
+else
+    @shellcheck@ --color=$color "$@"
+fi

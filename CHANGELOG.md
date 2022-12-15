@@ -17,17 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nix develop` cd to correct location (assuming git project).
 - lintPhase and lintInputs to be able to separate lints from other tests with `enableChecks`.
 - `base.mkDerivation` will now detect `doChecks` correctly.
-- `shellCommands.<command>.description` supports ANSI escape codes when printing the shell message.
+- `shellCommands.<command>.description` supports ANSI escape codes when printing the shell
+  message.
+- `check` script in the check attribute (`bin/check`) that runs all checks. All scripts uses
+  $NEDRYLAND_CHECK_FILES for files to check or default to old/own way of discovering files.
 
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
 - Shells got all nativeBuildInputs elements twice.
+- nix-lint in the ci output (`bin/nix-lint`) will no longer print help/version text once for each file.
 
 ### Changed
 - `mkTargetSetup` now requires a `typeName` describing the type of target it sets up.
 - shellCommands adds `set -euo pipefail` before executing the script.
 - All shells now have a command `shellHelp` which is also used to print the help on
   startup of the shell instead of the hard-coded nix string used previously.
+- The "target" axis of the matrix is now exposed as `matrix.targets` instead of directly
+  on the `matrix` attribute. This makes evaluation of components a lot faster.
+- `targets.*` is now a link farm
+- `all` is now a link farm 🚜
+- `ci` has been renamed to `checks` to reserve the ci name for more specific CI tools.
 
 ### Removed
 - `base.languages`. This now lives in the [Nedryglot](https://github.com/goodbyekansas/nedryglot) extension.
