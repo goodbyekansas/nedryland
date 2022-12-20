@@ -9,10 +9,11 @@
 # base.deployment.priority which lets you manually set priority
 
 # By default the priority is set to 1000 for all components.
-base.mkComponent {
+base.mkComponent rec {
   name = "combined";
   src = ./.;
 
+  _default = deployment.lastArtifact;
   deployment = {
 
     # 3

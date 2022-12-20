@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `targets.*` is now a link farm
 - `all` is now a link farm 🚜
 - `ci` has been renamed to `checks` to reserve the ci name for more specific CI tools.
+- All components are now also derivations building a tree of symlink to the output of its'
+  targets. The original component attributes are available in `<component>.componentAttrs`.
 
 ### Removed
 - `base.languages`. This now lives in the [Nedryglot](https://github.com/goodbyekansas/nedryglot) extension.

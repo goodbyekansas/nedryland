@@ -8,6 +8,7 @@
   components = { callFile }: {
     # Library that prints greetings in different languages
     greeting = callFile ./libraries/greeting/greeting.nix { };
+
     # Client that uses the above library to print a message
     hello = callFile ./clients/hello/hello.nix { };
 
@@ -17,7 +18,8 @@
     # A component with a combined deployment.
     combinedDeployment = callFile ./deployment/combined.nix { };
 
-    # sources are filtered with git ignore, these two contains different files but after git ignore they are the same
+    # sources are filtered with git ignore, these two contains different files but after
+    # git ignore they are the same
     sameThing1 = callFile ./libraries/same-things-1/same-thing.nix { };
     sameThing2 = callFile ./libraries/same-things-2/same-thing.nix { };
   };

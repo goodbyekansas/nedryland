@@ -14,6 +14,11 @@
           lib = import ./.;
           packages = {
             inherit (internalNedryland) docs checks;
+            default = pkgs.linkFarm
+              "all"
+              (pkgs.lib.mapAttrsToList
+                (name: path: { inherit name path; })
+                { inherit (internalNedryland) docs checks; });
           };
           apps = {
             nixfmt = {
@@ -33,6 +38,8 @@
               program = "${internalNedryland.checks}/bin/check";
             };
           };
+
+          devShells.docs = internalNedryland.docs;
         }
       ) // (
       let

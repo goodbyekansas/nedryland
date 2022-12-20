@@ -1,16 +1,13 @@
-{ base, components, lib, tree, linkFarm }:
+{ base, components, lib, linkFarm, tree }:
 let
   site = linkFarm
     "all-docs"
-    (lib.flatten (lib.mapAttrsToList
-      (n: v: lib.mapAttrsToList
-        (n': path: {
-          inherit path;
-          name = "${n}-${n'}";
-        })
-        v.docs)
-      components))
-  ;
+    (lib.mapAttrsToList
+      (name: v: {
+        inherit name;
+        path = v.docs;
+      })
+      components);
 in
 base.deployment.mkDeployment {
   name = "project-documentation";

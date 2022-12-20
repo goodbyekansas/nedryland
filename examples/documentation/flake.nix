@@ -19,7 +19,7 @@
     in
     {
       packages."${system}" = project.matrix // {
-        default = pkgs'.linkFarmFromDrvs "all" (pkgs'.lib.flatten project.matrix.all);
+        default = project.all;
       };
       devShells."${system}" = project.shells;
     };

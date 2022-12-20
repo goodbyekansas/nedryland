@@ -294,23 +294,43 @@ let
             resolvedComponents = appliedAttrs.components;
             resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;
 
-            # create a set of all available targets on all components
+            # create a set of all available targets
             # for use as one axis in the matrix
             allTargets =
               builtins.mapAttrs
-                pkgs'.linkFarmFromDrvs
-                (pkgs'.lib.zipAttrs (
-                  builtins.map
-                    (
-                      pkgs'.lib.filterAttrs
-                        (
-                          name: value:
-                            name != "allTargets" && name != "_default" &&
-                            (pkgs'.lib.isDerivation value || builtins.isList value)
-                        )
-                    )
-                    resolvedNedrylandComponents
-                ));
+                (target: drvs:
+                  # create a link farm where each link has the name of the access path to
+                  # the component. I.e. the target `tgt` in the component `myComponent`
+                  # has the link name `myComponent` so that if you `nix build
+                  # .#targets.tgt` followed by `ls -l result/` you will see `myComponent
+                  # -> /nix/store/something`.
+                  pkgs'.linkFarm
+                    target
+                    (builtins.map
+                      (path: {
+                        inherit path;
+                        name = builtins.concatStringsSep "." path.accessPath;
+                      })
+                      drvs))
+                (pkgs'.lib.zipAttrs
+                  (
+                    builtins.map
+                      (comp:
+                        # add the accessPath of the component to the individual
+                        # drvs to be able to use in linkfarm above.
+                        # looks like `[ "grandParentComponent" "parentComponent" "component" ]`
+                        builtins.mapAttrs
+                          (_: v: v // { inherit (comp) accessPath; })
+                          (pkgs'.lib.filterAttrs
+                            (
+                              name: value:
+                                name != "_default" &&
+                                (pkgs'.lib.isDerivation value)
+                            )
+                            comp.componentAttrs)
+                      )
+                      resolvedNedrylandComponents
+                  ));
 
 
             # any extra attributes are assumed to be targets in the matrix
@@ -327,6 +347,7 @@ let
                 "name"
                 "dependencies"
                 "themes"
+                "version"
               ]);
           in
           (rec {
@@ -339,30 +360,59 @@ let
             dependencies = appliedAttrs.dependencies or [ ];
 
             # x-axis
-            components = resolvedComponents // extraTargets;
+            components = builtins.mapAttrs
+              (name: value:
+                if pkgs.lib.isDerivation value then
+                  value
+                else
+                  if builtins.isAttrs value then
+                    base.mkComponent ({ inherit name; } // value)
+                  else
+                    builtins.throw "components can only be attrsets or derivations."
+              )
+              (resolvedComponents // extraTargets);
             # y-axis
-            targets = allTargets;
+            targets = (pkgs.linkFarm
+              "targets"
+              (pkgs.lib.mapAttrsToList
+                (name: path: { inherit name path; })
+                allTargets)) // allTargets;
 
             # matrix
             matrix = components // { inherit targets; };
 
             # the whole matrix as a link farm
-            all = pkgs'.linkFarmFromDrvs "allTargets" (pkgs'.lib.flatten (builtins.attrValues allTargets));
+            all = pkgs'.linkFarm
+              "allComponents"
+              (pkgs.lib.mapAttrsToList
+                (name: path: { inherit name path; })
+                components);
 
-            shells = pkgs'.callPackage ./shells.nix {
-              inherit (pkgs') git;
-              inherit components;
-              inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig;
-              enableChecks = minimalBase.enableChecksOverride true;
-              extraShells = appliedAttrs.extraShells or { };
-            };
-          } // (pkgs'.lib.optionalAttrs (appliedAttrs ? version) { inherit (appliedAttrs) version; })))
+            # do not fall for the temptation to use callPackage here. callPackage blindly
+            # adds "override" and "overrideDerivation" functions which will break flake
+            # checks since functions are not derivations.
+            shells =
+              let
+                f = import ./shells.nix;
+              in
+              f ((builtins.intersectAttrs (builtins.functionArgs f) pkgs') // {
+                inherit components;
+                inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig collectComponentsRecursive;
+                enableChecks = minimalBase.enableChecksOverride true;
+                extraShells = appliedAttrs.extraShells or { };
+              });
+
+          } // (pkgs'.lib.optionalAttrs
+            (appliedAttrs ? version)
+            { inherit (appliedAttrs) version; })))
           {
             # checks are off by default, to turn on, call override on
             # the return value from mkProject and set enableChecks = true
             enableChecks = false;
           };
-      override = f;
+      override =
+        f;
     };
 in
 f
+
