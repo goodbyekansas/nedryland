@@ -2,7 +2,6 @@
 base.mkClient rec{
   name = "awesome-client";
   version = "1.0.0";
-  src = null;
 
   docs = {
     manual = base.documentation.mkDocs {

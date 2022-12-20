@@ -2,6 +2,7 @@
 , lib
 , git
 , components
+, collectComponentsRecursive
 , mapComponentsRecursive
 , parseConfig
 , enableChecks
@@ -14,27 +15,15 @@ let
     structure = { defaultTarget = "package"; };
   };
 
-  getAllPackages = components:
-    [ ]
-    ++ (
-      if components.isNedrylandComponent or false then
-        [
-          components._defaultShell or
-            components._default or
-              components."${config.defaultTarget}" or
-                null
-        ]
-      else
-        builtins.map
-          getAllPackages
-          (builtins.filter
-            builtins.isAttrs
-            (builtins.attrValues components))
-    );
-
-  all = mkShell {
-    buildInputs = (getAllPackages components);
-  };
+  getAllTargets = components:
+    builtins.map
+      (component:
+        component.componentAttrs._defaultShell
+          or component.componentAttrs._default
+          or component.componentAttrs."${config.defaultTarget}"
+          or null
+      )
+      (collectComponentsRecursive components);
 in
 (mapComponentsRecursive
   (
@@ -123,18 +112,17 @@ in
                   }
                   shellPkg
               )
-              (lib.filterAttrs (_: lib.isDerivation) component);
+              (lib.filterAttrs (_: lib.isDerivation) component.componentAttrs);
 
           derivationShells = toShells
             component;
-          # also include non-derivation attrsets in the passthru property of the top-level
-          # shell to support nested components
+
           derivationsAndAttrsets = (
             lib.filterAttrs
               (
-                _: v: builtins.isAttrs v && !lib.isDerivation v
+                _: v: builtins.isAttrs v && v.isNedrylandDerivation or false
               )
-              component
+              component.componentAttrs
           ) // derivationShells;
 
           defaultShell =
@@ -145,20 +133,25 @@ in
                 derivationShells._default or
                   derivationShells."${config.defaultTarget}" or
                     (mkShell {
-                      shellHook = builtins.abort ''
+                      shellHook = ''
                         🐚 Could not decide on a default shell for component "${component.name}"
-                        🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'';
+                        🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}
+                        exit 1
+                      '';
                     });
+
         in
         defaultShell.overrideAttrs (_: {
           passthru = derivationsAndAttrsets // lib.optionalAttrs
             (component ? docs)
             ({
               docs = mkShell {
-                shellHook = builtins.abort ''
-                  Invalid shell docs!
+                shellHook = ''
+                  Invalid shell "docs"!
                   🐚 The docs attribute is just the combination of the sub-targets.
-                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'';
+                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}
+                  exit 1
+                '';
                 passthru = toShells (component.docs // { inherit (component) name path; });
               };
             });
@@ -166,5 +159,7 @@ in
       )
   )
   components) // extraShells // {
-  inherit all;
+  all = mkShell {
+    nativeBuildInputs = getAllTargets components;
+  };
 }

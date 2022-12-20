@@ -5,16 +5,18 @@ rec {
     let
       mkComponentInner = attrs@{ name, nedrylandType ? "component", ... }:
         let
-          component' =
+          component =
             (attrs // {
               inherit name path nedrylandType;
-              isNedrylandComponent = true;
-              __toString = self: "Nedryland component: ${self.name}";
             } // (pkgs.lib.optionalAttrs (attrs ? deployment && attrs.deployment != { }) {
               # the deploy target is simply the sum of everything
               # in the deployment set
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
-            }) // (pkgs.lib.optionalAttrs (attrs ? docs) {
+              deployment = attrs.deployment //
+                (pkgs.linkFarmFromDrvs
+                  "${name}-deployment"
+                  (builtins.attrValues attrs.deployment));
+            }) // (pkgs.lib.optionalAttrs (attrs ? docs && !pkgs.lib.isDerivation attrs.docs) {
               # the docs target is a symlinkjoin of all sub-derivations
               docs =
                 let
@@ -34,7 +36,6 @@ rec {
                 };
             }));
 
-          component = component';
           docsRequirement = (parseConfig {
             key = "docs";
             structure = { requirements = { "${component.nedrylandType}" = [ ]; }; };
@@ -48,8 +49,17 @@ rec {
           ''Projects config demands type "${component.nedrylandType}" to have at least: ${builtins.concatStringsSep ", " docsRequirement}.
           "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames attrs.docs or { })}.'';
         (component
+          //
+          (pkgs.linkFarm
+            name
+            (pkgs.lib.mapAttrsToList
+              (name: path: { inherit name path; })
+              (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component)))
           // {
+          isNedrylandComponent = true;
           overrideAttrs = f: mkComponentInner (attrs // (f component));
+          override = mkComponentInner;
+          componentAttrs = component;
         });
     in
     mkComponentInner;
@@ -60,22 +70,32 @@ rec {
         let
           g =
             name: value:
-            if (!builtins.isAttrs value) || pkgs.lib.isDerivation value then value
+            if value.isNedrylandComponent or false then
+              recurse (path ++ [ name ]) (f (path ++ [ name ]) value)
             else
-              recurse (path ++ [ name ]) (
-                if value.isNedrylandComponent or false then f (path ++ [ name ]) value
-                else value
-              );
+              value;
         in
         builtins.mapAttrs g;
     in
     recurse [ ];
 
-  collectComponentsRecursive = set:
-    if set.isNedrylandComponent or false then
-      [ set ] ++ (builtins.concatMap collectComponentsRecursive (builtins.attrValues set))
-    else if builtins.isAttrs set && !pkgs.lib.isDerivation set then
-      builtins.concatMap collectComponentsRecursive (builtins.attrValues set)
-    else
-      [ ];
+  collectComponentsRecursive =
+    let
+      recurse = path:
+        let
+          g =
+            name: value:
+            if value.isNedrylandComponent or false then
+              [
+                ({
+                  accessPath = (path ++ [ name ]);
+                } // value)
+              ] ++ (recurse (path ++ [ name ]) value)
+            else
+              [ ];
+        in
+        set:
+        builtins.concatMap (name: g name (builtins.getAttr name set)) (builtins.attrNames set);
+    in
+    recurse [ ];
 }

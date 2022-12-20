@@ -5,6 +5,7 @@ base.mkComponent rec {
   name = "single";
   src = ./.;
 
+  _default = deployment.artifact;
   deployment = {
     artifact = base.deployment.mkDeployment {
       name = "single-deploy";
