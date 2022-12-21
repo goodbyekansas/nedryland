@@ -75,341 +75,309 @@ let
         attrs@{ name
         , ...
         }:
-        pkgs'.lib.makeOverridable
-          ({ enableChecks }:
-          let
-            componentFns = import ./component.nix pkgs';
+        let
+          componentFns = import ./component.nix pkgs';
 
-            # create the non-extended base
-            minimalBase =
-              let
-                parseConfig = import ./config.nix pkgs' configContent configRoot (pkgs'.lib.toUpper name);
-                enableChecksOverride = enable: originalDrv:
-                  if
-                  # Should checks be enabled or not?
-                    enable
-                    # Have we already enabled checks?
-                    && !(originalDrv.doCheck or false)
-                    # Have the user explicitily requested the checks to be off? (base.mkDerivation only)
-                    && ! (originalDrv.originalDoCheck or null == false)
-                  then
-                    originalDrv.overrideAttrs
-                      (oldAttrs:
-                        let
-                          checkAttrs =
-                            {
-                              passthru = oldAttrs.passthru or { } // { inherit originalDrv; };
-                              doCheck = true;
+          # create the non-extended base
+          minimalBase =
+            let
+              parseConfig = import ./config.nix pkgs' configContent configRoot (pkgs'.lib.toUpper name);
 
-                              # Python packages don't have a checkPhase, only an installCheckPhase
-                              doInstallCheck = true;
+              minimalBase = {
+                inherit
+                  version
+                  versionAtLeast
+                  callFile
+                  callFunction
+                  parseConfig;
+                mkShellCommands = pkgs'.callPackage ./shell-commands.nix { };
 
-                              # LintPhase for checks that does not require to run the built program
-                              lintPhase = oldAttrs.lintPhase or ''echo "No lintPhase defined, doing nothing"'';
-                              preInstallPhases = oldAttrs.preInstallPhases or [ ] ++ [ "lintPhase" ];
-                              nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ] ++ oldAttrs.lintInputs or [ ];
-                            };
-                        in
-                        checkAttrs // pkgs'.lib.optionalAttrs (originalDrv.stdenv.hostPlatform != originalDrv.stdenv.buildPlatform && oldAttrs.doCrossCheck or false) {
-                          crossCheckPhase = oldAttrs.crossCheckPhase or oldAttrs.checkPhase or ''echo "No checkPhase or crossCheckPhase defined (but doCrossCheck is true), doing nothing"'';
-                          preInstallPhases = checkAttrs.preInstallPhases ++ [ "crossCheckPhase" ];
-                          nativeBuildInputs = checkAttrs.nativeBuildInputs ++ oldAttrs.checkInputs or [ ];
-                        }) else if originalDrv.doCheck or true then originalDrv.originalDrv or originalDrv else originalDrv;
 
-                minimalBase = {
-                  inherit
-                    version
-                    versionAtLeast
-                    callFile
-                    callFunction
-                    parseConfig
-                    enableChecksOverride;
-                  mkShellCommands = pkgs'.callPackage ./shell-commands.nix { };
-
-                  # enableChecks is the directive to enable checks.
-                  # checksEnabled is the state if enabled or not.
-                  checksEnabled = enableChecks;
-                  # Overwrite the directive with a function to enable checks.
-                  enableChecks = enableChecksOverride enableChecks;
-
-                  resolveInputs = name: typeName: targets: builtins.map
-                    (input:
-                      if input ? isNedrylandComponent then
-                        input."${(pkgs'.lib.findFirst
+                resolveInputs = name: typeName: targets: builtins.map
+                  (input:
+                    if input ? isNedrylandComponent then
+                      input."${(pkgs'.lib.findFirst
                           (target: builtins.hasAttr target input)
                       (abort "${name}.${typeName} did not contain any of the targets ${builtins.toString targets}. Please specify a valid target.")
                           targets)}"
-                      else
-                        input
-                    );
+                    else
+                      input
+                  );
 
-                  mkDerivation = attrs@{ name, stdenv ? pkgs'.stdenv, ... }:
-                    let
-                      customerFilter = src:
-                        let
-                          # IMPORTANT: use a let binding like this to memoize info about the git directories.
-                          srcIgnored = pkgs'.gitignoreFilter src;
-                        in
-                        filter:
-                        path: type:
-                          (srcIgnored path type) && (filter path type);
-                      filteredSrc =
-                        if attrs ? srcFilter && attrs ? src then
-                          pkgs'.lib.cleanSourceWith
-                            {
-                              inherit (attrs) src;
-                              filter = customerFilter attrs.src attrs.srcFilter;
-                              name = "${name}-source";
-                            } else pkgs'.gitignoreSource attrs.src;
-                    in
-                    minimalBase.enableChecks (stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" "shellCommands" ]) //
-                      {
-                        originalDoCheck = attrs.doCheck or null;
-                        isNedrylandDerivation = true;
-                        passthru = (attrs.passthru or { }) // {
-                          isNedrylandDerivation = true;
-                          shellCommands = attrs.shellCommands or { };
-                        };
-                      }
-                      //
-                      (pkgs'.lib.optionalAttrs (attrs ? src) {
-                        src = if pkgs'.lib.isStorePath attrs.src then attrs.src else filteredSrc;
-                      })));
-                  inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
-                  mkTargetSetup = import ./targetsetup.nix pkgs' parseConfig;
-                  deployment = import ./deployment.nix pkgs' minimalBase;
-                  documentation = import ./documentation pkgs' minimalBase;
-                  setComponentPath = path:
-                    let
-                      overriddenMkComponent = componentFns.mkComponent path minimalBase.deployment.mkCombinedDeployment parseConfig;
-                    in
-                    minimalBase // {
-                      mkComponent = overriddenMkComponent;
-                      mkClient = targets: overriddenMkComponent (targets // { nedrylandType = "client"; });
-                      mkService = targets: overriddenMkComponent (targets // { nedrylandType = "service"; });
-                      mkLibrary = targets: overriddenMkComponent (targets // { nedrylandType = "library"; });
-                    };
-                };
-              in
-              minimalBase.setComponentPath ./.;
-
-            evalBaseExtensionsWith = baseExtensions: initialBase: components:
-              (builtins.foldl'
-                (
-                  combinedBaseExtensions: currentBaseExtension:
-                    let
-                      extFn = if builtins.isPath currentBaseExtension then import currentBaseExtension else currentBaseExtension;
-                      args = builtins.functionArgs extFn;
-                    in
-                    pkgs'.lib.recursiveUpdate combinedBaseExtensions (if builtins.isAttrs currentBaseExtension then currentBaseExtension else
-                    (
-                      extFn (
-                        builtins.intersectAttrs args (components // { inherit components; })
-                        // builtins.intersectAttrs args pkgs'
-                        // builtins.intersectAttrs args (let base = (pkgs'.lib.recursiveUpdate combinedBaseExtensions initialBase); in base // { inherit base; })
-                      )
-                    ))
-                )
-                { }
-                baseExtensions
-              );
-
-            # extend base with base extensions from this and dependent projects
-            extendBase = minimalBase:
-              let
-                originalSetComponentPath = minimalBase.setComponentPath;
-                inner = minimalBase:
+                mkDerivation = attrs@{ name, stdenv ? pkgs'.stdenv, ... }:
                   let
-                    evalDependenciesBaseExtensions = dependencies: initialBase:
-                      builtins.foldl' pkgs'.lib.recursiveUpdate initialBase (builtins.map
-                        (pd:
-                          evalBaseExtensionsWith
-                            pd.baseExtensions
-                            (evalDependenciesBaseExtensions pd.dependencies initialBase)
-                            pd.components
-                        )
-                        dependencies);
-
-                    # evaluate all base extensions from dependent projects recursively
-                    dependenciesBase = evalDependenciesBaseExtensions (appliedAttrs.dependencies or [ ]) minimalBase;
+                    customerFilter = src:
+                      let
+                        # IMPORTANT: use a let binding like this to memoize info about the git directories.
+                        srcIgnored = pkgs'.gitignoreFilter src;
+                      in
+                      filter:
+                      path: type:
+                        (srcIgnored path type) && (filter path type);
+                    filteredSrc =
+                      if attrs ? srcFilter && attrs ? src then
+                        pkgs'.lib.cleanSourceWith
+                          {
+                            inherit (attrs) src;
+                            filter = customerFilter attrs.src attrs.srcFilter;
+                            name = "${name}-source";
+                          } else pkgs'.gitignoreSource attrs.src;
                   in
-                  # evaluate base extensions for current project
-                  pkgs'.lib.recursiveUpdate dependenciesBase (evalBaseExtensionsWith
-                    (appliedAttrs.baseExtensions or [ ])
-                    dependenciesBase
-                    resolvedComponents);
-              in
-              (inner minimalBase) // {
-                setComponentPath = path: inner (originalSetComponentPath path);
-              };
-
-
-            extendedBase = extendBase minimalBase;
-
-            # callFile and callFunction will auto-populate dependencies
-            # on nixpkgs, base members and project components
-            callFile = path: callFunction (import path) path;
-            callFunction = function: path:
-              let
-                args = builtins.functionArgs function;
-                # Burn the path into newBase
-                newBase = extendedBase.setComponentPath path;
-              in
-              pkgs'.lib.makeOverridable
-                (
-                  overrides:
-                  function
+                  stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" "shellCommands" ]) //
+                    {
+                      isNedrylandDerivation = true;
+                      passthru = (attrs.passthru or { }) // {
+                        isNedrylandDerivation = true;
+                        shellCommands = attrs.shellCommands or { };
+                      };
+                    }
+                    // pkgs'.lib.optionalAttrs (attrs.doCheck or true)
                     (
-                      (builtins.intersectAttrs args pkgs')
-                      // (builtins.intersectAttrs args (resolvedComponents // { components = resolvedComponents; }))
-                      // (builtins.intersectAttrs args (newBase // { base = newBase; }))
-                      // overrides
-                    )
-                );
-
-            # we support most arguments to mkProject being functions
-            # that accept a minimal base
-            appliedAttrs =
-              builtins.mapAttrs
-                (_: v:
-                  # intersect with minimal base (without extensions) to avoid cyclic deps
-                  if builtins.isFunction v then
-                    v (builtins.intersectAttrs (builtins.functionArgs v) minimalBase)
-                  else
-                    v
-                )
-                attrs;
-
-            configContentFromEnv = builtins.getEnv "${pkgs'.lib.toUpper appliedAttrs.name}_config";
-            configContent =
-              if configContentFromEnv != "" then configContentFromEnv else
-              (
-                if appliedAttrs ? configFile
-                  && builtins.pathExists appliedAttrs.configFile then
-                  builtins.readFile appliedAttrs.configFile
-                else ""
-              );
-            configRoot = if appliedAttrs ? configFile then builtins.dirOf appliedAttrs.configFile else null;
-
-            resolvedComponents = appliedAttrs.components;
-            resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;
-
-            # create a set of all available targets
-            # for use as one axis in the matrix
-            allTargets =
-              builtins.mapAttrs
-                (target: drvs:
-                  # create a link farm where each link has the name of the access path to
-                  # the component. I.e. the target `tgt` in the component `myComponent`
-                  # has the link name `myComponent` so that if you `nix build
-                  # .#targets.tgt` followed by `ls -l result/` you will see `myComponent
-                  # -> /nix/store/something`.
-                  pkgs'.linkFarm
-                    target
-                    (builtins.map
-                      (path: {
-                        inherit path;
-                        name = builtins.concatStringsSep "." path.accessPath;
+                      let checkAttrs = {
+                        # LintPhase for checks that does not require to run the built program
+                        lintPhase = attrs.lintPhase or ''echo "No lintPhase defined, doing nothing"'';
+                        preInstallPhases = attrs.preInstallPhases or [ ] ++ [ "lintPhase" ];
+                        nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ attrs.lintInputs or [ ];
+                      };
+                      in
+                      (checkAttrs // pkgs'.lib.optionalAttrs (stdenv.hostPlatform != stdenv.buildPlatform && attrs.doCrossCheck or false) {
+                        crossCheckPhase = attrs.crossCheckPhase or attrs.checkPhase or ''echo "No checkPhase or crossCheckPhase defined (but doCrossCheck is true), doing nothing"'';
+                        preInstallPhases = checkAttrs.preInstallPhases ++ [ "crossCheckPhase" ];
+                        nativeBuildInputs = checkAttrs.nativeBuildInputs ++ attrs.checkInputs or [ ];
                       })
-                      drvs))
-                (pkgs'.lib.zipAttrs
-                  (
-                    builtins.map
-                      (comp:
-                        # add the accessPath of the component to the individual
-                        # drvs to be able to use in linkfarm above.
-                        # looks like `[ "grandParentComponent" "parentComponent" "component" ]`
-                        builtins.mapAttrs
-                          (_: v: v // { inherit (comp) accessPath; })
-                          (pkgs'.lib.filterAttrs
-                            (
-                              name: value:
-                                name != "_default" &&
-                                (pkgs'.lib.isDerivation value)
-                            )
-                            comp.componentAttrs)
-                      )
-                      resolvedNedrylandComponents
-                  ));
+                    )
+                    // (pkgs'.lib.optionalAttrs (attrs ? src) {
+                    src = if pkgs'.lib.isStorePath attrs.src then attrs.src else filteredSrc;
+                  }));
+                inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
+                mkTargetSetup = import ./targetsetup.nix pkgs' parseConfig;
+                deployment = import ./deployment.nix pkgs' minimalBase;
+                documentation = import ./documentation pkgs' minimalBase;
+                setComponentPath = path:
+                  let
+                    overriddenMkComponent = componentFns.mkComponent path minimalBase.deployment.mkCombinedDeployment parseConfig;
+                  in
+                  minimalBase // {
+                    mkComponent = overriddenMkComponent;
+                    mkClient = targets: overriddenMkComponent (targets // { nedrylandType = "client"; });
+                    mkService = targets: overriddenMkComponent (targets // { nedrylandType = "service"; });
+                    mkLibrary = targets: overriddenMkComponent (targets // { nedrylandType = "library"; });
+                  };
+              };
+            in
+            minimalBase.setComponentPath ./.;
 
-
-            # any extra attributes are assumed to be targets in the matrix
-            extraTargets = builtins.mapAttrs
+          evalBaseExtensionsWith = baseExtensions: initialBase: components:
+            (builtins.foldl'
               (
-                _: value: if builtins.isFunction value then value resolvedComponents else value
+                combinedBaseExtensions: currentBaseExtension:
+                  let
+                    extFn = if builtins.isPath currentBaseExtension then import currentBaseExtension else currentBaseExtension;
+                    args = builtins.functionArgs extFn;
+                  in
+                  pkgs'.lib.recursiveUpdate combinedBaseExtensions (if builtins.isAttrs currentBaseExtension then currentBaseExtension else
+                  (
+                    extFn (
+                      builtins.intersectAttrs args (components // { inherit components; })
+                      // builtins.intersectAttrs args pkgs'
+                      // builtins.intersectAttrs args (let base = (pkgs'.lib.recursiveUpdate combinedBaseExtensions initialBase); in base // { inherit base; })
+                    )
+                  ))
               )
-              (builtins.removeAttrs appliedAttrs [
-                "components"
-                "extraShells"
-                "lib"
-                "baseExtensions"
-                "configFile"
-                "name"
-                "dependencies"
-                "themes"
-                "version"
-              ]);
-          in
-          (rec {
-            inherit (appliedAttrs) name;
-            pkgs = pkgs';
+              { }
+              baseExtensions
+            );
 
-            base = extendedBase;
-            lib = appliedAttrs.lib or { };
-            baseExtensions = appliedAttrs.baseExtensions or [ ];
-            dependencies = appliedAttrs.dependencies or [ ];
+          # extend base with base extensions from this and dependent projects
+          extendBase = minimalBase:
+            let
+              originalSetComponentPath = minimalBase.setComponentPath;
+              inner = minimalBase:
+                let
+                  evalDependenciesBaseExtensions = dependencies: initialBase:
+                    builtins.foldl' pkgs'.lib.recursiveUpdate initialBase (builtins.map
+                      (pd:
+                        evalBaseExtensionsWith
+                          pd.baseExtensions
+                          (evalDependenciesBaseExtensions pd.dependencies initialBase)
+                          pd.components
+                      )
+                      dependencies);
 
-            # x-axis
-            components = builtins.mapAttrs
-              (name: value:
-                if pkgs.lib.isDerivation value then
-                  value
+                  # evaluate all base extensions from dependent projects recursively
+                  dependenciesBase = evalDependenciesBaseExtensions (appliedAttrs.dependencies or [ ]) minimalBase;
+                in
+                # evaluate base extensions for current project
+                pkgs'.lib.recursiveUpdate dependenciesBase (evalBaseExtensionsWith
+                  (appliedAttrs.baseExtensions or [ ])
+                  dependenciesBase
+                  resolvedComponents);
+            in
+            (inner minimalBase) // {
+              setComponentPath = path: inner (originalSetComponentPath path);
+            };
+
+
+          extendedBase = extendBase minimalBase;
+
+          # callFile and callFunction will auto-populate dependencies
+          # on nixpkgs, base members and project components
+          callFile = path: callFunction (import path) path;
+          callFunction = function: path:
+            let
+              args = builtins.functionArgs function;
+              # Burn the path into newBase
+              newBase = extendedBase.setComponentPath path;
+            in
+            pkgs'.lib.makeOverridable
+              (
+                overrides:
+                function
+                  (
+                    (builtins.intersectAttrs args pkgs')
+                    // (builtins.intersectAttrs args (resolvedComponents // { components = resolvedComponents; }))
+                    // (builtins.intersectAttrs args (newBase // { base = newBase; }))
+                    // overrides
+                  )
+              );
+
+          # we support most arguments to mkProject being functions
+          # that accept a minimal base
+          appliedAttrs =
+            builtins.mapAttrs
+              (_: v:
+                # intersect with minimal base (without extensions) to avoid cyclic deps
+                if builtins.isFunction v then
+                  v (builtins.intersectAttrs (builtins.functionArgs v) minimalBase)
                 else
-                  if builtins.isAttrs value then
-                    base.mkComponent ({ inherit name; } // value)
-                  else
-                    builtins.throw "components can only be attrsets or derivations."
+                  v
               )
-              (resolvedComponents // extraTargets);
-            # y-axis
-            targets = (pkgs.linkFarm
-              "targets"
-              (pkgs.lib.mapAttrsToList
-                (name: path: { inherit name path; })
-                allTargets)) // allTargets;
+              attrs;
 
-            # matrix
-            matrix = components // { inherit targets; };
+          configContentFromEnv = builtins.getEnv "${pkgs'.lib.toUpper appliedAttrs.name}_config";
+          configContent =
+            if configContentFromEnv != "" then configContentFromEnv else
+            (
+              if appliedAttrs ? configFile
+                && builtins.pathExists appliedAttrs.configFile then
+                builtins.readFile appliedAttrs.configFile
+              else ""
+            );
+          configRoot = if appliedAttrs ? configFile then builtins.dirOf appliedAttrs.configFile else null;
 
-            # the whole matrix as a link farm
-            all = pkgs'.linkFarm
-              "allComponents"
-              (pkgs.lib.mapAttrsToList
-                (name: path: { inherit name path; })
-                components);
+          resolvedComponents = appliedAttrs.components;
+          resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;
 
-            # do not fall for the temptation to use callPackage here. callPackage blindly
-            # adds "override" and "overrideDerivation" functions which will break flake
-            # checks since functions are not derivations.
-            shells =
-              let
-                f = import ./shells.nix;
-              in
-              f ((builtins.intersectAttrs (builtins.functionArgs f) pkgs') // {
-                inherit components;
-                inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig collectComponentsRecursive;
-                enableChecks = minimalBase.enableChecksOverride true;
-                extraShells = appliedAttrs.extraShells or { };
-              });
+          # create a set of all available targets
+          # for use as one axis in the matrix
+          allTargets =
+            builtins.mapAttrs
+              (target: drvs:
+                # create a link farm where each link has the name of the access path to
+                # the component. I.e. the target `tgt` in the component `myComponent`
+                # has the link name `myComponent` so that if you `nix build
+                # .#targets.tgt` followed by `ls -l result/` you will see `myComponent
+                # -> /nix/store/something`.
+                pkgs'.linkFarm
+                  target
+                  (builtins.map
+                    (path: {
+                      inherit path;
+                      name = builtins.concatStringsSep "." path.accessPath;
+                    })
+                    drvs))
+              (pkgs'.lib.zipAttrs
+                (
+                  builtins.map
+                    (comp:
+                      # add the accessPath of the component to the individual
+                      # drvs to be able to use in linkfarm above.
+                      # looks like `[ "grandParentComponent" "parentComponent" "component" ]`
+                      builtins.mapAttrs
+                        (_: v: v // { inherit (comp) accessPath; })
+                        (pkgs'.lib.filterAttrs
+                          (
+                            name: value:
+                              name != "_default" &&
+                              (pkgs'.lib.isDerivation value)
+                          )
+                          comp.componentAttrs)
+                    )
+                    resolvedNedrylandComponents
+                ));
 
-          } // (pkgs'.lib.optionalAttrs
-            (appliedAttrs ? version)
-            { inherit (appliedAttrs) version; })))
-          {
-            # checks are off by default, to turn on, call override on
-            # the return value from mkProject and set enableChecks = true
-            enableChecks = false;
-          };
+
+          # any extra attributes are assumed to be targets in the matrix
+          extraTargets = builtins.mapAttrs
+            (
+              _: value: if builtins.isFunction value then value resolvedComponents else value
+            )
+            (builtins.removeAttrs appliedAttrs [
+              "components"
+              "extraShells"
+              "lib"
+              "baseExtensions"
+              "configFile"
+              "name"
+              "dependencies"
+              "themes"
+              "version"
+            ]);
+        in
+        (rec {
+          inherit (appliedAttrs) name;
+          pkgs = pkgs';
+
+          base = extendedBase;
+          lib = appliedAttrs.lib or { };
+          baseExtensions = appliedAttrs.baseExtensions or [ ];
+          dependencies = appliedAttrs.dependencies or [ ];
+
+          # x-axis
+          components = builtins.mapAttrs
+            (name: value:
+              if pkgs.lib.isDerivation value then
+                value
+              else
+                if builtins.isAttrs value then
+                  base.mkComponent ({ inherit name; } // value)
+                else
+                  builtins.throw "components can only be attrsets or derivations."
+            )
+            (resolvedComponents // extraTargets);
+          # y-axis
+          targets = (pkgs.linkFarm
+            "targets"
+            (pkgs.lib.mapAttrsToList
+              (name: path: { inherit name path; })
+              allTargets)) // allTargets;
+
+          # matrix
+          matrix = components // { inherit targets; };
+
+          # the whole matrix as a link farm
+          all = pkgs'.linkFarm
+            "allComponents"
+            (pkgs.lib.mapAttrsToList
+              (name: path: { inherit name path; })
+              components);
+
+          # do not fall for the temptation to use callPackage here. callPackage blindly
+          # adds "override" and "overrideDerivation" functions which will break flake
+          # checks since functions are not derivations.
+          shells =
+            let
+              f = import ./shells.nix;
+            in
+            f ((builtins.intersectAttrs (builtins.functionArgs f) pkgs') // {
+              inherit components;
+              inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig collectComponentsRecursive;
+              extraShells = appliedAttrs.extraShells or { };
+            });
+
+        } // (pkgs'.lib.optionalAttrs
+          (appliedAttrs ? version)
+          { inherit (appliedAttrs) version; }));
       override =
         f;
     };
