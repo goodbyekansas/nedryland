@@ -3,6 +3,7 @@
 
   inputs = {
     pkgs.url = github:NixOS/nixpkgs/nixos-22.11;
+    flake-utils.url = github:numtide/flake-utils;
   };
 
   outputs = { pkgs, flake-utils, ... }:
