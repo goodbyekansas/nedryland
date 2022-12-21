@@ -38,29 +38,36 @@ in
                   # the shell (but not for dependencies of it)
                   # that is the reason we are not using the check
                   # variant of the matrix
-                  drv =
-                    # Priority of nativeBuildInputs is: 
-                    #  1. nativeBuildInputs
-                    #  2. checkInputs
-                    #  3. shellInputs
-                    #  4. shellCommands
-                    (enableChecks drv').overrideAttrs (oldAttrs:
-                      let
-                        shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
-                          oldAttrs.shellCommands or { };
-                        shellCommands =
-                          if lib.isDerivation shellCommandAttrsOrDrv then
-                            shellCommandAttrsOrDrv
-                          else
-                            mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
-                      in
-                      {
-                        inherit shellCommands;
-                        nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
-                        ++ oldAttrs.passthru.shellInputs or [ ]
-                        ++ oldAttrs.shellInputs or [ ]
-                        ++ [ shellCommands ];
-                      });
+                  drv = enableChecks drv';
+
+                  # add shell inputs and commands to native build inputs
+                  # note that this has to run after the shell derivation is created to let
+                  # it first run its logic on nativeBuildInputs ++
+                  # checkInputs/installCheckInputs
+                  #
+                  # Priority of nativeBuildInputs then becomes:
+                  #  1. nativeBuildInputs
+                  #  2. checkInputs/installCheckInputs
+                  #  3. shellInputs
+                  #  4. shellCommands
+                  addShellInputs = drv: drv.overrideAttrs (oldAttrs:
+                    let
+                      shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
+                        oldAttrs.shellCommands or { };
+                      shellCommands =
+                        if lib.isDerivation shellCommandAttrsOrDrv then
+                          shellCommandAttrsOrDrv
+                        else
+                          mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
+                    in
+                    {
+                      inherit shellCommands;
+                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
+                      ++ oldAttrs.passthru.shellInputs or [ ]
+                      ++ oldAttrs.shellInputs or [ ]
+                      ++ [ shellCommands ];
+                    });
+
                   targetName = lib.escapeShellArg ''target "${drv.name}" in component "${component.name}"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
@@ -106,11 +113,12 @@ in
                     '';
                   });
                 in
-                mkShell.override
-                  {
-                    stdenv = drv.stdenv;
-                  }
-                  shellPkg
+                addShellInputs
+                  (mkShell.override
+                    {
+                      stdenv = drv.stdenv;
+                    }
+                    shellPkg)
               )
               (lib.filterAttrs (_: lib.isDerivation) component.componentAttrs);
 
