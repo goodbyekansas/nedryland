@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base.mkExtension`. Instead just return a set from the extension to be merged with base.
 - Control of `nixpkgs`. Nedryland now has a mandatory argument for it so that users of
   Nedryland controls the version of nixpkgs.
+- Ability to turn off/on checks on the matrix. They are always on. Instead, components
+  that should not be checked can set `doCheck=false` in their derivations.
 
 ## [7.0.0] - 2022-11-24
 

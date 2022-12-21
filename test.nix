@@ -16,9 +16,7 @@ let
 
   mappedTests = (builtins.mapAttrs
     (
-      _: project: (
-        project.override { enableChecks = true; }
-      ).all
+      _: project: project.all
     )
     examples) // {
     combinedDeployment = builtins.trace "🎪 Running combined deployment test." import ./test/deployment.nix examples.hello.matrix.combinedDeployment.deploy pkgs.lib.assertMsg;

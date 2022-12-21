@@ -5,7 +5,6 @@
 , collectComponentsRecursive
 , mapComponentsRecursive
 , parseConfig
-, enableChecks
 , extraShells ? { }
 , mkShellCommands
 }:
@@ -32,14 +31,8 @@ in
         let
           toShells = component:
             builtins.mapAttrs
-              (_: drv':
+              (_: drv:
                 let
-                  # we want the check version of the derivation for
-                  # the shell (but not for dependencies of it)
-                  # that is the reason we are not using the check
-                  # variant of the matrix
-                  drv = enableChecks drv';
-
                   # add shell inputs and commands to native build inputs
                   # note that this has to run after the shell derivation is created to let
                   # it first run its logic on nativeBuildInputs ++
