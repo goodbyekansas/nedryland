@@ -21,8 +21,8 @@ base.mkComponent {
 ```
 
 Building a deployment script from this declaration can be done in two ways.
- 1. `nix-build -A <componentName>.deployment.terraform`.
- 2. `nix-build -A <componentName>.deploy` which is a combined target containing all deployments (which in this example is only one).
+ 1. The attribute `<componentName>.deployment.terraform`.
+ 2. The attribute `<componentName>.deploy` which is a combined target containing all deployments (which in this example is only one).
 
 A deploy can now be performed by running the script in `bin/deploy` in
 the resulting derivation (usually accessed by the `result`
@@ -33,7 +33,7 @@ this shell run `bin/shell` in the resulting derivation.
 ## Setting up project deployment targets
 
 `mkProject` accepts extra targets and `deploy` is conventionally used
-for project deployment targets and can be accessed through `nix-build -A deploy.<attribute>`.
+for project deployment targets and can be accessed through `deploy.<attribute>`.
 
 All values in this set should be deployment derivations, or
 combinations of them which can be created with the convenience

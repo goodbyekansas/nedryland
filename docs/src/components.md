@@ -52,15 +52,17 @@ nedryland.mkProject {
 }
 ```
 
-The component will be exposed under the nix attribute `exampleComponent` so to build it you can use
-`nix-build -A exampleComponent.<target>` where `target` is for example `package` (see
+The component will be exposed under the nix attribute `exampleComponent` so to build it
+you can use `nix-build -A exampleComponent.<target>` or `nix build
+.#exampleComponent.<target>` where `target` is any target on the component (see
 [matrix](../concepts/matrix.md))
 
 ## Component Dependencies
-Nedryland supports components being dependent on other components. This is done by declaring
-your dependency as an input. This is true for both for packages available in pkgs and your defined components.
-Add your dependency to the argument list to your file and Nedryland will automatically send it to the function
-call if available in either components or pkgs.
+Nedryland supports components being dependent on other components. This is done by
+declaring your dependency as an input. This is true for both for packages available in
+pkgs and your defined components.  Add your dependency to the argument list to your file
+and Nedryland will automatically send it to the function call if available in either
+components or pkgs.
 
 ```nix
 { pkgs, base, myDependency }:

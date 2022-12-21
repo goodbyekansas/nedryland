@@ -34,15 +34,15 @@ To forward linters from Nedryland to a project to something like this:
 And then run it with `nix run .#checks`.
 
 ## Selecting Files
-Sometimes a project contains files which should not be linted, for example 3rd
-party files or generated scripts. To customize which files will be checked set
-`$NEDRYLAND_CHECK_FILES` to point to a files containing a list of all files to
-check.
+Sometimes a project contains files which should not be linted, for example 3rd party files
+or generated scripts. To customize which files will be checked set
+`$NEDRYLAND_CHECK_FILES` to point to a file containing a list (newline separated) of all
+files to check.
 
 ## Extending the Set of Linters
 `check` will run all scripts in its bin folder, which means that to extend the lint
 toolset in a project, simply symlinkJoin it with a derivation containing more linters.
 When writing a custom linter use `$NEDRYLAND_CHECK_FILES` to select files from
 and fall back to some other way of discovering files. Use
-`NEDRYLAND_CHECK_COLOR` to check if colors should be in the output. The script
+`$NEDRYLAND_CHECK_COLOR` to check if colors should be in the output. The script
 should be able to run without any arguments.
