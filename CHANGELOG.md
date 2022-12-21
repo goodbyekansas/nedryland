@@ -25,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
 - Shells got all nativeBuildInputs elements twice.
-- nix-lint in the ci output (`bin/nix-lint`) will no longer print help/version text once for each file.
+- nix-lint in the ci output (`bin/nix-lint`) will no longer print help/version text once
+  for each file.
+- Shells not following the designated priority for `nativeBuildInputs`.
 
 ### Changed
 - `mkTargetSetup` now requires a `typeName` describing the type of target it sets up.
