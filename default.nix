@@ -92,6 +92,7 @@ let
                   parseConfig;
                 mkShellCommands = pkgs'.callPackage ./shell-commands.nix { };
 
+                inCI = builtins.stringLength (builtins.getEnv "CI") > 0;
 
                 resolveInputs = name: typeName: targets: builtins.map
                   (input:

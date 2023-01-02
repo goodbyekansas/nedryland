@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   message.
 - `check` script in the check attribute (`bin/check`) that runs all checks. All scripts uses
   $NEDRYLAND_CHECK_FILES for files to check or default to old/own way of discovering files.
+- `inCI` on base, it just checks if the environment variable CI is set and is anything but
+  an empty string.
 
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
@@ -45,7 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `base.languages`. This now lives in the [Nedryglot](https://github.com/goodbyekansas/nedryglot) extension.
 - examples/protobuf. For the same reason.
-- `base.mkExtension`. Instead just return a set from the extension to be merged with base.
+- `base.mkExtension` and `base.mkComponentType`. Instead just return a set from the
+  extension to be merged with base.
 - Control of `nixpkgs`. Nedryland now has a mandatory argument for it so that users of
   Nedryland controls the version of nixpkgs.
 - Ability to turn off/on checks on the matrix. They are always on. Instead, components
