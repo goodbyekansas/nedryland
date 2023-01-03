@@ -1,5 +1,13 @@
 pkgs:
 rec {
+  mkComponentSet = name: nedrylandComponents:
+    (pkgs.linkFarm
+      name
+      (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) nedrylandComponents)) //
+    {
+      inherit nedrylandComponents;
+    };
+
   mkComponent =
     path: mkCombinedDeployment: parseConfig:
     let

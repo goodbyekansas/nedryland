@@ -5,22 +5,21 @@
     pkgs.url = github:NixOS/nixpkgs/nixos-22.11;
   };
 
-  outputs = { pkgs, ... }:
-    let
-      # TODO: not necessarily
-      system = "x86_64-linux";
-
-      pkgs' = pkgs.legacyPackages."${system}";
-      nedryland = import ../../default.nix;
-      project = import ./project.nix {
-        inherit nedryland;
-        pkgs = pkgs';
-      };
-    in
-    {
-      packages."${system}" = project.matrix // {
-        default = project.all;
-      };
-      devShells."${system}" = project.shells;
-    };
+  outputs = { pkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs' = pkgs.legacyPackages.${system};
+        nedryland = import ../../default.nix;
+        project = import ./project.nix {
+          inherit nedryland;
+          pkgs = pkgs';
+        };
+      in
+      {
+        packages = project.matrix // {
+          # This make `$nix build` (without arguments) result in a linkfarm of all components.
+          default = project.components;
+        };
+        devShells = project.shells;
+      });
 }

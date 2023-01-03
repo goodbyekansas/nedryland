@@ -1,12 +1,9 @@
-{ base, components, lib, linkFarm, tree }:
+{ base, components, tree }:
 let
-  site = linkFarm
+  site = base.mkComponentSet
     "all-docs"
-    (lib.mapAttrsToList
-      (name: v: {
-        inherit name;
-        path = v.docs;
-      })
+    (builtins.mapAttrs
+      (_: v: v.docs)
       components);
 in
 base.deployment.mkDeployment {

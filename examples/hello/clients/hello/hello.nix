@@ -4,6 +4,7 @@
 base.mkClient rec{
   name = "hello";
   version = "1.0.0";
+
   package = ((writeScriptBin name ''
     set -e
     translation=$(${greeting.lib}/bin/greetinglib $1)

@@ -1,0 +1,78 @@
+name: 🌱 Setup nix
+description: Setup nix with ssh agent and optionally config
+inputs:
+  access-key:
+    description: SSH key to use for accessing repositories through nix.
+    required: true
+
+  builders-access-key:
+    description: SSH key to use for accessing builders, defaults to the same used for repositories.
+    required: false
+
+  builders:
+    description: SSH connection string for nix builders.
+    type: string
+    required: false
+
+  config-path:
+    description: Path to a nix configuration file.
+    required: false
+
+  version:
+    description: Nix version to install.
+    type: string
+    default: 2.11.1
+
+  cachix-name:
+    description: The name of the cachix cache to use.
+    type: string
+    required: false
+
+  cachix-signing-key:
+    description: The cachix signing key.
+    type: string
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup SSH
+      env:
+        CI_ACCESS_KEY: ${{ inputs.access-key }}
+        BUILDERS_ACCESS_KEY: ${{ inputs.builders-access-key || inputs.access-key }}
+        SSH_CONFIG: ${{ github.action_path }}/ssh-conf
+      run: ${{ github.action_path }}/ssh-agent.sh
+      shell: sh
+
+    - name: Set up nix builders ssh connection
+      if: ${{ inputs.builders != '' }}
+      run: |
+        sudo --preserve-env=SSH_AUTH_SOCK \
+        ssh -T -o StrictHostKeyChecking=accept-new \
+        ${{ inputs.builders }} 'nix-store --version && echo "connection successful"'
+      shell: sh
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v18
+      with:
+        install_url: https://releases.nixos.org/nix/nix-${{ inputs.version }}/install
+
+    - name: Create Nix configuration
+      run: |
+        mkdir -p ~/.config/nix
+
+        if [ -f "${{ inputs.config-path }}" ]; then
+          cp ${{ inputs.config-path }} ~/.config/nix/nix.conf
+        fi
+
+        if ! grep "access-tokens" ~/.config/nix/nix.conf; then
+          echo "access-tokens = github.com=${{ github.token }}" >> ~/.config/nix/nix.conf
+        fi
+      shell: sh
+
+    - name: Setup Cachix
+      if: ${{ inputs.cachix-name != '' }}
+      uses: cachix/cachix-action@v12
+      with:
+        name: ${{ inputs.cachix-name }}
+        signingKey: '${{ inputs.cachix-signing-key }}'
