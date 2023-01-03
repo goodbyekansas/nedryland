@@ -33,41 +33,7 @@ let
         '';
       };
 
-      checks = pkgs'.runCommand "check"
-        {
-          nixpkgsFmt = "${pkgs'.nixpkgs-fmt}/bin/nixpkgs-fmt";
-          diff = "${pkgs'.diffutils}/bin/diff";
-          mktemp = "${pkgs'.mktemp}/bin/mktemp";
-          shellcheck = "${pkgs'.shellcheck}/bin/shellcheck";
-          shfmt = "${pkgs'.shfmt}/bin/shfmt";
-          nixLinter = "${pkgs'.nix-linter}/bin/nix-linter";
-          bash = "${pkgs'.bash}/bin/bash";
-          sed = "${pkgs'.gnused}/bin/sed";
-          # Pointless to do this on a remote machine.
-          preferLocalBuild = true;
-          allowSubstitutes = false;
-        }
-        ''
-          n=$out/bin/nixfmt
-          mkdir -p "$(dirname "$n")"
-          substituteAll ${./ci/nix-fmt.bash} $n
-          chmod +x "$n"
-
-          n=$out/bin/shellcheck
-          mkdir -p "$(dirname "$n")"
-          substituteAll ${./ci/shellcheck.bash} $n
-          chmod +x "$n"
-
-          n=$out/bin/nix-lint
-          mkdir -p "$(dirname "$n")"
-          substituteAll ${./ci/nix-lint.sh} $n
-          chmod +x "$n"
-
-          n=$out/bin/check
-          mkdir -p "$(dirname "$n")"
-          substituteAll ${./ci/check.bash} $n
-          chmod +x "$n"
-        '';
+      checks = pkgs'.callPackage ./ci { };
 
       mkTheme = import ./mktheme.nix pkgs';
 
@@ -150,7 +116,7 @@ let
                     // (pkgs'.lib.optionalAttrs (attrs ? src) {
                     src = if pkgs'.lib.isStorePath attrs.src then attrs.src else filteredSrc;
                   }));
-                inherit (componentFns) mapComponentsRecursive collectComponentsRecursive;
+                inherit (componentFns) mapComponentsRecursive collectComponentsRecursive mkComponentSet;
                 mkTargetSetup = import ./targetsetup.nix pkgs' parseConfig;
                 deployment = import ./deployment.nix pkgs' minimalBase;
                 documentation = import ./documentation pkgs' minimalBase;
@@ -279,14 +245,14 @@ let
                 # has the link name `myComponent` so that if you `nix build
                 # .#targets.tgt` followed by `ls -l result/` you will see `myComponent
                 # -> /nix/store/something`.
-                pkgs'.linkFarm
+                componentFns.mkComponentSet
                   target
-                  (builtins.map
-                    (path: {
-                      inherit path;
-                      name = builtins.concatStringsSep "." path.accessPath;
+                  (builtins.listToAttrs (builtins.map
+                    (value: {
+                      inherit value;
+                      name = builtins.concatStringsSep "." value.accessPath;
                     })
-                    drvs))
+                    drvs)))
               (pkgs'.lib.zipAttrs
                 (
                   builtins.map
@@ -324,6 +290,17 @@ let
               "themes"
               "version"
             ]);
+          componentSet = builtins.mapAttrs
+            (name: value:
+              if pkgs.lib.isDerivation value then
+                value
+              else
+                if builtins.isAttrs value then
+                  extendedBase.mkComponent ({ inherit name; } // value)
+                else
+                  builtins.throw "components can only be attrsets or derivations."
+            )
+            (resolvedComponents // extraTargets);
         in
         (rec {
           inherit (appliedAttrs) name;
@@ -335,33 +312,17 @@ let
           dependencies = appliedAttrs.dependencies or [ ];
 
           # x-axis
-          components = builtins.mapAttrs
-            (name: value:
-              if pkgs.lib.isDerivation value then
-                value
-              else
-                if builtins.isAttrs value then
-                  base.mkComponent ({ inherit name; } // value)
-                else
-                  builtins.throw "components can only be attrsets or derivations."
-            )
-            (resolvedComponents // extraTargets);
+          components = componentFns.mkComponentSet
+            "components"
+            componentSet;
+
           # y-axis
-          targets = (pkgs.linkFarm
+          targets = (componentFns.mkComponentSet
             "targets"
-            (pkgs.lib.mapAttrsToList
-              (name: path: { inherit name path; })
-              allTargets)) // allTargets;
+            allTargets) // allTargets;
 
           # matrix
-          matrix = components // { inherit targets; };
-
-          # the whole matrix as a link farm
-          all = pkgs'.linkFarm
-            "allComponents"
-            (pkgs.lib.mapAttrsToList
-              (name: path: { inherit name path; })
-              components);
+          matrix = componentSet // { inherit targets; };
 
           # do not fall for the temptation to use callPackage here. callPackage blindly
           # adds "override" and "overrideDerivation" functions which will break flake
@@ -371,7 +332,7 @@ let
               f = import ./shells.nix;
             in
             f ((builtins.intersectAttrs (builtins.functionArgs f) pkgs') // {
-              inherit components;
+              components = componentSet;
               inherit (minimalBase) mkShellCommands mapComponentsRecursive parseConfig collectComponentsRecursive;
               extraShells = appliedAttrs.extraShells or { };
             });

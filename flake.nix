@@ -37,6 +37,10 @@
               type = "app";
               program = "${internalNedryland.checks}/bin/check";
             };
+            actionlint = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/actionlint";
+            };
           };
 
           devShells.docs = internalNedryland.docs;

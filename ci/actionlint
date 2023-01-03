@@ -1,0 +1,12 @@
+#! @bash@
+# shellcheck shell=bash
+
+set -uo pipefail
+
+# the two ignores are for an older version of the actionlint tool
+# TODO: check version?
+
+@actionlint@ -shellcheck @shellcheck@ -pyflakes @pyflakes@ \
+  -ignore 'when a reusable workflow is called with "uses", "strategy"' \
+  -ignore 'reusable workflow cannot be nested' \
+  "$@"

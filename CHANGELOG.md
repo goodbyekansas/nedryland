@@ -19,10 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base.mkDerivation` will now detect `doChecks` correctly.
 - `shellCommands.<command>.description` supports ANSI escape codes when printing the shell
   message.
+- `actionlint` added to checks (former ci attribute).
 - `check` script in the check attribute (`bin/check`) that runs all checks. All scripts uses
   $NEDRYLAND_CHECK_FILES for files to check or default to old/own way of discovering files.
 - `inCI` on base, it just checks if the environment variable CI is set and is anything but
   an empty string.
+- Github workflows `build-components` and `checks` for Nedryland projects on Github to use.
 
 ### Fixed
 - When printing welcome text in shells, respect shellCommands' "show" attribute.
@@ -40,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the `matrix` attribute. This makes evaluation of components a lot faster.
 - `targets.*` is now a link farm
 - `all` is now a link farm 🚜
-- `ci` has been renamed to `checks` to reserve the ci name for more specific CI tools.
+- `ci` has been renamed to `checks` and `ci` has become a derivation containing a github CI CLI.
 - All components are now also derivations building a tree of symlink to the output of its'
   targets. The original component attributes are available in `<component>.componentAttrs`.
 

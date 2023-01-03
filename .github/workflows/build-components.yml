@@ -1,0 +1,236 @@
+name: 🏗️ Build Components 🦕
+
+on:
+  workflow_call:
+    secrets:
+      nix-access-key:
+        description: SSH key to use for accessing repositories through nix.
+        required: true
+
+      nix-builders-access-key:
+        description: SSH key to use for accessing builders, defaults to the same used for repositories.
+        required: false
+
+      cachix-signing-key:
+        description: Cachix signing key.
+        required: false
+
+    inputs:
+      build-platform:
+        description: "The nix platform to run the build on, available options are x86_64-linux (default) and x86_64-darwin."
+        default: x86_64-linux
+        type: string
+
+      attribute:
+        description: "The attribute in the matrix to build, default is to build all packages in the flake for the build platform."
+        default: default
+        type: string
+
+      root:
+        description: "The path, relative to the git repository, where the flake of the project is."
+        default: .
+        type: string
+
+      max-parallel:
+        description: "The maximum parallel jobs to run when building."
+        default: 0
+        type: number
+
+      nix-builders:
+        description: SSH connection string for nix builders.
+        type: string
+        required: false
+
+      nix-config-path:
+        description: Path to a nix configuration file.
+        type: string
+        required: false
+
+      nix-version:
+        description: Nix version to install.
+        type: string
+        default: 2.11.1
+
+      nix-build-locally:
+        description: If nix should build on the local computer or remotely only.
+        type: boolean
+        default: false
+
+      fail-fast:
+        description: If building components should fail fast.
+        type: boolean
+        default: false
+
+      cachix-name:
+        description: Name of the cachix cache to use.
+        type: string
+        required: false
+
+jobs:
+  collect-matrix:
+    name: Collect Components
+    runs-on: ${{ inputs.build-platform == 'x86_64-linux' && 'ubuntu-latest' || inputs.build-platform == 'x86_64-darwin' && 'macos-latest' || 'unsupported-os' }}
+    env:
+      ATTRIBUTE: packages.${{ inputs.build-platform }}${{ format('.{0}', inputs.attribute) }}
+      PACKAGES: packages.${{ inputs.build-platform }}
+    outputs:
+      components: ${{ steps.filter.outputs.components || steps.eval.outputs.components }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Nix (move-to-nedryglot)
+      if: ${{ github.repository != 'goodbyekansas/nedryland' }}
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@move-to-nedryglot
+      with:
+        access-key: ${{ secrets.nix-access-key }}
+        builders-access-key: ${{ secrets.nix-builders-access-key }}
+        builders: ${{ inputs.nix-builders }}
+        config-path: ${{ inputs.nix-config-path }}
+        version: ${{ inputs.nix-version }}
+        cachix-name: ${{ inputs.cachix-name }}
+        cachix-signing-key: ${{ secrets.cachix-signing-key }}
+
+    - name: Setup Nix (Locally)
+      if: ${{ github.repository == 'goodbyekansas/nedryland' }}
+      uses: ./.github/actions/setup-nix
+      with:
+        access-key: ${{ secrets.nix-access-key }}
+        builders-access-key: ${{ secrets.nix-builders-access-key }}
+        builders: ${{ inputs.nix-builders }}
+        config-path: ${{ inputs.nix-config-path }}
+        version: ${{ inputs.nix-version }}
+        cachix-name: ${{ inputs.cachix-name }}
+        cachix-signing-key: ${{ secrets.cachix-signing-key }}
+
+    - id: eval
+      name: Collect Components
+      working-directory: ${{ inputs.root }}
+      run: |
+        nix eval \
+          ".#$ATTRIBUTE" \
+          --json \
+          --apply 'attrs: if attrs ? nedrylandComponents then (builtins.attrNames attrs.nedrylandComponents) else [ "${{ inputs.attribute }}" ]' \
+          > components.json
+
+        echo "components=$(cat components.json)" >> "$GITHUB_OUTPUT"
+
+    - id: filter
+      name: Filter Cached Components
+      working-directory: ${{ inputs.root }}
+      if: ${{ inputs.cachix-name != '' }}
+      run: |
+        components=$(jq -r '.[]' components.json)
+
+        echo -n "[" > filtered-components.json
+        filteredComponents=()
+        skippedComponents=()
+        echo "# Filter Summary" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        for component in $components; do
+          outPath="$(nix eval ".#$PACKAGES.$component" --raw)"
+          if ! curl -f -s "https://${{ inputs.cachix-name }}.cachix.org/${outPath:11:32}.narinfo" >/dev/null;
+          then
+            filteredComponents+=("\"$component\"")
+          else
+            skippedComponents+=("\"$component\"")
+          fi
+        done
+
+        if [ ${#skippedComponents[@]} -gt 0 ]; then
+          echo "## Found in Cache
+          " >> "$GITHUB_STEP_SUMMARY"
+
+          for com in "${skippedComponents[@]}"; do
+            echo "- $(echo "$com" | tr -d '"')" >> "$GITHUB_STEP_SUMMARY"
+          done
+        fi
+
+        if [ ${#filteredComponents[@]} -gt 0 ]; then
+          echo "## Building
+          " >> "$GITHUB_STEP_SUMMARY"
+
+          for com in "${filteredComponents[@]}"; do
+            echo "- $(echo "$com" | tr -d '"')" >> "$GITHUB_STEP_SUMMARY"
+          done
+        fi
+
+        IFS=,; echo -n "${filteredComponents[*]}" >> filtered-components.json
+        echo -n "]" >> filtered-components.json
+
+        echo "components=$(cat filtered-components.json)" >> "$GITHUB_OUTPUT"
+
+      shell: bash
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: components
+        path: |
+          filtered-components.json
+          components.json
+        if-no-files-found: ignore
+
+  build-matrix:
+    name: Build ${{ matrix.component }}
+    needs: collect-matrix
+    runs-on: ${{ inputs.build-platform == 'x86_64-linux' && 'ubuntu-latest' || inputs.build-platform == 'x86_64-darwin' && 'macos-latest' || 'unsupported-os' }}
+    if: ${{ needs.collect-matrix.outputs.components != '[]' }}
+
+    strategy:
+      max-parallel: ${{ inputs.max-parallel }}
+      matrix:
+        component: ${{ fromJSON(needs.collect-matrix.outputs.components) }}
+      fail-fast: ${{ inputs.fail-fast }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Nix (move-to-nedryglot)
+      if: ${{ github.repository != 'goodbyekansas/nedryland' }}
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@move-to-nedryglot
+      with:
+        access-key: ${{ secrets.nix-access-key }}
+        builders-access-key: ${{ secrets.nix-builders-access-key }}
+        builders: ${{ inputs.nix-builders }}
+        config-path: ${{ inputs.nix-config-path }}
+        version: ${{ inputs.nix-version }}
+        cachix-name: ${{ inputs.cachix-name }}
+        cachix-signing-key: ${{ secrets.cachix-signing-key }}
+
+    - name: Setup Nix (Locally)
+      if: ${{ github.repository == 'goodbyekansas/nedryland' }}
+      uses: ./.github/actions/setup-nix
+      with:
+        access-key: ${{ secrets.nix-access-key }}
+        builders-access-key: ${{ secrets.nix-builders-access-key }}
+        builders: ${{ inputs.nix-builders }}
+        config-path: ${{ inputs.nix-config-path }}
+        version: ${{ inputs.nix-version }}
+        cachix-name: ${{ inputs.cachix-name }}
+        cachix-signing-key: ${{ secrets.cachix-signing-key }}
+
+    - name: Build ${{ matrix.component }}
+      working-directory: ${{ inputs.root }}
+      run: |
+        echo "building ${{ matrix.component }}"
+        nix build ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}" ${{ !inputs.nix-build-locally && ' --max-jobs 0' || '' }}
+
+    - name: Closure Stats
+      continue-on-error: true
+      working-directory: ${{ inputs.root }}
+      run: |
+        echo -e "\x1b[93;4;1mSize\x1b[0m"
+        printf "\x1b[4m%-62.62s %8.8s %8.8s\x1b[0m\n" "Store Path" Self Closure
+        # shellcheck disable=SC2183,SC2086,SC2046
+        printf "%-62.62s %8.8s %8.8s\n" $(nix path-info -sSh ./result)
+        echo ""
+        echo -e "\x1b[93;4;1mContents\x1b[0m"
+        printf "\x1b[4m%-62.62s %8.8s %8.8s\x1b[0m\n" "Store Path" Self Closure
+        # shellcheck disable=SC2183,SC2086,SC2046
+        printf "%-62.62s %8.8s %8.8s\n" $(nix path-info -rsSh ./result)
+
+    - name: Post annotation
+      if: ${{ failure() }}
+      run: |
+        directoryText="${{ inputs.root != '.' && format(' in directory {0}', inputs.root) || '' }}"
+        echo "::error ::${{ matrix.component }} failed to build. \
+        To reproduce locally run \`nix build .#${{ matrix.component }}\`$directoryText."
