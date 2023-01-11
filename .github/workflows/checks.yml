@@ -92,3 +92,15 @@ jobs:
 
     - name: Lint Github Actions 🐙 🐱 🎬
       run: nix run .#actionlint
+
+  all-checks:
+    runs-on: ubuntu-latest
+    needs: [ format, shell-check, lint, actionlint ]
+    if: always()
+    steps:
+      - name: Successful checks
+        if: ${{ !(contains(needs.*.result, 'failure')) && !(contains(needs.*.result, 'cancelled')) }}
+        run: exit 0
+      - name: Failing checks
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1

@@ -234,3 +234,15 @@ jobs:
         directoryText="${{ inputs.root != '.' && format(' in directory {0}', inputs.root) || '' }}"
         echo "::error ::${{ matrix.component }} failed to build. \
         To reproduce locally run \`nix build .#${{ matrix.component }}\`$directoryText."
+
+  matrix:
+    runs-on: ubuntu-latest
+    needs: build-matrix
+    if: always()
+    steps:
+      - name: Successful Matrix Build
+        if: ${{ !(contains(needs.*.result, 'failure')) && !(contains(needs.*.result, 'cancelled')) }}
+        run: exit 0
+      - name: Failing Matrix Build
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
