@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Check for oldest supported Nixpkgs version. Can be overridden when importing Nedryland
+  by passing `skipNixpkgsVersionCheck = true`.
+
 ### Fixed
 - Evaluation of base extensions for dependent project used the components derivation
   instead of the attrset.
