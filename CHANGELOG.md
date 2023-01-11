@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Evaluation of base extensions for dependent project used the components derivation
+  instead of the attrset.
+
 ## [8.0.0] - 2023-01-11
 
 ### Added
