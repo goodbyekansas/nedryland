@@ -1,7 +1,8 @@
 # Nedryland
 
-![Checks](https://github.com/goodbyekansas/nedryland/workflows/Checks/badge.svg)
-![Checks](https://github.com/goodbyekansas/nedryland/workflows/%F0%9F%93%96%20Deploy%20to%20Github%20Pages/badge.svg)
+[![Examples](https://github.com/goodbyekansas/nedryland/actions/workflows/build-examples.yml/badge.svg)](https://github.com/goodbyekansas/nedryland/actions/workflows/build-examples.yml)
+[![Tests](https://github.com/goodbyekansas/nedryland/actions/workflows/test.yaml/badge.svg)](https://github.com/goodbyekansas/nedryland/actions/workflows/test.yaml)
+[![Deploy Pages](https://github.com/goodbyekansas/nedryland/actions/workflows/deploy-book.yml/badge.svg)](https://github.com/goodbyekansas/nedryland/actions/workflows/deploy-book.yml)
 
 Nedryland is a collection of utilities and a build system for declaring, building and deploying
 microservice solutions.
