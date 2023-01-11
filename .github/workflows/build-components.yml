@@ -78,9 +78,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Nix (move-to-nedryglot)
+    - name: Setup Nix (main)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@move-to-nedryglot
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@main
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
@@ -184,9 +184,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Nix (move-to-nedryglot)
+    - name: Setup Nix (main)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@move-to-nedryglot
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@main
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
