@@ -21,25 +21,30 @@
                 { inherit (internalNedryland) docs checks; });
           };
           apps = {
-            nixfmt = {
+            checks = rec {
               type = "app";
-              program = "${internalNedryland.checks}/bin/nixfmt";
-            };
-            shellcheck = {
-              type = "app";
-              program = "${internalNedryland.checks}/bin/shellcheck";
-            };
-            nix-lint = {
-              type = "app";
-              program = "${internalNedryland.checks}/bin/nix-lint";
-            };
-            all-checks = {
-              type = "app";
-              program = "${internalNedryland.checks}/bin/check";
-            };
-            actionlint = {
-              type = "app";
-              program = "${internalNedryland.checks}/bin/actionlint";
+              program = all.program;
+
+              nixfmt = {
+                type = "app";
+                program = "${internalNedryland.checks}/bin/nixfmt";
+              };
+              shellcheck = {
+                type = "app";
+                program = "${internalNedryland.checks}/bin/shellcheck";
+              };
+              nix-lint = {
+                type = "app";
+                program = "${internalNedryland.checks}/bin/nix-lint";
+              };
+              all = {
+                type = "app";
+                program = "${internalNedryland.checks}/bin/check";
+              };
+              actionlint = {
+                type = "app";
+                program = "${internalNedryland.checks}/bin/actionlint";
+              };
             };
           };
 

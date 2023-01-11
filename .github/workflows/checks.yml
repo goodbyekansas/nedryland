@@ -43,7 +43,7 @@ jobs:
         install_url: https://releases.nixos.org/nix/nix-${{ inputs.nix-version }}/install
 
     - name: Check Nix format 👓 🦖💨
-      run: nix run .#nixfmt
+      run: nix run .#checks.nixfmt
 
   shell-check:
     name: Lint Shell Scripts 🐢 🐌 💶
@@ -59,7 +59,7 @@ jobs:
         install_url: https://releases.nixos.org/nix/nix-${{ inputs.nix-version }}/install
 
     - name: Check shell scripts 🐢 🐌 💶
-      run: nix run .#shellcheck
+      run: nix run .#checks.shellcheck
 
   lint:
     name: Lint Nix Expressions 🦕 📝 👀
@@ -75,7 +75,7 @@ jobs:
         install_url: https://releases.nixos.org/nix/nix-${{ inputs.nix-version }}/install
 
     - name: Lint Nix files 🦕 📝 👀
-      run: nix run .#nix-lint
+      run: nix run .#checks.nix-lint
 
   actionlint:
     name: Lint Github Actions 🐙 🐱 🎬
@@ -91,7 +91,7 @@ jobs:
         install_url: https://releases.nixos.org/nix/nix-${{ inputs.nix-version }}/install
 
     - name: Lint Github Actions 🐙 🐱 🎬
-      run: nix run .#actionlint
+      run: nix run .#checks.actionlint
 
   all-checks:
     name: All Checks 🍪
