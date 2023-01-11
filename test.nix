@@ -21,6 +21,8 @@ let
     componentFnsTest = builtins.trace "📦 Running componentFns tests." import ./test/components.nix pkgs.lib.assertMsg;
   };
 in
-(tests // {
-  all = builtins.attrValues tests;
-})
+builtins.trace
+  "📠 Running tests for buildPlatform ${pkgs.system}"
+  (tests // {
+    all = builtins.attrValues tests;
+  })

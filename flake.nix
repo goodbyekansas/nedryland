@@ -44,23 +44,16 @@
           };
 
           devShells.docs = internalNedryland.docs;
+          checks.default = builtins.derivation {
+            inherit system;
+            name = "all-tests";
+            builder = "${pkgs.bash}/bin/bash";
+            args = [ "-c" ''${pkgs.coreutils}/bin/touch $out'' ];
+            tests = builtins.filter (x: x != { })
+              (import ./test.nix {
+                inherit pkgs;
+              }).all;
+          };
         }
-      ) // (
-      let
-        system = "x86_64-linux";  # TODO eachDefaultSystem does not work correctly for check
-        pkgs = nixpkgs.legacyPackages."${system}";
-      in
-      {
-        checks."${system}".default = builtins.derivation {
-          inherit system;
-          name = "all-tests";
-          builder = "${pkgs.bash}/bin/bash";
-          args = [ "-c" ''${pkgs.coreutils}/bin/touch $out'' ];
-          tests = builtins.filter (x: x != { })
-            (import ./test.nix {
-              inherit pkgs;
-            }).all;
-        };
-      }
-    );
+      );
 }
