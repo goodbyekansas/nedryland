@@ -167,7 +167,7 @@ let
                         evalBaseExtensionsWith
                           pd.baseExtensions
                           (evalDependenciesBaseExtensions pd.dependencies initialBase)
-                          pd.components
+                          pd.components.nedrylandComponents
                       )
                       dependencies);
 
