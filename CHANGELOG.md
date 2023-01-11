@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Evaluation of base extensions for dependent project used the components derivation
   instead of the attrset.
 
+### Changed
+- The checks apps has been moved into their own category "checks". And all-checks is renamed to all.
+
 ## [8.0.0] - 2023-01-11
 
 ### Added
