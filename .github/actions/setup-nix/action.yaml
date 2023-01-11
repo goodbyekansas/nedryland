@@ -3,7 +3,7 @@ description: Setup nix with ssh agent and optionally config
 inputs:
   access-key:
     description: SSH key to use for accessing repositories through nix.
-    required: true
+    required: false
 
   builders-access-key:
     description: SSH key to use for accessing builders, defaults to the same used for repositories.
@@ -37,6 +37,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup SSH
+      if: ${{ inputs.access-key != '' }}
       env:
         CI_ACCESS_KEY: ${{ inputs.access-key }}
         BUILDERS_ACCESS_KEY: ${{ inputs.builders-access-key || inputs.access-key }}
