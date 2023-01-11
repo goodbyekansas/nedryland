@@ -10,7 +10,10 @@ let
     });
   });
 
-  f = { pkgs }:
+  f = { pkgs, skipNixpkgsVersionCheck ? false }:
+    assert pkgs.lib.assertMsg
+      (!skipNixpkgsVersionCheck && pkgs.lib.versionAtLeast (builtins.replaceStrings [ "pre-git" ] [ "" ] (pkgs.lib.version or "0.0.0")) "22.05")
+      "Nedryland supports nixpkgs versions >= 22.05, you have ${pkgs.lib.version or "unknown"}}";
     let
       pkgs' = pkgs.extend gitIgnoreOverlay;
       version = "8.0.0";
