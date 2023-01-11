@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.0] - 2023-01-11
+
 ### Added
 - `documentation.mkMdbook` uses pre/post hooks for build and install and let users add inputs.
 - `documentation.mkMdbook` run is now a shell function which creates an exit trap to shut down the server,
