@@ -24,7 +24,15 @@ let
       export ${varName}
     '')
     (builtins.removeAttrs variableQueries (builtins.attrNames componentConfig));
-  templateDir' = if templateDir != null then (builtins.toString templateDir) else "";
+
+  templateDirDrv =
+    if templateDir != null then
+      pkgs.runCommand
+        "template-dir-${name}"
+        { inherit templateDir; }
+        "cp -rL $templateDir $out"
+    else
+      "";
 in
 pkgs.writeTextFile {
   name = "target-setup-${builtins.replaceStrings [ " " ] [ "-" ] name}";
@@ -37,10 +45,10 @@ pkgs.writeTextFile {
       componentSetup() {
         echo ""
         echo "👋 Hello! It looks like you are in a new ${typeName} component, lets do some setup!"
-        if [ "${templateDir'}" != "" ] && [ "${builtins.toString showTemplate}" == "1" ]; then
+        if [ "${templateDirDrv}" != "" ] && [ "${builtins.toString showTemplate}" == "1" ]; then
           echo "Files that should be here are:"
-          ${pkgs.tree}/bin/tree "${templateDir'}" -a --noreport --dirsfirst \
-          | sed 's!${templateDir'}!'"$PWD"'!g' \
+          ${pkgs.tree}/bin/tree "${templateDirDrv}" -a --noreport --dirsfirst \
+          | sed 's!${templateDirDrv}!'"$PWD"'!g' \
           | sed -E 's!@(\w+)@!''${\1}!g' \
           | sed 's/ -> .*$*//g' \
           | ${pkgs.envsubst}/bin/envsubst
@@ -57,8 +65,8 @@ pkgs.writeTextFile {
 
         ${readVarStdin}
 
-        for rel in $(find ${templateDir'} -type f,l | sed 's|${templateDir'}/||g'); do
-          file=${templateDir'}/$rel
+        for rel in $(cd ${templateDirDrv} && find . -type f,l); do
+          file=${templateDirDrv}/$rel
           outname=$(echo $rel | sed -E 's!@(\w+)@!''${\1}!g' | ${pkgs.envsubst}/bin/envsubst)
           if [ -f $outname ]; then
               echo "👌 $outname already exists"
