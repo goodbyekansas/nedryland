@@ -15,6 +15,10 @@ on:
         description: Cachix signing key.
         required: false
 
+      cachix-auth-token:
+        description: Cachix auth token.
+        required: false
+
     inputs:
       build-platform:
         description: "The nix platform to run the build on, available options are x86_64-linux (default) and x86_64-darwin."
@@ -78,9 +82,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Nix (Nedryland 8.0.0)
+    - name: Setup Nix (Nedryland make-checks-apps-category)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@8.0.0
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@make-checks-apps-category
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
@@ -89,6 +93,7 @@ jobs:
         version: ${{ inputs.nix-version }}
         cachix-name: ${{ inputs.cachix-name }}
         cachix-signing-key: ${{ secrets.cachix-signing-key }}
+        cachix-auth-token: ${{ secrets.cachix-auth-token }}
 
     - name: Setup Nix (Locally)
       if: ${{ github.repository == 'goodbyekansas/nedryland' }}
@@ -101,6 +106,7 @@ jobs:
         version: ${{ inputs.nix-version }}
         cachix-name: ${{ inputs.cachix-name }}
         cachix-signing-key: ${{ secrets.cachix-signing-key }}
+        cachix-auth-token: ${{ secrets.cachix-auth-token }}
 
     - id: eval
       name: Collect Components
@@ -184,9 +190,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Nix (Nedryland 8.0.0)
+    - name: Setup Nix (Nedryland make-checks-apps-category)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@8.0.0
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@make-checks-apps-category
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
@@ -195,6 +201,7 @@ jobs:
         version: ${{ inputs.nix-version }}
         cachix-name: ${{ inputs.cachix-name }}
         cachix-signing-key: ${{ secrets.cachix-signing-key }}
+        cachix-auth-token: ${{ secrets.cachix-auth-token }}
 
     - name: Setup Nix (Locally)
       if: ${{ github.repository == 'goodbyekansas/nedryland' }}
@@ -207,6 +214,7 @@ jobs:
         version: ${{ inputs.nix-version }}
         cachix-name: ${{ inputs.cachix-name }}
         cachix-signing-key: ${{ secrets.cachix-signing-key }}
+        cachix-auth-token: ${{ secrets.cachix-auth-token }}
 
     - name: Build ${{ matrix.component }}
       working-directory: ${{ inputs.root }}
