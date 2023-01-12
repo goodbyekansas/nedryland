@@ -17,10 +17,19 @@ let
       envVars = pkgs.writeTextFile {
         name = "${name}-env";
         text = builtins.foldl'
-          (acc: curr: ''
-            ${acc}
-            declare -x ${curr}="${builtins.replaceStrings [ "$" "\"" "\\" ] [ "\\$" "\\\"" "\\\\" ] (builtins.toString (builtins.getAttr curr env))}"
-          '')
+          (acc: curr:
+            let
+              val = builtins.getAttr curr env;
+              # paths are only resolved to their nix store counterpart when using
+              # "${path}", not builtins.toString path
+              # i.e. "${./my-path}" = /nix/store/asdasdasd-my-path whereas
+              # builtins.toString ./my-path = /some/local/path/my-path
+              valResolvedPath = if builtins.isPath val then "${val}" else builtins.toString val;
+            in
+            ''
+              ${acc}
+              declare -x ${curr}="${builtins.replaceStrings [ "$" "\"" "\\" ] [ "\\$" "\\\"" "\\\\" ] valResolvedPath}"
+            '')
           # These variables are needed for stdenvs setup
           ''
             declare -x out="/deploy/should/not/generate/output"

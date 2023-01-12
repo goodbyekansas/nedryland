@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Evaluation of base extensions for dependent project used the components derivation
   instead of the attrset.
+- Target setup uses separate derivation for template directory. It otherwise depended on
+  the source of the whole repo.
+- Deployment wrongfully using `toString` on a path causing it to depend on the whole repo.
+
 
 ### Changed
 - The checks apps has been moved into their own category "checks". And all-checks is renamed to all.
