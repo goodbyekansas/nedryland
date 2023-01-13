@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Check for oldest supported Nixpkgs version. Can be overridden when importing Nedryland
   by passing `skipNixpkgsVersionCheck = true`.
 - Support for passing `cachix-auth-token` to the setup action and matrix workflow.
+- components are added directly onto ComponentsSets as well as under nedrylandComponents.
 
 ### Fixed
 - Evaluation of base extensions for dependent project used the components derivation
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Target setup uses separate derivation for template directory. It otherwise depended on
   the source of the whole repo.
 - Deployment wrongfully using `toString` on a path causing it to depend on the whole repo.
+- Deployment linkFarm now looks like the other linkfarms.
 
 
 ### Changed

@@ -1,12 +1,13 @@
 pkgs:
 rec {
   mkComponentSet = name: nedrylandComponents:
-    (pkgs.linkFarm
-      name
-      (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) nedrylandComponents)) //
     {
       inherit nedrylandComponents;
-    };
+    } // nedrylandComponents
+    //
+    (pkgs.linkFarm
+      name
+      (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) nedrylandComponents));
 
   mkComponent =
     path: mkCombinedDeployment: parseConfig:
@@ -21,9 +22,9 @@ rec {
               # in the deployment set
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
               deployment = attrs.deployment //
-                (pkgs.linkFarmFromDrvs
+                (pkgs.linkFarm
                   "${name}-deployment"
-                  (builtins.attrValues attrs.deployment));
+                  (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) attrs.deployment));
             }) // (pkgs.lib.optionalAttrs (attrs ? docs && !pkgs.lib.isDerivation attrs.docs) {
               # the docs target is a symlinkjoin of all sub-derivations
               docs =
