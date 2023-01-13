@@ -150,7 +150,7 @@ let
                     extFn (
                       builtins.intersectAttrs args (components // { inherit components; })
                       // builtins.intersectAttrs args pkgs'
-                      // builtins.intersectAttrs args (let base = (pkgs'.lib.recursiveUpdate combinedBaseExtensions initialBase); in base // { inherit base; })
+                      // builtins.intersectAttrs args (let base = (pkgs'.lib.recursiveUpdate initialBase combinedBaseExtensions); in base // { inherit base; })
                     )
                   ))
               )

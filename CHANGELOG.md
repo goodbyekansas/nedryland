@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the source of the whole repo.
 - Deployment wrongfully using `toString` on a path causing it to depend on the whole repo.
 - Deployment linkFarm now looks like the other linkfarms.
-
+- Priority of base extensions from dependent projects was higher than the current project,
+  this is now reversed.
 
 ### Changed
 - The checks apps has been moved into their own category "checks". And all-checks is renamed to all.
