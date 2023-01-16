@@ -16,7 +16,7 @@ let
       "Nedryland supports nixpkgs versions >= 22.05, you have ${pkgs.lib.version or "unknown"}}";
     let
       pkgs' = pkgs.extend gitIgnoreOverlay;
-      version = "8.0.0";
+      version = "8.1.1";
       versionAtLeast = pkgs'.lib.versionAtLeast version;
     in
     {
