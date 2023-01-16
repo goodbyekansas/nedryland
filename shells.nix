@@ -135,9 +135,10 @@ in
                   derivationShells."${config.defaultTarget}" or
                     (mkShell {
                       shellHook = ''
-                        🐚 Could not decide on a default shell for component "${component.name}"
-                        🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}
-                        exit 1
+                        echo '
+                          🐚 Could not decide on a default shell for component "${component.name}"
+                          🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'
+                          exit 1
                       '';
                     });
 
@@ -148,9 +149,9 @@ in
             ({
               docs = mkShell {
                 shellHook = ''
-                  Invalid shell "docs"!
+                  echo 'Invalid shell "docs"!
                   🐚 The docs attribute is just the combination of the sub-targets.
-                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}
+                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'
                   exit 1
                 '';
                 passthru = toShells (component.docs // { inherit (component) name path; });

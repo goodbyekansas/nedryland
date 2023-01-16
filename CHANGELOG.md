@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Help message for entering a shell without a proper target.
+
 ## [8.1.0] - 2023-01-13
 
 ### Added
