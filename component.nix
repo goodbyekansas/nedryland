@@ -15,7 +15,7 @@ rec {
           component =
             (attrs // {
               inherit name path nedrylandType;
-            } // (pkgs.lib.optionalAttrs (attrs ? deployment && attrs.deployment != { }) {
+            } // (pkgs.lib.optionalAttrs (nedrylandType != "component-set" && attrs ? deployment && attrs.deployment != { }) {
               # the deploy target is simply the sum of everything
               # in the deployment set
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
@@ -23,7 +23,7 @@ rec {
                 (pkgs.linkFarm
                   "${name}-deployment"
                   (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) attrs.deployment));
-            }) // (pkgs.lib.optionalAttrs (attrs ? docs && !pkgs.lib.isDerivation attrs.docs) {
+            }) // (pkgs.lib.optionalAttrs (nedrylandType != "component-set" && attrs ? docs && !pkgs.lib.isDerivation attrs.docs) {
               # the docs target is a symlinkjoin of all sub-derivations
               docs =
                 let
