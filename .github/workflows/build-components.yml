@@ -127,27 +127,35 @@ jobs:
       run: |
         components=$(jq -r '.[]' components.json)
 
-        echo -n "[" > filtered-components.json
-        filteredComponents=()
-        skippedComponents=()
         echo "# Filter Summary" >> "$GITHUB_STEP_SUMMARY"
         echo "" >> "$GITHUB_STEP_SUMMARY"
-        for component in $components; do
-          outPath="$(nix eval ".#$PACKAGES.$component" --raw)"
+
+        checkCache() {
+          outPath="$(nix eval ".#$PACKAGES.$1" --raw)"
           if ! curl -f -s "https://${{ inputs.cachix-name }}.cachix.org/${outPath:11:32}.narinfo" >/dev/null;
           then
-            filteredComponents+=("\"$component\"")
+            touch filtered-components/"$1"
           else
-            skippedComponents+=("\"$component\"")
+            touch skipped-components/"$1"
           fi
+        }
+
+        mkdir -p filtered-components skipped-components
+        for component in $components; do
+          checkCache "$component" &
         done
+
+        wait
+
+        filteredComponents=($(ls filtered-components/))
+        skippedComponents=($(ls skipped-components/))
 
         if [ ${#skippedComponents[@]} -gt 0 ]; then
           echo "## Found in Cache
           " >> "$GITHUB_STEP_SUMMARY"
 
           for com in "${skippedComponents[@]}"; do
-            echo "- $(echo "$com" | tr -d '"')" >> "$GITHUB_STEP_SUMMARY"
+            echo "- $com" >> "$GITHUB_STEP_SUMMARY"
           done
         fi
 
@@ -156,12 +164,11 @@ jobs:
           " >> "$GITHUB_STEP_SUMMARY"
 
           for com in "${filteredComponents[@]}"; do
-            echo "- $(echo "$com" | tr -d '"')" >> "$GITHUB_STEP_SUMMARY"
+            echo "- $com" >> "$GITHUB_STEP_SUMMARY"
           done
         fi
 
-        IFS=,; echo -n "${filteredComponents[*]}" >> filtered-components.json
-        echo -n "]" >> filtered-components.json
+        jq --compact-output --null-input '$ARGS.positional' --args -- "${filteredComponents[@]}" > filtered-components.json
 
         echo "components=$(cat filtered-components.json)" >> "$GITHUB_OUTPUT"
 
