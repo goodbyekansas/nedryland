@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Fixed
+- Deployment and docs special treatment is not given to component sets.
+- Target linkfarms contains the full path to the target.
+
 ## [8.1.2] - 2023-01-17
 
 ### Fixed

@@ -254,7 +254,7 @@ let
                   (builtins.listToAttrs (builtins.map
                     (value: {
                       inherit value;
-                      name = builtins.concatStringsSep "." value.accessPath;
+                      name = builtins.concatStringsSep "." (value.accessPath ++ [ target ]);
                     })
                     drvs)))
               (pkgs'.lib.zipAttrs
@@ -270,7 +270,8 @@ let
                           (
                             name: value:
                               name != "_default" &&
-                              (pkgs'.lib.isDerivation value)
+                              (pkgs'.lib.isDerivation value) &&
+                              !(value.isNedrylandComponent or false)
                           )
                           comp.componentAttrs)
                     )
@@ -323,9 +324,9 @@ let
             componentSet;
 
           # y-axis
-          targets = (extendedBase.mkComponentSet
+          targets = extendedBase.mkComponentSet
             "targets"
-            allTargets) // allTargets;
+            allTargets;
 
           # matrix
           matrix = componentSet // { inherit targets; };
