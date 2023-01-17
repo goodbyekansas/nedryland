@@ -45,12 +45,23 @@ let
         , ...
         }:
         let
-          componentFns = import ./component.nix pkgs';
+          configContentFromEnv = builtins.getEnv "${pkgs'.lib.toUpper appliedAttrs.name}_config";
+          configContent =
+            if configContentFromEnv != "" then configContentFromEnv else
+            (
+              if appliedAttrs ? configFile
+                && builtins.pathExists appliedAttrs.configFile then
+                builtins.readFile appliedAttrs.configFile
+              else ""
+            );
+          configRoot = if appliedAttrs ? configFile then builtins.dirOf appliedAttrs.configFile else null;
+          parseConfig = import ./config.nix pkgs' configContent configRoot (pkgs'.lib.toUpper name);
+          deployment = import ./deployment.nix pkgs';
+          componentFns = import ./component.nix pkgs' deployment.mkCombinedDeployment parseConfig;
 
           # create the non-extended base
           minimalBase =
             let
-              parseConfig = import ./config.nix pkgs' configContent configRoot (pkgs'.lib.toUpper name);
 
               minimalBase = {
                 inherit
@@ -120,14 +131,15 @@ let
                     src = if pkgs'.lib.isStorePath attrs.src then attrs.src else filteredSrc;
                   }));
                 inherit (componentFns) mapComponentsRecursive collectComponentsRecursive mkComponentSet;
+                inherit deployment;
                 mkTargetSetup = import ./targetsetup.nix pkgs' parseConfig;
-                deployment = import ./deployment.nix pkgs' minimalBase;
                 documentation = import ./documentation pkgs' minimalBase;
                 setComponentPath = path:
                   let
-                    overriddenMkComponent = componentFns.mkComponent path minimalBase.deployment.mkCombinedDeployment parseConfig;
+                    overriddenMkComponent = componentFns.mkComponent path;
                   in
                   minimalBase // {
+                    mkComponentSet = componentFns.mkComponentSet overriddenMkComponent;
                     mkComponent = overriddenMkComponent;
                     mkClient = targets: overriddenMkComponent (targets // { nedrylandType = "client"; });
                     mkService = targets: overriddenMkComponent (targets // { nedrylandType = "service"; });
@@ -224,17 +236,6 @@ let
               )
               attrs;
 
-          configContentFromEnv = builtins.getEnv "${pkgs'.lib.toUpper appliedAttrs.name}_config";
-          configContent =
-            if configContentFromEnv != "" then configContentFromEnv else
-            (
-              if appliedAttrs ? configFile
-                && builtins.pathExists appliedAttrs.configFile then
-                builtins.readFile appliedAttrs.configFile
-              else ""
-            );
-          configRoot = if appliedAttrs ? configFile then builtins.dirOf appliedAttrs.configFile else null;
-
           resolvedComponents = appliedAttrs.components;
           resolvedNedrylandComponents = componentFns.collectComponentsRecursive resolvedComponents;
 
@@ -248,7 +249,7 @@ let
                 # has the link name `myComponent` so that if you `nix build
                 # .#targets.tgt` followed by `ls -l result/` you will see `myComponent
                 # -> /nix/store/something`.
-                componentFns.mkComponentSet
+                extendedBase.mkComponentSet
                   target
                   (builtins.listToAttrs (builtins.map
                     (value: {
@@ -299,7 +300,9 @@ let
                 value
               else
                 if builtins.isAttrs value then
-                  extendedBase.mkComponent ({ inherit name; } // value)
+                  extendedBase.mkComponentSet
+                    name
+                    value
                 else
                   builtins.throw "components can only be attrsets or derivations."
             )
@@ -315,12 +318,12 @@ let
           dependencies = appliedAttrs.dependencies or [ ];
 
           # x-axis
-          components = componentFns.mkComponentSet
+          components = extendedBase.mkComponentSet
             "components"
             componentSet;
 
           # y-axis
-          targets = (componentFns.mkComponentSet
+          targets = (extendedBase.mkComponentSet
             "targets"
             allTargets) // allTargets;
 

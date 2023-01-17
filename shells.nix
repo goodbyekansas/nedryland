@@ -26,12 +26,12 @@ let
 in
 (mapComponentsRecursive
   (
-    _: component:
+    pth: component:
       (
         let
-          toShells = component:
+          mkShellForComponent = component:
             builtins.mapAttrs
-              (_: drv:
+              (name: drv:
                 let
                   # add shell inputs and commands to native build inputs
                   # note that this has to run after the shell derivation is created to let
@@ -61,7 +61,7 @@ in
                       ++ [ shellCommands ];
                     });
 
-                  targetName = lib.escapeShellArg ''target "${drv.name}" in component "${component.name}"'';
+                  targetName = lib.escapeShellArg ''target "${name}" in component "${builtins.concatStringsSep "." pth}"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
                     name = "${component.name}-${drv.name}-shell";
@@ -113,48 +113,42 @@ in
                     }
                     shellPkg)
               )
-              (lib.filterAttrs (_: lib.isDerivation) component.componentAttrs);
+              (lib.filterAttrs (_n: t: lib.isDerivation t && !(t.isNedrylandComponent or false)) component.componentAttrs);
 
-          derivationShells = toShells
-            component;
-
-          derivationsAndAttrsets = (
-            lib.filterAttrs
-              (
-                _: v: builtins.isAttrs v && v.isNedrylandDerivation or false
-              )
-              component.componentAttrs
-          ) // derivationShells;
+          componentShells = mkShellForComponent component;
+          componentShellsAndSubComponents = componentShells // component.nedrylandComponents;
 
           defaultShell =
-            if (builtins.length (builtins.attrValues derivationShells)) == 1 then
-              builtins.head (builtins.attrValues derivationShells)
-            else
-              derivationShells._defaultShell or
-                derivationShells._default or
-                  derivationShells."${config.defaultTarget}" or
+            # ._defaultShell -> ._default -> config defaultTarget -> only one derivation?
+            # -> error
+            componentShells._defaultShell or
+              componentShells._default or
+                componentShells."${config.defaultTarget}" or
+                  (if (builtins.length (builtins.attrValues componentShells)) == 1 then
+                    builtins.head (builtins.attrValues componentShells)
+                  else
                     (mkShell {
+                      name = "error-shell";
                       shellHook = ''
-                        echo '
-                          🐚 Could not decide on a default shell for component "${component.name}"
-                          🎯 Available targets are: ${builtins.concatStringsSep ", " (builtins.attrNames derivationShells)}'
-                          exit 1
+                        echo '🐚 Could not decide on a default shell for component "${component.name}"'
+                        echo '🎯 Available targets/sub-components are: ${builtins.concatStringsSep ", " (builtins.attrNames componentShellsAndSubComponents)}'
+                        exit 1
                       '';
-                    });
+                    }));
 
         in
         defaultShell.overrideAttrs (_: {
-          passthru = derivationsAndAttrsets // lib.optionalAttrs
+          passthru = componentShellsAndSubComponents // lib.optionalAttrs
             (component ? docs)
             ({
               docs = mkShell {
                 shellHook = ''
-                  echo 'Invalid shell "docs"!
-                  🐚 The docs attribute is just the combination of the sub-targets.
-                  🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'
+                  Invalid shell "docs"!
+                  echo '🐚 The docs attribute is just the combination of the sub-targets.'
+                  echo '🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'
                   exit 1
                 '';
-                passthru = toShells (component.docs // { inherit (component) name path; });
+                passthru = mkShellForComponent (component.docs // { inherit (component) name path; });
               };
             });
         })

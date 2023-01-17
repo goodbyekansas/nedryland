@@ -95,7 +95,6 @@ let
       paths = [ deploy ] ++ pkgs.lib.optional deployShell shell;
     };
 in
-base:
 {
   inherit mkDeployment;
 
@@ -153,5 +152,4 @@ base:
       }).overrideAttrs (_: { passthru = { inherit sortedDeployments; }; });
 
   mkFileUploadDeployment = _: { };
-  mkTerraformDeployment = import ./deployment/terraform/terraform.nix { inherit base pkgs mkDeployment; };
 }
