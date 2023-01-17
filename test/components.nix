@@ -1,5 +1,5 @@
 let
-  componentFns = import ../component.nix { };
+  componentFns = import ../component.nix { } (_: _: { }) (_: { });
   project1 = {
     component1 = {
       name = "component-1";

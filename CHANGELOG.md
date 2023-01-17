@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Collection error in the reusable workflow build-components.yml now correctly fails the
   sum-job at the end.
+- Nested shells by normalizing the component hierarchy to only contain derivations or
+  derivations that are also Nedryland components. Leaf nodes are always derivations and
+  inner nodes are Nedryland components (which are also derivations).
+
 ## [8.1.1] - 2023-01-16
 
 ### Fixed

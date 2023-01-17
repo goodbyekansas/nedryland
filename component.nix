@@ -1,16 +1,14 @@
-pkgs:
+pkgs: mkCombinedDeployment: parseConfig:
 rec {
-  mkComponentSet = name: nedrylandComponents:
-    {
-      inherit nedrylandComponents;
-    } // nedrylandComponents
-    //
-    (pkgs.linkFarm
-      name
-      (pkgs.lib.mapAttrsToList (name: path: { inherit name path; }) nedrylandComponents));
+  mkComponentSet = mkComponent: name: nedrylandComponents:
+    mkComponent
+      ({
+        inherit name;
+        nedrylandType = "component-set";
+      } // nedrylandComponents);
 
   mkComponent =
-    path: mkCombinedDeployment: parseConfig:
+    path:
     let
       mkComponentInner = attrs@{ name, nedrylandType ? "component", ... }:
         let
@@ -69,6 +67,7 @@ rec {
           overrideAttrs = f: mkComponentInner (attrs // (f component));
           override = mkComponentInner;
           componentAttrs = component;
+          nedrylandComponents = pkgs.lib.filterAttrs (_: c: c.isNedrylandComponent or false) component;
         });
     in
     mkComponentInner;

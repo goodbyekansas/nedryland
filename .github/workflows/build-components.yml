@@ -115,7 +115,7 @@ jobs:
         nix eval \
           ".#$ATTRIBUTE" \
           --json \
-          --apply 'attrs: if attrs ? nedrylandComponents then (builtins.attrNames attrs.nedrylandComponents) else [ "${{ inputs.attribute }}" ]' \
+          --apply 'attrs: if attrs.nedrylandType or "" == "component-set" then (builtins.attrNames attrs.nedrylandComponents) else [ "${{ inputs.attribute }}" ]' \
           > components.json
 
         echo "components=$(cat components.json)" >> "$GITHUB_OUTPUT"
@@ -172,8 +172,8 @@ jobs:
       with:
         name: components
         path: |
-          filtered-components.json
-          components.json
+          ${{inputs.root}}/filtered-components.json
+          ${{inputs.root}}/components.json
         if-no-files-found: ignore
 
   build-matrix:
