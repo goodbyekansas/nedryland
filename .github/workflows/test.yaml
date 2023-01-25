@@ -25,7 +25,7 @@ jobs:
       uses: ./.github/actions/setup-nix
       with:
         access-key: ${{ secrets.NIXOS_BUILDERS }}
-        builders: root@nix-builders.goodbyekansas.com
+        builders: build@nix-builders.goodbyekansas.com
         config-path: ./.github/workflows/setup/nix.conf
         version: 2.11.1
 

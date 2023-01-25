@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [8.1.3] - 2023-01-17
 
-## Fixed
+### Added
+- CI build-components: Support for arbitrary nix caches parsed from config.
+
+### Fixed
 - Deployment and docs special treatment is not given to component sets.
 - Target linkfarms contains the full path to the target.
 - check to exit with the sum of all check's exit codes.
