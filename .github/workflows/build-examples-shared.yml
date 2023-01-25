@@ -22,7 +22,7 @@ jobs:
       root: examples/hello
       nix-build-locally: ${{ inputs.build-platform != 'x86_64-linux' }}
       build-platform: ${{ inputs.build-platform }}
-      nix-builders: root@nix-builders.goodbyekansas.com
+      nix-builders: ${{ inputs.build-platform == 'x86_64-linux' && 'build@nix-builders.goodbyekansas.com' || '' }}
       nix-config-path: ./.github/workflows/setup/nix.conf
       nix-version: 2.11.1
 
@@ -35,7 +35,7 @@ jobs:
       root: examples/documentation
       nix-build-locally: ${{ inputs.build-platform != 'x86_64-linux' }}
       build-platform: ${{ inputs.build-platform }}
-      nix-builders: root@nix-builders.goodbyekansas.com
+      nix-builders: ${{ inputs.build-platform == 'x86_64-linux' && 'build@nix-builders.goodbyekansas.com' || '' }}
       nix-config-path: ./.github/workflows/setup/nix.conf
       nix-version: 2.11.1
 
@@ -48,7 +48,7 @@ jobs:
       root: examples/dependencies/child
       nix-build-locally: ${{ inputs.build-platform != 'x86_64-linux' }}
       build-platform: ${{ inputs.build-platform }}
-      nix-builders: root@nix-builders.goodbyekansas.com
+      nix-builders: ${{ inputs.build-platform == 'x86_64-linux' && 'build@nix-builders.goodbyekansas.com' || '' }}
       nix-config-path: ./.github/workflows/setup/nix.conf
       nix-version: 2.11.1
 

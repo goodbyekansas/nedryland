@@ -14,7 +14,7 @@ correspond to the provided attribute (defaults to `default`). Usage looks like
 jobs:
   build-matrix:
     name: Build all Component
-    uses: goodbyekansas/nedryland/.github/workflows/build-components.yml@8.0.0
+    uses: goodbyekansas/nedryland/.github/workflows/build-components.yml@8.1.3
     secrets:
       nix-access-key: ${{ secrets.nix-access-key }}
     with:

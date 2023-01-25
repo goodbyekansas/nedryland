@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - check to exit with the sum of all check's exit codes.
 
+### Added
+- build-components runs the cache filter in parallel and checks for all caches in the config.
+- build-components option to run with remote store.
+
 ## [8.1.3] - 2023-01-17
 
-## Fixed
+### Added
+- CI build-components: Support for arbitrary nix caches parsed from config.
+
+### Fixed
 - Deployment and docs special treatment is not given to component sets.
 - Target linkfarms contains the full path to the target.
 

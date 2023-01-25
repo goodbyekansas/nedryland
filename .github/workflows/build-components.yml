@@ -70,6 +70,11 @@ on:
         type: string
         required: false
 
+      use-remote-store:
+        description: Whether to use remote store builds (--store <nix-builders>)
+        type: boolean
+        default: false
+
 jobs:
   collect-matrix:
     name: Collect Components
@@ -84,7 +89,7 @@ jobs:
 
     - name: Setup Nix (Nedryland 8.1.3)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@8.1.3
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@main
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
@@ -122,33 +127,72 @@ jobs:
 
     - id: filter
       name: Filter Cached Components
+      if: ${{ inputs.nix-config-path != '' }}
       working-directory: ${{ inputs.root }}
-      if: ${{ inputs.cachix-name != '' }}
       run: |
-        components=$(jq -r '.[]' components.json)
+        # read cache (substituters) from config
+        # filter out default substituters and also handle when the default values ends with "/" but not config
+        caches=()
+        while IFS= read -r line; do
+          caches+=("$line")
+        done < <(nix show-config --json | \
+          jq -r '.substituters | (.value - (.defaultValue + (.defaultValue | map(.[:-1]))) )[]')
+
+        if [ "${#caches[@]}" -eq 0 ]; then
+          echo "No non-default substituters set in config, skipping filter."
+          exit 0
+        fi
+
+        echo "Looking for already built components in: ${caches[*]}"
+        components=()
+        while IFS= read -r line; do
+            components+=("$line")
+        done < <(jq -r '.[]' components.json)
 
         echo "# Filter Summary" >> "$GITHUB_STEP_SUMMARY"
         echo "" >> "$GITHUB_STEP_SUMMARY"
 
         checkCache() {
-          outPath="$(nix eval ".#$PACKAGES.$1" --raw)"
-          if ! curl -f -s "https://${{ inputs.cachix-name }}.cachix.org/${outPath:11:32}.narinfo" >/dev/null;
-          then
-            touch filtered-components/"$1"
-          else
-            touch skipped-components/"$1"
+          component="$1"
+          shift
+          outPath="$1"
+          shift
+          for cache in "$@"; do
+            echo "Checking for $component in $cache..."
+            if curl -f -s "$cache/${outPath:11:32}.narinfo" >/dev/null; then
+              echo "Found $component in $cache"
+                touch skipped-components/"$component"
+              break
+            fi
+          done
+
+          if [ ! -f skipped-components/"$component" ]; then
+            echo "$component not found in any cache, marking for build..."
+            touch filtered-components/"$component"
           fi
         }
 
         mkdir -p filtered-components skipped-components
-        for component in $components; do
-          checkCache "$component" &
+
+        echo "::group::Collecting outpaths..."
+        out_paths=$(nix eval ".#$PACKAGES" --json)
+        echo "Outpaths collected."
+        echo "::endgroup::"
+
+        batch_size=10
+        for ((i = 0; i < ${#components[@]}; i += batch_size)); do
+            for component in "${components[@]:i:batch_size}"; do
+                out_path=$(jq -r ".$component" <<< "$out_paths")
+                checkCache "$component" "$out_path" "${caches[@]}" &
+            done
+            wait
         done
 
-        wait
-
-        filteredComponents=($(ls filtered-components/))
-        skippedComponents=($(ls skipped-components/))
+        shopt -s nullglob
+        filteredComponents=(filtered-components/*)
+        filteredComponents=("${filteredComponents[@]##*/}")
+        skippedComponents=(skipped-components/*)
+        skippedComponents=("${skippedComponents[@]##*/}")
 
         if [ ${#skippedComponents[@]} -gt 0 ]; then
           echo "## Found in Cache
@@ -200,7 +244,7 @@ jobs:
 
     - name: Setup Nix (Nedryland 8.1.3)
       if: ${{ github.repository != 'goodbyekansas/nedryland' }}
-      uses: goodbyekansas/nedryland/.github/actions/setup-nix@8.1.3
+      uses: goodbyekansas/nedryland/.github/actions/setup-nix@main
       with:
         access-key: ${{ secrets.nix-access-key }}
         builders-access-key: ${{ secrets.nix-builders-access-key }}
@@ -228,7 +272,16 @@ jobs:
       working-directory: ${{ inputs.root }}
       run: |
         echo "building ${{ matrix.component }}"
-        nix build ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}" ${{ !inputs.nix-build-locally && ' --max-jobs 0' || '' }}
+        if [ -n "${{ inputs.nix-builders }}" ] && [ "${{ inputs.use-remote-store }}" = "true" ]; then
+          nix build \
+            --eval-store auto \
+            --store ssh-ng://${{ inputs.nix-builders }} \
+            ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}"
+        else
+          nix build \
+            ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}" \
+            ${{ !inputs.nix-build-locally && ' --max-jobs 0' || '' }}
+        fi
 
     - name: Closure Stats
       continue-on-error: true

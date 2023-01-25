@@ -1,32 +1,18 @@
 #! /usr/bin/env sh
-which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
-##
-## Run ssh-agent (inside the build environment)
-##
-eval "$(ssh-agent -s)"
-##
-## Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
-## We're using tr to fix line endings which makes ed25519 keys work
-## without extra base64 encoding.
-## https://gitlab.com/gitlab-examples/ssh-private-key/issues/1#note_48526556
-##
-echo "$CI_ACCESS_KEY" | tr -d '\r' | ssh-add -
-##
-
-echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
-echo "NIX_SSHOPTS='-o ServerAliveInterval=15 -o ServerAliveCountMax=150'" >> "$GITHUB_ENV"
 
 # user ssh config
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 cp "$SSH_CONFIG" ~/.ssh/config
+echo "$BUILDERS_ACCESS_KEY" >~/.ssh/id_rsa
+chmod 600 ~/.ssh/id_rsa
 
 # root ssh config
-sudo mkdir -p /root/.ssh
-sudo chmod 700 /root/.ssh
-sudo cp "$SSH_CONFIG" /root/.ssh/config
-sudo chown root:root /root/.ssh/config
-echo "$BUILDERS_ACCESS_KEY" | sudo tee /root/.ssh/id_rsa >/dev/null
-sudo chmod 600 /root/.ssh/id_rsa
+root_home=$(sudo -i -H bash -c 'echo $HOME')  # So the shell doesn't expand HOME too early.
 
-ssh-add -L
+echo "using $root_home for root's home"
+sudo mkdir -p "$root_home/.ssh"
+sudo chmod 700 "$root_home/.ssh"
+sudo cp "$SSH_CONFIG" "$root_home/.ssh/config"
+echo "$BUILDERS_ACCESS_KEY" | sudo tee "$root_home/.ssh/id_rsa" >/dev/null
+sudo chmod 600 "$root_home/.ssh/id_rsa"

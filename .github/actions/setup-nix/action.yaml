@@ -41,23 +41,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup SSH
-      if: ${{ inputs.access-key != '' }}
-      env:
-        CI_ACCESS_KEY: ${{ inputs.access-key }}
-        BUILDERS_ACCESS_KEY: ${{ inputs.builders-access-key || inputs.access-key }}
-        SSH_CONFIG: ${{ github.action_path }}/ssh-conf
-      run: ${{ github.action_path }}/ssh-agent.sh
-      shell: sh
-
-    - name: Set up nix builders ssh connection
-      if: ${{ inputs.builders != '' }}
-      run: |
-        sudo --preserve-env=SSH_AUTH_SOCK \
-        ssh -T -o StrictHostKeyChecking=accept-new \
-        ${{ inputs.builders }} 'nix-store --version && echo "connection successful"'
-      shell: sh
-
     - name: Install Nix
       uses: cachix/install-nix-action@v18
       with:
@@ -75,6 +58,38 @@ runs:
           echo "access-tokens = github.com=${{ github.token }}" >> ~/.config/nix/nix.conf
         fi
       shell: sh
+
+    - name: Setup SSH
+      if: ${{ inputs.access-key != '' }}
+      env:
+        CI_ACCESS_KEY: ${{ inputs.access-key }}
+        BUILDERS_ACCESS_KEY: ${{ inputs.builders-access-key || inputs.access-key }}
+        SSH_CONFIG: ${{ github.action_path }}/ssh-conf
+      run: ${{ github.action_path }}/ssh-agent.sh
+      shell: sh
+
+    - name: Set up nix builders ssh connection
+      env:
+        BUILD_HOST: ${{ inputs.builders }}
+      if: ${{ inputs.builders != '' && inputs.access-key != '' }}
+      run: |
+        build_host="${BUILD_HOST##*@}"
+        # Add host key to root (for connections made by the nix-daemon)
+        echo "::group::Test nix-daemon SSH"
+        sudo -i ssh-keyscan -t ed25519 "$build_host" | sudo tee /root/.ssh/known_hosts
+        sudo ls /root/.ssh
+        sudo -i nix store ping --store "ssh://$BUILD_HOST"
+        echo "nix-daemon connection successful"
+        echo "::endgroup::"
+
+        # Add host key to user (for connections made by the nix client)
+        echo "::group::Test nix client SSH"
+        ssh-keyscan -t ed25519 "$build_host" >>~/.ssh/known_hosts
+        nix store ping --store ssh://"$BUILD_HOST"
+        echo "nix client connection successful"
+        echo "::endgroup::"
+      shell: bash
+
 
     - name: Setup Cachix
       if: ${{ inputs.cachix-name != '' }}
