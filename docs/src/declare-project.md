@@ -92,7 +92,7 @@ let
     builtins.fetchGit {
       name = "nedryland";
       url = "git@github.com:goodbyekansas/nedryland.git";
-      ref = "refs/tags/8.2.0";
+      ref = "refs/tags/8.2.1";
     } { inherit pkgs; });
 in
 nedryland.mkProject {

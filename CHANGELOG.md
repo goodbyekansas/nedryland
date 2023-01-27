@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.2.1] - 2023-01-27
+
 ### Fixed
 - Add missing `-L` (log) to nix build in build-components workflow.
 
 ## [8.2.0] - 2023-01-27
+
 ### Fixed
 - check to exit with the sum of all check's exit codes.
 

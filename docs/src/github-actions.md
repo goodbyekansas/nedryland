@@ -14,7 +14,7 @@ correspond to the provided attribute (defaults to `default`). Usage looks like
 jobs:
   build-matrix:
     name: Build all Component
-    uses: goodbyekansas/nedryland/.github/workflows/build-components.yml@8.2.0
+    uses: goodbyekansas/nedryland/.github/workflows/build-components.yml@8.2.1
     secrets:
       nix-access-key: ${{ secrets.nix-access-key }}
     with:
@@ -32,7 +32,7 @@ jobs:
 ```
 
 For a list of available options, see
-[build-components.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.0/.github/workflows/build-components.yml).
+[build-components.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.1/.github/workflows/build-components.yml).
 
 # Checks
 
@@ -63,7 +63,7 @@ jobs:
       actionlint: false
 ```
 For a list of available options, see
-[checks.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.0/.github/workflows/checks.yml).
+[checks.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.1/.github/workflows/checks.yml).
 
 # Setup Nix
 
@@ -101,4 +101,4 @@ jobs:
 ```
 
 For a complete list of options, see
-[action.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.0/.github/actions/setup-nix/action.yml).
+[action.yml](https://github.com/goodbyekansas/nedryland/blob/8.2.1/.github/actions/setup-nix/action.yml).
