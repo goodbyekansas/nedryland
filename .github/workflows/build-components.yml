@@ -274,11 +274,13 @@ jobs:
         echo "building ${{ matrix.component }}"
         if [ -n "${{ inputs.nix-builders }}" ] && [ "${{ inputs.use-remote-store }}" = "true" ]; then
           nix build \
+            -L \
             --eval-store auto \
             --store ssh-ng://${{ inputs.nix-builders }} \
             ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}"
         else
           nix build \
+            -L \
             ".#packages.${{ inputs.build-platform }}.${{ matrix.component }}" \
             ${{ !inputs.nix-build-locally && ' --max-jobs 0' || '' }}
         fi
