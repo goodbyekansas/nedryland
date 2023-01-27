@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 - Deployment and docs special treatment is not given to component sets.
 - Target linkfarms contains the full path to the target.
+- check to exit with the sum of all check's exit codes.
 
 ## [8.1.2] - 2023-01-17
 
