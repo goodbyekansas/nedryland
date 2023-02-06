@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mkDerivation does, but not sent to the linkfarm. This can be useful to have
   expensive properties on the component accessible without adding a lot of eval cost.
 
+### Changed
+- Component linkFarms does not shadow any attributes, user added attributes takes precedence.
+
 ## [8.2.1] - 2023-01-27
 
 ### Fixed

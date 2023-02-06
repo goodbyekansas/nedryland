@@ -55,21 +55,22 @@ rec {
             docsRequirement)
           ''Projects config demands type "${component.nedrylandType}" to have at least: ${builtins.concatStringsSep ", " docsRequirement}.
           "${component.name}" has: ${builtins.concatStringsSep "," (builtins.attrNames attrs.docs or { })}.'';
-        (component
-          //
+        (
           (pkgs.linkFarm
             name
             (pkgs.lib.mapAttrsToList
               (name: path: { inherit name path; })
               (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component)))
+          // (builtins.removeAttrs component [ "passthru" ])
           // (component.passthru or { })
           // {
-          isNedrylandComponent = true;
-          overrideAttrs = f: mkComponentInner (attrs // (f component));
-          override = mkComponentInner;
-          componentAttrs = component;
-          nedrylandComponents = pkgs.lib.filterAttrs (_: c: c.isNedrylandComponent or false) component;
-        });
+            isNedrylandComponent = true;
+            overrideAttrs = f: mkComponentInner (attrs // (f component));
+            override = mkComponentInner;
+            componentAttrs = component;
+            nedrylandComponents = pkgs.lib.filterAttrs (_: c: c.isNedrylandComponent or false) component;
+          }
+        );
     in
     mkComponentInner;
 
