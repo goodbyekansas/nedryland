@@ -15,7 +15,7 @@ rec {
           component =
             (attrs // {
               inherit name path nedrylandType;
-            } // (pkgs.lib.optionalAttrs (nedrylandType != "component-set" && attrs ? deployment && attrs.deployment != { }) {
+            } // (pkgs.lib.optionalAttrs (nedrylandType != "component-set" && attrs ? deployment) {
               # the deploy target is simply the sum of everything
               # in the deployment set
               deploy = mkCombinedDeployment "${name}-deploy" attrs.deployment;
@@ -62,6 +62,7 @@ rec {
             (pkgs.lib.mapAttrsToList
               (name: path: { inherit name path; })
               (pkgs.lib.filterAttrs (_: pkgs.lib.isDerivation) component)))
+          // (component.passthru or { })
           // {
           isNedrylandComponent = true;
           overrideAttrs = f: mkComponentInner (attrs // (f component));

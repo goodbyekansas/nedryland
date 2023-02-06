@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Components can take `passthru`, they are exposed on the component like
+  mkDerivation does, but not sent to the linkfarm. This can be useful to have
+  expensive properties on the component accessible without adding a lot of eval cost.
+
 ## [8.2.1] - 2023-01-27
 
 ### Fixed
