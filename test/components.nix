@@ -48,6 +48,23 @@ let
       };
     };
   };
+
+  project4 = {
+    componentSet1 = rec {
+      isNedrylandComponent = true;
+      component1 = {
+        isNedrylandComponent = true;
+      };
+      component2 = {
+        isNedrylandComponent = true;
+      };
+      component3 = {
+        isNedrylandComponent = true;
+      };
+      nedrylandComponents = { inherit component1 component2; };
+    };
+  };
+
   removeAccessPath = builtins.map (c: builtins.removeAttrs c [ "accessPath" ]);
 in
 assertMsg:
@@ -79,4 +96,19 @@ assert assertMsg
     component2 = { name = "no-name"; path = [ "component2" ]; };
   })
   "mapComponentRecursive did not produce the expected result";
+
+# Only collect components in nedrylandComponents if it exists.
+assert assertMsg
+  (removeAccessPath
+    (
+      componentFns.collectComponentsRecursive project4) == (with project4; [
+    componentSet1
+    componentSet1.component1
+    componentSet1.component2
+  ]
+  )
+  )
+  "Expected collectComponentsRecursive to only recurse through nedrylandComponents.";
+
+# Return nothing so signal tests passed.
 { }
