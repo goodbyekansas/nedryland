@@ -103,7 +103,10 @@ rec {
               [ ];
         in
         set:
-        builtins.concatMap (name: g name (builtins.getAttr name set)) (builtins.attrNames set);
+        let
+          componentSet = set.nedrylandComponents or set;
+        in
+        builtins.concatMap (name: g name (builtins.getAttr name componentSet)) (builtins.attrNames componentSet);
     in
     recurse [ ];
 }
