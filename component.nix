@@ -66,7 +66,7 @@ rec {
           // {
             isNedrylandComponent = true;
             overrideAttrs = f: mkComponentInner (attrs // (f component));
-            override = mkComponentInner;
+            override = arg: mkComponentInner (attrs // arg);
             componentAttrs = component;
             nedrylandComponents = pkgs.lib.filterAttrs (_: c: c.isNedrylandComponent or false) component;
           }
