@@ -52,7 +52,13 @@ let
             args = (if builtins.isAttrs value then value.args or "" else "");
           }
         )
-          (lib.filterAttrs (_: value: if builtins.isAttrs value then value.show or true else true) allCommands))
+          (lib.filterAttrs (_: value:
+            if builtins.isAttrs value then
+              value.show or true
+            else
+              true)
+            cmds)
+        )
          }
       '')
     ];
