@@ -42,7 +42,7 @@ runs:
   using: "composite"
   steps:
     - name: Install Nix
-      uses: cachix/install-nix-action@v18
+      uses: cachix/install-nix-action@v20
       with:
         install_url: https://releases.nixos.org/nix/nix-${{ inputs.version }}/install
 
