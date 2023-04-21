@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.3.1] - 2023-04-21
+
 ### Fixed
 - override on mkComponent didn't override, just called the mkComponent with only
   the new arguments.
-
 - When overriding shellCommands the help text was not updated.
 
 ## [8.3.0] - 2023-02-08
