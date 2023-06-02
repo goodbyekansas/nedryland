@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- checks.shellcheck can now handle files with spaces in the names.
+
 ## [8.3.1] - 2023-04-21
 
 ### Fixed
