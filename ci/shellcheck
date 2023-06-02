@@ -6,6 +6,7 @@ color="auto"
 [ -n "${NEDRYLAND_CHECK_COLOR:-}" ] && color="always"
 
 lintFiles() {
+    local IFS=$'\n'
     exitCode=0
     # shellcheck disable=SC2086
     while mapfile -t -n 50 shellFiles && ((${#shellFiles[@]})); do
