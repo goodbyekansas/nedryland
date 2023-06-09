@@ -29,7 +29,7 @@ in
     pth: component:
       (
         let
-          mkShellForComponent = component:
+          mkShellForComponent = component: attributePath:
             builtins.mapAttrs
               (name: drv:
                 let
@@ -61,7 +61,7 @@ in
                       ++ [ shellCommands ];
                     });
 
-                  targetName = lib.escapeShellArg ''target "${name}" in component "${builtins.concatStringsSep "." pth}"'';
+                  targetName = lib.escapeShellArg ''target "\x1b[1m${name}\x1b[0m" in "\x1b[1m${builtins.concatStringsSep "." attributePath}\x1b[0m"'';
                   shellPkg = (drv.drvAttrs // {
                     inherit (drv) passthru;
                     name = "${component.name}-${drv.name}-shell";
@@ -98,9 +98,9 @@ in
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
                       ${if drv ? targetSetup then "${drv.targetSetup}/bin/target-setup" else ""}
-                      echo 🐚 Running shell hook for ${targetName}
+                      echo -e 🐚 Running shell hook for ${targetName}
                       ${drv.shellHook or ""}
-                      echo 🥂 You are now in a shell for working on ${targetName}
+                      echo -e 🥂 You are now in a shell for working on ${targetName}
                       echo "Available commands for this shell are:"
                       shellHelp
                     '';
@@ -115,7 +115,7 @@ in
               )
               (lib.filterAttrs (_n: t: lib.isDerivation t && !(t.isNedrylandComponent or false)) component.componentAttrs);
 
-          componentShells = mkShellForComponent component;
+          componentShells = mkShellForComponent component pth;
           componentShellsAndSubComponents = componentShells // component.nedrylandComponents;
 
           defaultShell =
@@ -143,12 +143,17 @@ in
             ({
               docs = mkShell {
                 shellHook = ''
-                  Invalid shell "docs"!
+                  echo -e '\x1b[31mInvalid shell "docs"!\x1b[0m'
                   echo '🐚 The docs attribute is just the combination of the sub-targets.'
                   echo '🎯 Available sub-targets are: ${builtins.concatStringsSep ", " (builtins.attrNames (lib.filterAttrs (_: lib.isDerivation) component.docs.passthru))}'
                   exit 1
                 '';
-                passthru = mkShellForComponent (component.docs // { inherit (component) name path; });
+                passthru = mkShellForComponent
+                  {
+                    inherit (component) name path;
+                    componentAttrs = component.docs;
+                  }
+                  (pth ++ [ "docs" ]);
               };
             });
         })
