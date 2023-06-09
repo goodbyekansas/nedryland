@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.3.2] - 2023-06-09
+
 ### Fixed
 - checks.shellcheck can now handle files with spaces in the names.
 - Shells for docs
