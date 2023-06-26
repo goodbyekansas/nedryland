@@ -25,7 +25,7 @@ if ! ps -p $servePid >/dev/null; then
     exit 1
 fi
 
-echo $servePid > ./run.pid
-echo "$servePort" >> ./run.pid
+echo $servePid > ./mdbook.pid
+echo "$servePort" >> ./mdbook.pid
 echo ""
 echo "Mdbook running on $servePort"
