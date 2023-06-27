@@ -114,6 +114,7 @@ let
                         isNedrylandDerivation = true;
                         shellCommands = attrs.shellCommands or { };
                       };
+                      shellInputs = attrs.shellInputs or [ ] ++ pkgs'.lib.optional (attrs ? targetSetup) attrs.targetSetup;
                     }
                     // pkgs'.lib.optionalAttrs (attrs.doCheck or true)
                     (
@@ -135,7 +136,7 @@ let
                   }));
                 inherit (componentFns) mapComponentsRecursive collectComponentsRecursive mkComponentSet;
                 inherit deployment;
-                mkTargetSetup = import ./targetsetup.nix pkgs' parseConfig;
+                mkTargetSetup = import ./target-setup pkgs' parseConfig;
                 documentation = import ./documentation pkgs' minimalBase;
                 setComponentPath = path:
                   let
