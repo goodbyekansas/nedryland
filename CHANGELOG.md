@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error on github actions on macos, fixed by updating install-nix-action version.
 - base.mkDerivation could not take pname + version instead of name, like stdenv.mkDerivation.
 
+### Changed
+- mkTargetSetup now creates a setupHook which adds itself to the shellHook of whatever
+  it is added to. It respects the dontSetupTarget variable to not run.
+
 ## [8.3.2] - 2023-06-09
 
 ### Fixed

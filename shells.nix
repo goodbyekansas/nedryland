@@ -97,7 +97,6 @@ in
                       fi
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
-                      ${if drv ? targetSetup then "${drv.targetSetup}/bin/target-setup" else ""}
                       echo -e 🐚 Running shell hook for ${targetName}
                       ${drv.shellHook or ""}
                       echo -e 🥂 You are now in a shell for working on ${targetName}
