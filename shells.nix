@@ -32,57 +32,46 @@ in
           mkShellForComponent = component: attributePath:
             builtins.mapAttrs
               (name: drv:
-                let
-                  # add shell inputs and commands to native build inputs
-                  # note that this has to run after the shell derivation is created to let
-                  # it first run its logic on nativeBuildInputs ++
-                  # checkInputs/installCheckInputs
-                  #
-                  # Priority of nativeBuildInputs then becomes:
-                  #  1. nativeBuildInputs
-                  #  2. checkInputs/installCheckInputs
-                  #  3. shellInputs
-                  #  4. shellCommands
-                  addShellInputs = drv: drv.overrideAttrs (oldAttrs:
-                    let
-                      shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
-                        oldAttrs.shellCommands or { };
-                      shellCommands =
-                        if lib.isDerivation shellCommandAttrsOrDrv then
-                          shellCommandAttrsOrDrv
-                        else
-                          mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
-                    in
-                    {
-                      inherit shellCommands;
-                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
-                      ++ oldAttrs.passthru.shellInputs or [ ]
-                      ++ oldAttrs.shellInputs or [ ]
-                      ++ [ shellCommands ];
-                    });
+                drv.overrideAttrs (oldAttrs:
+                  let
+                    targetName = lib.escapeShellArg ''target "\x1b[1m${name}\x1b[0m" in "\x1b[1m${builtins.concatStringsSep "." attributePath}\x1b[0m"'';
+                    shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
+                      oldAttrs.shellCommands or { };
+                    shellCommands =
+                      if lib.isDerivation shellCommandAttrsOrDrv then
+                        shellCommandAttrsOrDrv
+                      else
+                        mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
+                  in
+                  {
+                    inherit shellCommands;
+                    name = "${component.name}-${oldAttrs.name}-shell";
 
-                  targetName = lib.escapeShellArg ''target "\x1b[1m${name}\x1b[0m" in "\x1b[1m${builtins.concatStringsSep "." attributePath}\x1b[0m"'';
-                  shellPkg = (drv.drvAttrs // {
-                    inherit (drv) passthru;
-                    name = "${component.name}-${drv.name}-shell";
+                    # add shell inputs and commands to native build inputs
+                    #
+                    # Priority of nativeBuildInputs then becomes:
+                    #  1. nativeBuildInputs
+                    #  2. checkInputs/installCheckInputs
+                    #  3. shellInputs
+                    #  4. shellCommands
+                    nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
+                    ++ oldAttrs.passthru.shellInputs or [ ]
+                    ++ oldAttrs.shellInputs or [ ]
+                    ++ [ shellCommands ];
 
                     # set componentDir here to be able to access
                     # it inside the shell as $componentDir if we wish
                     componentDir =
                       let
                         possibleSources = lib.optionals
-                          (drv ? src)
-                          [ (drv.src.origSrc or null) drv.src ];
+                          (oldAttrs ? src)
+                          [ (oldAttrs.src.origSrc or null) oldAttrs.src ];
                       in
                       builtins.toString (lib.findFirst
                         (p: p != null && !lib.isStorePath p)
                         component.path
                         possibleSources);
 
-                    # the standard shell hook will:
-                    # 1. change directory to the component dir
-                    # 2. run the shell hook defined in the target/derivation
-                    # 3. celebrate!
                     shellHook = ''
                       componentDir="$componentDir"
                       if [ -f "$componentDir" ]; then
@@ -98,19 +87,14 @@ in
                       echo ⛑ Changing dir to \"$componentDir\"
                       cd "$componentDir"
                       echo -e 🐚 Running shell hook for ${targetName}
-                      ${drv.shellHook or ""}
+                      ${oldAttrs.shellHook or ""}
                       echo -e 🥂 You are now in a shell for working on ${targetName}
                       echo "Available commands for this shell are:"
                       shellHelp
                     '';
-                  });
-                in
-                addShellInputs
-                  (mkShell.override
-                    {
-                      stdenv = drv.stdenv;
-                    }
-                    shellPkg)
+
+                    preferLocalBuild = true;
+                  })
               )
               (lib.filterAttrs (_n: t: lib.isDerivation t && !(t.isNedrylandComponent or false)) component.componentAttrs);
 
