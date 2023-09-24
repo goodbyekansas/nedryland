@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mdbook shell commands now finds the running process correctly, making the stop
   and open commands work.
 - Error on github actions on macos, fixed by updating install-nix-action version.
+- base.mkDerivation could not take pname + version instead of name, like stdenv.mkDerivation.
 
 ## [8.3.2] - 2023-06-09
 

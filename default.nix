@@ -85,7 +85,10 @@ let
                       input
                   );
 
-                mkDerivation = attrs@{ name, stdenv ? pkgs'.stdenv, ... }:
+                mkDerivation = attrs@{ stdenv ? pkgs'.stdenv, ... }:
+                  assert pkgs'.lib.assertMsg
+                    (!(attrs ? name) -> attrs ? pname && attrs ? version)
+                    "mkDerivation missing required argument name, alternatively supply pname and version.";
                   let
                     customerFilter = src:
                       let
@@ -101,7 +104,7 @@ let
                           {
                             inherit (attrs) src;
                             filter = customerFilter attrs.src attrs.srcFilter;
-                            name = "${name}-source";
+                            name = "${attrs.name or attrs.pname}-source";
                           } else pkgs'.gitignoreSource attrs.src;
                   in
                   stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" "shellCommands" ]) //
