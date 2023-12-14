@@ -41,11 +41,11 @@ in
                       if lib.isDerivation shellCommandAttrsOrDrv then
                         shellCommandAttrsOrDrv
                       else
-                        mkShellCommands oldAttrs.name shellCommandAttrsOrDrv;
+                        mkShellCommands (oldAttrs.name or oldAttrs.pname or "no-name") shellCommandAttrsOrDrv;
                   in
                   {
                     inherit shellCommands;
-                    name = "${component.name}-${oldAttrs.name}-shell";
+                    name = "${component.name}-${oldAttrs.name or oldAttrs.pname or "no-name"}-shell";
 
                     # add shell inputs and commands to native build inputs
                     #
