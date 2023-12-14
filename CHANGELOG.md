@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Shells were assuming that the `name` attribute always existed on derivations.
+  This is not always true and `pname` can now also be used.
+
 ## [9.0.0] - 2023-11-07
 
 ### Changed
