@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for nixpkgs up to 23.11
+
+### Changed
+- The default linter is now statix instead of nix-lint. The name of the nix attribute and
+  script is also changed from `nix-lint` to `nixlint` to be consistent with other linting
+  tools.
+
 ### Fixed
 - Shells were assuming that the `name` attribute always existed on derivations.
   This is not always true and `pname` can now also be used.

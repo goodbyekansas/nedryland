@@ -4,6 +4,8 @@
 set -uo pipefail
 color="auto"
 
+@preamble@
+
 [ -n "${NEDRYLAND_CHECK_COLOR:-}" ] && color="always"
 
 check="--check"

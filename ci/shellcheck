@@ -2,6 +2,9 @@
 # shellcheck shell=bash
 
 set -uo pipefail
+
+@preamble@
+
 color="auto"
 [ -n "${NEDRYLAND_CHECK_COLOR:-}" ] && color="always"
 

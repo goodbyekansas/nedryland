@@ -3,6 +3,8 @@
 
 set -uo pipefail
 
+@preamble@
+
 # the two ignores are for an older version of the actionlint tool
 # TODO: check version?
 

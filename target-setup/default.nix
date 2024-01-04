@@ -14,11 +14,12 @@ let
     key = "components";
     structure = pkgs.lib.mapAttrs (_: _: null) (variableQueries // variables);
   });
+  depsAttr = if pkgs.lib.versionOlder pkgs.lib.version "23.05pre-git" then "deps" else "propagatedBuildInputs";
 in
 pkgs.makeSetupHook
 {
   name = "target-setup-${builtins.replaceStrings [ " " ] [ "-" ] name}";
-  deps = [ pkgs.envsubst pkgs.tree ];
+  "${depsAttr}" = [ pkgs.envsubst pkgs.tree ];
   substitutions = {
     inherit typeName showTemplate initCommands;
     envsubst = "${pkgs.envsubst}/bin/envsubst";

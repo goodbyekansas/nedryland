@@ -48,8 +48,8 @@ let
         ${shellCommandHelpText (builtins.mapAttrs
         (_: value:
           {
-            description = (if builtins.isAttrs value then value.description or "" else "");
-            args = (if builtins.isAttrs value then value.args or "" else "");
+            description = if builtins.isAttrs value then value.description or "" else "";
+            args = if builtins.isAttrs value then value.args or "" else "";
           }
         )
           (lib.filterAttrs (_: value:

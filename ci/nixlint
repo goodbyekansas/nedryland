@@ -1,16 +1,19 @@
 #! @bash@
 # shellcheck shell=bash
 
-set -uo pipefail
+@preamble@
 
+set -uo pipefail
 if [ $# -eq 0 ]; then
     if [ -z "${NEDRYLAND_CHECK_FILES:-}" ]; then
-        @nixLinter@ -r .
+        @nixLinter@ check .
         exit $?
     else
         exitCode=0
-        while mapfile -t -n 50 nix_files && ((${#nix_files[@]})); do
-            if ! @nixLinter@ "${nix_files[@]}"; then
+        # statix cannot support multiple files
+        # https://github.com/nerdypepper/statix/issues/69
+        while mapfile -t -n 1 nix_files && ((${#nix_files[@]})); do
+            if ! @nixLinter@ check "${nix_files[@]}"; then
                 exitCode=1;
             fi
         done <<< "$(grep ".nix$" < "$NEDRYLAND_CHECK_FILES")"

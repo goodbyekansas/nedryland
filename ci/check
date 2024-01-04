@@ -5,6 +5,8 @@ set -uo pipefail
 shopt -s nullglob
 shopt -s extglob
 
+@preamble@
+
 export NEDRYLAND_CHECK_COLOR=1
 emoji_index=0
 exit_code=0

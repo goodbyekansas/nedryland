@@ -2,7 +2,7 @@
 (nedryland { inherit pkgs; }).mkProject {
   name = "dep-example-father";
 
-  components = {}: { };
+  components = _: { };
 
   baseExtensions = [
     ./extensions/mkfather.nix
