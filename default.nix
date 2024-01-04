@@ -1,21 +1,10 @@
 let
-  gitignore = import (builtins.fetchTarball {
-    url = "https://github.com/hercules-ci/gitignore.nix/archive/a20de23b925fd8264fd7fad6454652e142fd7f73.tar.gz";
-    sha256 = "sha256:07vg2i9va38zbld9abs9lzqblz193vc5wvqd6h7amkmwf66ljcgh";
-  });
-
-  gitIgnoreOverlay = _: prev: (gitignore {
-    lib = prev.lib // (prev.lib.optionalAttrs (! prev.lib ? inPureEvalMode) {
-      inPureEvalMode = ! builtins ? currentSystem;
-    });
-  });
-
   f = { pkgs, skipNixpkgsVersionCheck ? false }:
     assert pkgs.lib.assertMsg
       (!skipNixpkgsVersionCheck && pkgs.lib.versionAtLeast (builtins.replaceStrings [ "pre-git" ] [ "" ] (pkgs.lib.version or "0.0.0")) "22.05")
       "Nedryland supports nixpkgs versions >= 22.05, you have ${pkgs.lib.version or "unknown"}}";
     let
-      pkgs' = pkgs.extend gitIgnoreOverlay;
+      pkgs' = pkgs;
       version = "9.0.0";
       versionAtLeast = pkgs'.lib.versionAtLeast version;
     in
@@ -90,10 +79,19 @@ let
                     (!(attrs ? name) -> attrs ? pname && attrs ? version)
                     "mkDerivation missing required argument name, alternatively supply pname and version.";
                   let
+                    gitignore = (import (builtins.fetchTarball {
+                      url = "https://github.com/hercules-ci/gitignore.nix/archive/a20de23b925fd8264fd7fad6454652e142fd7f73.tar.gz";
+                      sha256 = "sha256:07vg2i9va38zbld9abs9lzqblz193vc5wvqd6h7amkmwf66ljcgh";
+                    })) {
+                      lib = pkgs'.lib // (pkgs'.lib.optionalAttrs (! pkgs'.lib ? inPureEvalMode) {
+                        inPureEvalMode = ! builtins ? currentSystem;
+                      });
+                    };
+
                     customerFilter = src:
                       let
                         # IMPORTANT: use a let binding like this to memoize info about the git directories.
-                        srcIgnored = pkgs'.gitignoreFilter src;
+                        srcIgnored = gitignore.gitignoreFilter src;
                       in
                       filter:
                       path: type:
@@ -105,7 +103,7 @@ let
                             inherit (attrs) src;
                             filter = customerFilter attrs.src attrs.srcFilter;
                             name = "${attrs.name or attrs.pname}-source";
-                          } else pkgs'.gitignoreSource attrs.src;
+                          } else gitignore.gitignoreSource attrs.src;
                   in
                   stdenv.mkDerivation ((builtins.removeAttrs attrs [ "stdenv" "srcFilter" "shellCommands" ]) //
                     {
@@ -118,18 +116,19 @@ let
                     }
                     // pkgs'.lib.optionalAttrs (attrs.doCheck or true)
                     (
-                      let checkAttrs = {
-                        # LintPhase for checks that does not require to run the built program
-                        lintPhase = attrs.lintPhase or ''echo "No lintPhase defined, doing nothing"'';
-                        preInstallPhases = attrs.preInstallPhases or [ ] ++ [ "lintPhase" ];
-                        nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ attrs.lintInputs or [ ];
-                      };
+                      let
+                        checkAttrs = {
+                          # LintPhase for checks that does not require to run the built program
+                          lintPhase = attrs.lintPhase or ''echo "No lintPhase defined, doing nothing"'';
+                          preInstallPhases = attrs.preInstallPhases or [ ] ++ [ "lintPhase" ];
+                          nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ attrs.lintInputs or [ ];
+                        };
                       in
-                      (checkAttrs // pkgs'.lib.optionalAttrs (stdenv.hostPlatform != stdenv.buildPlatform && attrs.doCrossCheck or false) {
+                      checkAttrs // pkgs'.lib.optionalAttrs (stdenv.hostPlatform != stdenv.buildPlatform && attrs.doCrossCheck or false) {
                         crossCheckPhase = attrs.crossCheckPhase or attrs.checkPhase or ''echo "No checkPhase or crossCheckPhase defined (but doCrossCheck is true), doing nothing"'';
                         preInstallPhases = checkAttrs.preInstallPhases ++ [ "crossCheckPhase" ];
                         nativeBuildInputs = checkAttrs.nativeBuildInputs ++ attrs.checkInputs or [ ];
-                      })
+                      }
                     )
                     // (pkgs'.lib.optionalAttrs (attrs ? src) {
                     src = if pkgs'.lib.isStorePath attrs.src then attrs.src else filteredSrc;
@@ -166,7 +165,7 @@ let
                     extFn (
                       builtins.intersectAttrs args (components // { inherit components; })
                       // builtins.intersectAttrs args pkgs'
-                      // builtins.intersectAttrs args (let base = (pkgs'.lib.recursiveUpdate initialBase combinedBaseExtensions); in base // { inherit base; })
+                      // builtins.intersectAttrs args (let base = pkgs'.lib.recursiveUpdate initialBase combinedBaseExtensions; in base // { inherit base; })
                     )
                   ))
               )
@@ -313,7 +312,7 @@ let
             )
             (resolvedComponents // extraTargets);
         in
-        (rec {
+        rec {
           inherit (appliedAttrs) name;
           pkgs = pkgs';
 
@@ -350,7 +349,7 @@ let
 
         } // (pkgs'.lib.optionalAttrs
           (appliedAttrs ? version)
-          { inherit (appliedAttrs) version; }));
+          { inherit (appliedAttrs) version; });
       override =
         f;
     };

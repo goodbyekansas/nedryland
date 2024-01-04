@@ -51,9 +51,9 @@ in
                     #
                     # Priority of nativeBuildInputs then becomes:
                     #  1. nativeBuildInputs
-                    #  2. checkInputs/installCheckInputs
-                    #  3. shellInputs
-                    #  4. shellCommands
+                    #  2. shellInputs
+                    #  3. shellCommands
+                    #  4. nativeCheckInputs/checkInputs/installCheckInputs
                     nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
                     ++ oldAttrs.passthru.shellInputs or [ ]
                     ++ oldAttrs.shellInputs or [ ]
@@ -79,7 +79,7 @@ in
                       fi
 
                       # This is for `nix develop` and flakes.
-                      if [[ "$componentDir" == /nix/store/* ]]; then
+                      if [[ "$componentDir" =~ ^/nix/store/.*$ ]]; then
                         git_root=$(${git}/bin/git rev-parse --show-toplevel)
                         target_relative="$(echo "$componentDir" | cut -d/ -f 5-)"
                         componentDir="$git_root/$target_relative"
@@ -123,7 +123,7 @@ in
         defaultShell.overrideAttrs (_: {
           passthru = componentShellsAndSubComponents // lib.optionalAttrs
             (component ? docs)
-            ({
+            {
               docs = mkShell {
                 shellHook = ''
                   echo -e '\x1b[31mInvalid shell "docs"!\x1b[0m'
@@ -138,7 +138,7 @@ in
                   }
                   (pth ++ [ "docs" ]);
               };
-            });
+            };
         })
       )
   )

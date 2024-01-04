@@ -71,7 +71,7 @@ assertMsg:
 assert assertMsg
   (removeAccessPath
     (componentFns.collectComponentsRecursive project1)
-  == (with project1; [ component1 component2 ]))
+    == (with project1; [ component1 component2 ]))
   "collectComponentsRecursive did not collect!";
 
 assert assertMsg
