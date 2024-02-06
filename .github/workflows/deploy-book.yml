@@ -21,7 +21,7 @@ jobs:
         cp --recursive --dereference --no-preserve=mode,ownership result/share/doc/nedryland/manual dist
 
     - name: Upload Artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-pages-artifact@v2
       with:
         path: ./dist/
 
@@ -41,4 +41,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@main
+        uses: actions/deploy-pages@v3
