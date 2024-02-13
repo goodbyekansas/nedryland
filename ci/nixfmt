@@ -13,6 +13,10 @@ if [[ $* =~ (^|[[:space:]])+--fix([[:space:]]|$)+ ]]; then
     check=""
 fi
 
+if root="$(@git@ rev-parse --show-toplevel 2>/dev/null)"; then
+    cd "$root"
+fi
+
 if [ $# -eq 0 ] || [ -z "$check" ]; then
     exitCode=0
     files=()

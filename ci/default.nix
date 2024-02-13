@@ -9,6 +9,7 @@
 , gnused
 , python3
 , actionlint
+, git
 }:
 runCommandLocal "check"
 {
@@ -22,6 +23,7 @@ runCommandLocal "check"
   sed = "${gnused}/bin/sed";
   pyflakes = "${python3.pkgs.pyflakes}/bin/pyflakes";
   actionlint = "${actionlint}/bin/actionlint";
+  git = "${git}/bin/git";
   preamble = ''
     if [[ ",''${NEDRYLAND_NO_USE_CHECK_FILES:-}," =~ ",$(basename "$0")," ]]; then
       echo "forcing file list off for tool \"$(basename "$0")\""
