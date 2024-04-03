@@ -16,8 +16,6 @@
 
 - [Nedryland's Linters](./checks.md)
 
-- [Github Actions](./github-actions.md)
-
 - [Setting Up Deployment](./deployment.md)
 
 ---

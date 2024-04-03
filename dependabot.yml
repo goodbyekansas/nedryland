@@ -1,8 +1,0 @@
-version: 2
-updates:
-
-  # Maintain
-  - package-ecosystem: "cargo"
-    -commit-message:
-      prefix: "🔒"
-

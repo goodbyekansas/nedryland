@@ -1,0 +1,32 @@
+name: Build Examples
+
+on:
+  workflow_call:
+    inputs:
+      build-platform:
+        description: "The GitHub runner platform to use. Github name minus -latest."
+        default: ubuntu
+        type: string
+
+jobs:
+  build-examples:
+    strategy:
+      matrix:
+        example: [hello, documentation, dependencies/child]
+
+    name: Build Example ${{ matrix.example }}
+    runs-on: ${{ inputs.build-platform }}-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Build ${{ matrix.example }}
+      run: |
+        cd examples/${{ matrix.example }}
+        nix build
+
