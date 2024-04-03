@@ -1,0 +1,96 @@
+name: Checks
+
+on: [push]
+
+concurrency:
+  group: '${{ github.ref_name }}-checks'
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Check Format on Nix Expressions 👓 🦖💨
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Check Nix format 👓 🦖💨
+      run: nix run .#checks.nixfmt
+
+  shell-check:
+    name: Lint Shell Scripts 🐢 🐌 💶
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Check shell scripts 🐢 🐌 💶
+      run: nix run .#checks.shellcheck
+
+  lint:
+    name: Lint Nix Expressions 🦕 📝 👀
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Lint Nix files 🦕 📝 👀
+      run: nix run .#checks.nixlint
+
+  actionlint:
+    name: Lint Github Actions 🐙 🐱 🎬
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Lint Github Actions 🐙 🐱 🎬
+      run: nix run .#checks.actionlint
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v26
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+
+    - name: Run all tests
+      run: nix flake check
+
+  build-examples-linux:
+    name: Build Examples (Linux 🐧)
+    uses: ./.github/workflows/build-examples.yaml
+    with:
+      build-platform: ubuntu
+
+  build-examples-macos:
+    name: Build Examples (macOS 🍎)
+    uses: ./.github/workflows/build-examples.yaml
+    with:
+      build-platform: macos
