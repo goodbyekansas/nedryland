@@ -32,69 +32,70 @@ in
           mkShellForComponent = component: attributePath:
             builtins.mapAttrs
               (name: drv:
-                drv.overrideAttrs (oldAttrs:
-                  let
-                    targetName = lib.escapeShellArg ''target "\x1b[1m${name}\x1b[0m" in "\x1b[1m${builtins.concatStringsSep "." attributePath}\x1b[0m"'';
-                    shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
-                      oldAttrs.shellCommands or { };
-                    shellCommands =
-                      if lib.isDerivation shellCommandAttrsOrDrv then
-                        shellCommandAttrsOrDrv
-                      else
-                        mkShellCommands (oldAttrs.name or oldAttrs.pname or "no-name") shellCommandAttrsOrDrv;
-                  in
-                  {
-                    inherit shellCommands;
-                    name = "${component.name}-${oldAttrs.name or oldAttrs.pname or "no-name"}-shell";
+                drv.overrideAttrs
+                  (oldAttrs:
+                    let
+                      targetName = lib.escapeShellArg ''target "\x1b[1m${name}\x1b[0m" in "\x1b[1m${builtins.concatStringsSep "." attributePath}\x1b[0m"'';
+                      shellCommandAttrsOrDrv = oldAttrs.passthru.shellCommands or
+                        oldAttrs.shellCommands or { };
+                      shellCommands =
+                        if lib.isDerivation shellCommandAttrsOrDrv then
+                          shellCommandAttrsOrDrv
+                        else
+                          mkShellCommands (oldAttrs.name or oldAttrs.pname or "no-name") shellCommandAttrsOrDrv;
+                    in
+                    {
+                      inherit shellCommands;
+                      name = "${component.name}-${oldAttrs.name or oldAttrs.pname or "no-name"}-shell";
 
-                    # add shell inputs and commands to native build inputs
-                    #
-                    # Priority of nativeBuildInputs then becomes:
-                    #  1. nativeBuildInputs
-                    #  2. shellInputs
-                    #  3. shellCommands
-                    #  4. nativeCheckInputs/checkInputs/installCheckInputs
-                    nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
-                    ++ oldAttrs.passthru.shellInputs or [ ]
-                    ++ oldAttrs.shellInputs or [ ]
-                    ++ [ shellCommands ];
+                      # add shell inputs and commands to native build inputs
+                      #
+                      # Priority of nativeBuildInputs then becomes:
+                      #  1. nativeBuildInputs
+                      #  2. shellInputs
+                      #  3. shellCommands
+                      #  4. nativeCheckInputs/checkInputs/installCheckInputs
+                      nativeBuildInputs = oldAttrs.nativeBuildInputs or [ ]
+                      ++ oldAttrs.passthru.shellInputs or [ ]
+                      ++ oldAttrs.shellInputs or [ ]
+                      ++ [ shellCommands ];
 
-                    # set componentDir here to be able to access
-                    # it inside the shell as $componentDir if we wish
-                    componentDir =
-                      let
-                        possibleSources = lib.optionals
-                          (oldAttrs ? src)
-                          [ (oldAttrs.src.origSrc or null) oldAttrs.src ];
-                      in
-                      builtins.toString (lib.findFirst
-                        (p: p != null && !lib.isStorePath p)
-                        component.path
-                        possibleSources);
+                      # set componentDir here to be able to access
+                      # it inside the shell as $componentDir if we wish
+                      componentDir =
+                        let
+                          possibleSources = lib.optionals
+                            (oldAttrs ? src)
+                            [ (oldAttrs.src.origSrc or null) oldAttrs.src ];
+                        in
+                        builtins.toString (lib.findFirst
+                          (p: p != null && !lib.isStorePath p)
+                          component.path
+                          possibleSources);
 
-                    shellHook = ''
-                      componentDir="$componentDir"
-                      if [ -f "$componentDir" ]; then
-                        componentDir=$(dirname "$componentDir")
-                      fi
+                      shellHook = ''
+                        componentDir="$componentDir"
+                        if [ -f "$componentDir" ]; then
+                          componentDir=$(dirname "$componentDir")
+                        fi
 
-                      # This is for `nix develop` and flakes.
-                      if [[ "$componentDir" =~ ^/nix/store/.*$ ]]; then
-                        git_root=$(${git}/bin/git rev-parse --show-toplevel)
-                        target_relative="$(echo "$componentDir" | cut -d/ -f 5-)"
-                        componentDir="$git_root/$target_relative"
-                      fi
-                      echo ⛑ Changing dir to \"$componentDir\"
-                      cd "$componentDir"
-                      echo -e 🐚 Running shell hook for ${targetName}
-                      ${oldAttrs.shellHook or ""}
-                      echo -e 🥂 You are now in a shell for working on ${targetName}
-                      echo "Available commands for this shell are:"
-                      shellHelp
-                    '';
+                        # This is for `nix develop` and flakes.
+                        if [[ "$componentDir" =~ ^/nix/store/.*$ ]]; then
+                          git_root=$(${git}/bin/git rev-parse --show-toplevel)
+                          target_relative="$(echo "$componentDir" | cut -d/ -f 5-)"
+                          componentDir="$git_root/$target_relative"
+                        fi
+                        echo ⛑  Changing dir to \"$componentDir\"
+                        cd "$componentDir"
+                        echo -e 🐚 Running shell hook for ${targetName}
+                        ${oldAttrs.shellHook or ""}
+                        echo -e 🥂 You are now in a shell for working on ${targetName}
+                        echo "Available commands for this shell are:"
+                        shellHelp
+                      '';
 
-                    preferLocalBuild = true;
-                  })
+                      preferLocalBuild = true;
+                    })
               )
               (lib.filterAttrs (_n: t: lib.isDerivation t && !(t.isNedrylandComponent or false)) component.componentAttrs);
 
@@ -120,8 +121,8 @@ in
                     }));
 
         in
-        defaultShell.overrideAttrs (_: {
-          passthru = componentShellsAndSubComponents // lib.optionalAttrs
+        defaultShell.overrideAttrs (a: {
+          passthru = a.passthru or { } // componentShellsAndSubComponents // lib.optionalAttrs
             (component ? docs)
             {
               docs = mkShell {
