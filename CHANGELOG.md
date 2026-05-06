@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `.#checks.nixfmt` can be run from everywhere when nixFiles are relative to project.
+- Preserve `passthru` for shells.
 
 ### Removed
 - All shared github workflows and actions.
