@@ -22,7 +22,7 @@ let
   };
 in
 builtins.trace
-  "📠 Running tests for buildPlatform ${pkgs.system}"
+  "📠 Running tests for buildPlatform ${pkgs.stdenv.hostPlatform.system}"
   (tests // {
     all = builtins.attrValues tests;
   })

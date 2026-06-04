@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The checks applications is now a flat dict. I.e. `checks.nixfmt` is now `nixfmt` and
+  `checks` runs all checks.
+
+### Added
+- Support for nixpkgs 25.11.
+
 ### Fixed
 - `.#checks.nixfmt` can be run from everywhere when nixFiles are relative to project.
 - Preserve `passthru` for shells.

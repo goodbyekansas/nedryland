@@ -1,6 +1,6 @@
 {
   description = "Nedryland is a collection of utilities and a build system for declaring, building and deploying microservice solutions.";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { nixpkgs, flake-utils, ... }:
@@ -20,35 +20,32 @@
                 (name: path: { inherit name path; })
                 { inherit (internalNedryland) docs checks; });
           };
-          apps = {
-            checks = rec {
-              type = "app";
-              inherit (all) program;
 
-              nixfmt = {
-                type = "app";
-                program = "${internalNedryland.checks}/bin/nixfmt";
-              };
-              shellcheck = {
-                type = "app";
-                program = "${internalNedryland.checks}/bin/shellcheck";
-              };
-              nixlint = {
-                type = "app";
-                program = "${internalNedryland.checks}/bin/nixlint";
-              };
-              all = {
-                type = "app";
-                program = "${internalNedryland.checks}/bin/check";
-              };
-              actionlint = {
-                type = "app";
-                program = "${internalNedryland.checks}/bin/actionlint";
-              };
+          apps = {
+            checks = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/check";
+            };
+            nixfmt = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/nixfmt";
+            };
+            shellcheck = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/shellcheck";
+            };
+            nixlint = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/nixlint";
+            };
+            actionlint = {
+              type = "app";
+              program = "${internalNedryland.checks}/bin/actionlint";
             };
           };
 
           devShells.docs = internalNedryland.docs;
+
           checks.default = builtins.derivation {
             inherit system;
             name = "all-tests";
@@ -62,3 +59,4 @@
         }
       );
 }
+
