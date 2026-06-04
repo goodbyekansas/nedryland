@@ -12,60 +12,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v26
+      uses: cachix/install-nix-action@v31
       with:
-        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+        install_url: https://releases.nixos.org/nix/nix-2.34.7/install
 
     - name: Check Nix format 👓 🦖💨
-      run: nix run .#checks.nixfmt
+      run: nix run .#nixfmt
 
   shell-check:
     name: Lint Shell Scripts 🐢 🐌 💶
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v26
+      uses: cachix/install-nix-action@v31
       with:
-        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+        install_url: https://releases.nixos.org/nix/nix-2.34.7/install
 
     - name: Check shell scripts 🐢 🐌 💶
-      run: nix run .#checks.shellcheck
+      run: nix run .#shellcheck
 
   lint:
     name: Lint Nix Expressions 🦕 📝 👀
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v26
+      uses: cachix/install-nix-action@v31
       with:
-        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+        install_url: https://releases.nixos.org/nix/nix-2.34.7/install
 
     - name: Lint Nix files 🦕 📝 👀
-      run: nix run .#checks.nixlint
+      run: nix run .#nixlint
 
   actionlint:
     name: Lint Github Actions 🐙 🐱 🎬
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v26
+      uses: cachix/install-nix-action@v31
       with:
-        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+        install_url: https://releases.nixos.org/nix/nix-2.34.7/install
 
     - name: Lint Github Actions 🐙 🐱 🎬
-      run: nix run .#checks.actionlint
+      run: nix run .#actionlint
 
   test:
     name: Unit Tests
@@ -73,15 +73,15 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Install Nix
-      uses: cachix/install-nix-action@v26
+      uses: cachix/install-nix-action@v31
       with:
-        install_url: https://releases.nixos.org/nix/nix-2.18.1/install
+        install_url: https://releases.nixos.org/nix/nix-2.34.7/install
 
     - name: Run all tests
-      run: nix flake check
+      run: nix flake check --all-systems
 
   build-examples-linux:
     name: Build Examples (Linux 🐧)
