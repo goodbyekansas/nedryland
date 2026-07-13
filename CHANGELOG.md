@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - ShellCommands not forwarding arguments to script when it's a file.
+- Mdbook's shellcommand `run` depended on mdbooks stdout.
+- Mdbook's shellcommand `run` didn't properly forwards arguments.
 
 ## [11.0.0] - 2026-06-05
 

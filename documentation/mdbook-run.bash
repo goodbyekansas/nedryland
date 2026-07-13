@@ -1,20 +1,44 @@
+#! @bash@
+# shellcheck shell=bash
+
+args=()
+port=0
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -p|--port)
+      port=$2
+      shift 2
+      ;;
+    -p=*|--port=*)
+      port="${1#*=}"
+      shift 1
+      ;;
+    -p*)
+      port="${1#-p}"
+      shift 1
+      ;;
+    *)
+      args+=("$1")
+      shift
+      ;;
+  esac
+done
+
 ticker=("⢿" "⡿" "⣟" "⣯" "⣷" "⣾" "⣽" "⣻")
 tickerCount=0
 echo -n "📖 Starting mdbook... ${ticker[tickerCount]}"
 serveOutput=$(mktemp)
-mdbook serve --port "${1:-0}" "$@" 1>"$serveOutput" 2>&1 &
+mdbook serve --port "$port" "${args[@]}" 1>"$serveOutput" 2>&1 &
 servePid=$!
-servePort=""
-while ps -p $servePid >/dev/null && [ -z "$servePort" ]; do
-    if [ $((tickerCount % 2)) -eq 0 ]; then
-        servePort=$(sed -n -E 's/^.*listening on (.*)$/\1/p' "$serveOutput")
-    else
-        sleep 0.25
-    fi
-
+servePort=
+while [ -z "$servePort" ] && ps -p "$servePid" >/dev/null 2>&1; do
     tickerCount=$((tickerCount + 1))
     tickerCount=$((tickerCount % ${#ticker[@]}))
     echo -en "\b${ticker[tickerCount]}"
+    servePort=$(@procfd@ --pid $servePid --socket-type tcp --json \
+        | @jq@ 'first(.. | .local_port? | select(. != null))')
+    sleep 0.1
 done
 
 if ! ps -p $servePid >/dev/null; then
@@ -28,4 +52,4 @@ fi
 echo $servePid > ./mdbook.pid
 echo "$servePort" >> ./mdbook.pid
 echo ""
-echo "Mdbook running on $servePort"
+echo "Mdbook running on http://localhost:$servePort"

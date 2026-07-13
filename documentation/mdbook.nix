@@ -27,12 +27,12 @@ base.mkDerivation (attrs // {
 
     run() {
       trap on_exit SIGQUIT EXIT SIGHUP
-      command run 0
+      command run "$@"
     }
 
     if checkRun; then
       echo ""
-      echo -e "🏃‍♀️ You seem to be running mdbook already at \e[93m$(tail -n 1 ./mdbook.pid)\e[0m, use \e[32mopen\e[0m to show it in your browser."
+      echo -e "🏃‍♀️ You seem to be running mdbook already at \e[93mhttp://localhost:$(tail -n 1 ./mdbook.pid)\e[0m, use \e[32mopen\e[0m to show it in your browser."
       echo ""
     else
       if [ -f ./mdbook.pid ]; then
@@ -44,7 +44,22 @@ base.mkDerivation (attrs // {
   '';
   shellCommands = {
     run = {
-      script = ./mdbook-run.bash;
+      script = pkgs.substitute {
+        name = "run-md-book";
+        src = ./mdbook-run.bash;
+        substitutions = [
+          "--subst-var-by"
+          "procfd"
+          "${pkgs.procfd}/bin/procfd"
+          "--subst-var-by"
+          "bash"
+          "${pkgs.bash}/bin/bash"
+          "--subst-var-by"
+          "jq"
+          "${pkgs.jq}/bin/jq"
+        ];
+        isExecutable = true;
+      };
       description = ''
         Preview the book and watches the book's src directory for changes, rebuilding the book and refreshing clients for each change.'';
     };
