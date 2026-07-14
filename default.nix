@@ -5,7 +5,7 @@ let
       "Nedryland supports nixpkgs versions >= 22.05, you have ${pkgs.lib.version or "unknown"}}";
     let
       pkgs' = pkgs;
-      version = "11.0.0";
+      version = "11.0.1";
       versionAtLeast = pkgs'.lib.versionAtLeast version;
     in
     {
