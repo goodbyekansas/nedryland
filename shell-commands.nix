@@ -41,7 +41,14 @@ let
 
         rm -rf "$envDir"
         set -euo pipefail
-        ${if builtins.isAttrs script then script.script or "" else script}
+        ${if builtins.isAttrs script then
+          if script ? script && script.script ? outPath then
+            "${script.script} \"$@\""
+          else
+            script.script or ""
+        else
+          script
+        }
       '')
       cmds) ++ [
       (writeShellScriptBin "shellHelp" ''
