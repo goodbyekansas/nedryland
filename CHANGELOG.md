@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- During combined deployments a NEDRYLAND_COMBINED_WORKDIR environment variable is accessible
+  for deployments to share data in.
+
 ## [11.0.1] - 2026-07-14
 
 ### Fixed

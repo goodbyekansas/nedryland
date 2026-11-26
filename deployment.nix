@@ -54,12 +54,12 @@ let
             esac
           done
 
-          workdir=$(mktemp -d --tmpdir ${name}-deploy-XXXXXXXX)
+          workdir="$(mktemp -d --tmpdir ${name}-deploy-XXXXXXXX)"
           echo "🏛️ Using temporary working directory $workdir"
           if [ "$keep" == false ]; then
             echo "🏛️ To keep the working directory run deploy with --keep-work-dir"
           fi
-          pushd $workdir
+          pushd "$workdir"
 
           runHook preDeploy
           ${preDeployPhase}
@@ -144,7 +144,7 @@ in
             ''
           )
           ''
-            #!${pkgs.bash}/bin/bash
+            export NEDRYLAND_COMBINED_WORKDIR="$workdir"
             set -e
             esc=$(printf '\033')
           ''
